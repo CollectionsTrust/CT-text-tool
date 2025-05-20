@@ -65,7 +65,7 @@ const LandingPage = () => {
               <div className="landing-ct-logo">
                 <img src={ctHeaderLogo} alt="Collections Trust Logo" className="header-logo" />
               </div>
-              <h1 className="landing-title">Text Tool</h1>
+              <h1 className="landing-title">Text Tool (beta)</h1>
             </div>
             <div className="landing-description">
               <p>Turn your museum's one-off project text into reusable content</p>
