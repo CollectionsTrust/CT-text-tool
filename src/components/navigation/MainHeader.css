@@ -1,0 +1,203 @@
+/* src/components/navigation/MainHeader.css */
+
+.main-header {
+  background-color: #515679; /* Purple brand color */
+  color: white;
+  padding: 15px 20px;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.project-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-container {
+  width: 48px;
+  height: 48px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.logo {
+  color: #515679; /* Purple brand color */
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-info h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: white;
+}
+
+.project-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Regular navigation buttons in teal color */
+.nav-button {
+  background-color: #00a9ac; /* Teal color to match Cancel button */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-button:hover {
+  background-color: #008f92; /* Slightly darker teal for hover */
+  color: white;
+  text-decoration: none;
+}
+
+/* Special styling for logout button */
+.logout-button {
+  background-color: rgba(220, 53, 69, 0.7); /* Reddish color for logout */
+}
+
+.logout-button:hover {
+  background-color: rgba(220, 53, 69, 0.9);
+}
+
+/* Help icon as just a circle with no button background */
+.help-icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  width: 28px;
+  height: 28px;
+  margin: 0 5px;
+}
+
+.help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: white;
+  color: #515679;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.help-icon-link:hover .help-icon {
+  background-color: #f0f0f0;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* The header-button class is kept for backward compatibility */
+.header-button {
+  background-color: #00a9ac; /* Updated to match nav-button */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-button:hover {
+  background-color: #008f92; /* Slightly darker teal for hover */
+  color: white;
+  text-decoration: none;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .nav-button,
+  .header-button {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-identity {
+    width: 100%;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .nav-button,
+  .header-button {
+    width: 100%;
+  }
+  
+  .help-icon-link {
+    align-self: flex-end;
+    margin-right: 10px;
+  }
+}

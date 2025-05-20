@@ -1,0 +1,41 @@
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .auth-form-container {
+    padding: 1.5rem;
+    margin: 1.5rem;
+    max-width: none;
+  }
+  
+  .landing-two-columns {
+    flex-direction: column;
+  }
+  
+  .landing-column {
+    width: 100%;
+  }
+  
+  .landing-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .login-section,
+  .request-section,
+  .feature-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .landing-intro h2 {
+    font-size: 1.5rem;
+  }
+  
+  .landing-intro p {
+    font-size: 1rem;
+  }
+  
+  .landing-content {
+    padding: 0 1rem;
+  }
+}

@@ -1,0 +1,90 @@
+/* src/components/ObjectsPage/DisplayOptions.css */
+
+.display-options-container {
+  margin-bottom: 10px; /* Reduced from 15px */
+  padding: 12px; /* Reduced from 15px */
+  background-color: #f9f9f9;
+  border-radius: 0 0 4px 4px; /* Flattened top edge */
+  border-top: 1px solid #eee; /* Add subtle separator */
+  margin-top: 0;
+}
+
+.display-options-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px; /* Reduced from 15px */
+}
+
+.display-toggle {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.display-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.display-toggle input[type="checkbox"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.selection-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.select-all-btn,
+.clear-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  background-color: #515578; /* Dark blue theme color */
+  color: white; /* White text */
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.select-all-btn:hover,
+.clear-btn:hover {
+  background-color: #454867; /* Slightly darker for hover */
+}
+
+.selected-records-count {
+  margin-top: 5px; /* Reduced from 10px */
+  font-size: 0.9rem;
+  color: var(--color-primary);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .display-options-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .display-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .selection-controls {
+    width: 100%;
+  }
+  
+  .select-all-btn,
+  .clear-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

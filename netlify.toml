@@ -1,0 +1,14 @@
+# netlify.toml - Configuration file for Netlify deployments
+
+[build]
+  # Directory to publish (relative to root of your repo)
+  publish = "build"
+  
+  # Default build command
+  command = "CI= npm run build"
+
+# Redirects and rewrites for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

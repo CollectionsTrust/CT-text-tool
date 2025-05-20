@@ -1,0 +1,294 @@
+/* src/components/ObjectsPage/ObjectsPage.css */
+
+.objects-page-container {
+  padding: 0; /* Changed from 15px 0 */
+}
+
+.objects-page-header {
+  margin-bottom: 0; /* Changed from 20px */
+  background-color: white;
+  border-radius: 8px 8px 0 0; /* Rounded corners only at top */
+  box-shadow: var(--shadow-sm);
+}
+
+.search-display-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 4px 4px 0 0; /* Modified to flatten bottom edge */
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0; /* Remove any bottom margin */
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  gap: 10px;
+  margin-left: 120px; /* Align with CT logo - adjust based on exact layout */
+}
+
+.search-input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-input.wide {
+  width: 100%;
+}
+
+.clear-search-btn {
+  background-color: #515578; /* Dark blue theme */
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.clear-search-btn:hover {
+  background-color: #454867; /* Slightly darker for hover */
+}
+
+.display-mode-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.display-mode-label {
+  color: var(--color-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Layout controls */
+.layout-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.layout-btn {
+  background-color: #f3f4f6;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layout-btn.active {
+  background-color: #515578; /* Dark blue theme */
+  color: white;
+  border-color: #515578;
+}
+
+.layout-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  width: 24px;
+}
+
+/* Focus mode options */
+.focus-options {
+  display: flex;
+  margin-left: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.focus-option-btn {
+  padding: 6px 12px;
+  border: none;
+  background-color: #f3f4f6;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.focus-option-btn.active {
+  background-color: #515578; /* Dark blue theme */
+  color: white;
+}
+
+/* Horizontal layout */
+.horizontal-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* Reduced from 20px */
+  border-radius: 0 0 8px 8px; /* Rounded corners only at bottom */
+  margin-top: 0;
+}
+
+.horizontal-layout .top-panel,
+.horizontal-layout .bottom-panel {
+  background: white;
+  border-radius: 0; /* Remove internal component radius */
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0;
+}
+
+.horizontal-layout .bottom-panel {
+  border-radius: 0 0 8px 8px; /* Round only bottom corners of bottom panel */
+}
+
+/* Focus layout */
+.focus-layout {
+  position: relative;
+  background: white;
+  border-radius: 0 0 8px 8px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  min-height: auto;
+  margin-top: 0;
+}
+
+/* Text form panel */
+.text-form-panel {
+  height: 100%;
+  padding: 0 0 20px 0;
+  overflow-y: auto;
+}
+
+.text-form-panel h3 {
+  color: var(--color-primary);
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.text-form-instruction {
+  color: var(--color-text-light);
+  margin-bottom: 1.5rem;
+}
+
+.split-layout-container .search-container,
+.split-layout-container .display-options-container {
+  max-width: 100%;
+}
+
+/* Pagination controls */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px; /* Reduced from 20px */
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+  margin-bottom: 0;
+}
+
+.pagination-controls .records-per-page label {
+  margin-right: 6px;
+  font-weight: 500;
+}
+
+.pagination-buttons button,
+.page-number {
+  background-color: #f3f4f6;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.page-number.active,
+.pagination-buttons button:hover {
+  background-color: #515578; /* Dark blue theme */
+  color: white;
+  border-color: #515578;
+}
+
+.page-ellipsis {
+  padding: 6px 10px;
+  color: #666;
+}
+
+.records-table th,
+.records-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.records-table th {
+  font-weight: 600;
+  background-color: #fafafa;
+}
+
+.records-table td {
+  vertical-align: top;
+}
+
+.table-wrapper {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* View button styling in records table */
+.view-link {
+  background-color: #00a9ac; /* Teal color - Cancel button color */
+  color: white;
+  border: none;
+  padding: 6px 12px; /* Slightly larger */
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.view-link:hover {
+  background-color: #008f92; /* Slightly darker teal for hover */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .objects-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .search-display-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .layout-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .focus-options {
+    position: static;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .focus-option-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .horizontal-layout .top-panel,
+  .horizontal-layout .bottom-panel {
+    padding: 15px;
+  }
+
+  .search-container {
+    margin-left: 0; /* Reset margin on mobile */
+  }
+}
