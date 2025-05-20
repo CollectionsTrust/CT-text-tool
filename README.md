@@ -1,6 +1,6 @@
 # 📘 CT Text Tool
 
-A React + Firebase web application for managing museum collection records from the Museum Data Service and collaboratively creating structured texts. Features role-based access, Firestore-backed content, bulk actions, hierarchical text linking, and an accessible, modern UI.
+A React and Firebase web application for managing museum collection records from the Museum Data Service and collaboratively creating structured texts. Features role-based access, Firestore-backed content, bulk actions, hierarchical text linking, and an accessible, modern UI.
 
 ---
 
