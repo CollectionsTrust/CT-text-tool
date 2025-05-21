@@ -19,8 +19,8 @@ const Login = () => {
 
     try {
       const { role } = await login(email, password);
-      localStorage.setItem('userEmail', email);
 
+      // Navigate based on user role
       if (role === 'admin') {
         navigate('/admin');
       } else {
