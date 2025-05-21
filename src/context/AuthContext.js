@@ -9,47 +9,14 @@ import {
   setDoc, 
   getDoc,
   deleteDoc,
-  serverTimestamp,
-  Timestamp 
+  serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { v4 as uuidv4 } from 'uuid'; // You may need to install this package
 
-// Helper function to create and sign a simple token
-// In a production environment, consider using Firebase Auth custom tokens or a proper JWT library
-const createToken = (user) => {
-  const payload = {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    // Set expiration to 24 hours from now
-    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
-  };
-  
-  // In a real app, sign this with a secret key
-  // For now we'll use a simple encoding as a placeholder
-  return btoa(JSON.stringify(payload));
-};
-
-// Helper function to verify a token
-const verifyToken = (token) => {
-  try {
-    const payload = JSON.parse(atob(token));
-    
-    // Check if token is expired
-    if (payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-    
-    return payload;
-  } catch (error) {
-    console.error('Token verification failed:', error);
-    return null;
-  }
-};
-
-const SESSION_TOKEN_KEY = 'ct_session_token';
-const SESSION_ID_KEY = 'ct_session_id';
+// Consistent keys used for sessionStorage
+const USER_EMAIL_KEY = 'userEmail';
+const USER_ROLE_KEY = 'userRole';
+const SESSION_ID_KEY = 'sessionId';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -58,89 +25,42 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sessionChecked, setSessionChecked] = useState(false);
-  const [lastVerification, setLastVerification] = useState(0);
 
-  // Create a new session in Firestore
+  // Create a session in Firestore and store in sessionStorage
   const createSession = async (user) => {
     try {
-      const sessionId = uuidv4();
+      // Generate a unique session ID
+      const sessionId = Math.random().toString(36).substring(2, 15) + 
+                       Math.random().toString(36).substring(2, 15);
+      
+      // Create session document in Firestore
       const sessionRef = doc(db, 'sessions', sessionId);
       
-      // Create expiration time (24 hours from now)
+      // Set expiration to 24 hours from now
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
       
-      // Create session in Firestore
       await setDoc(sessionRef, {
         userId: user.id,
         userEmail: user.email,
         userRole: user.role,
         createdAt: serverTimestamp(),
-        expiresAt: Timestamp.fromDate(expiresAt),
+        expiresAt: expiresAt,
         lastActive: serverTimestamp()
       });
       
-      // Create and store token
-      const token = createToken(user);
-      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+      // Store essential data in sessionStorage
+      sessionStorage.setItem(USER_EMAIL_KEY, user.email);
+      sessionStorage.setItem(USER_ROLE_KEY, user.role);
       sessionStorage.setItem(SESSION_ID_KEY, sessionId);
       
-      return { sessionId, token };
+      return sessionId;
     } catch (error) {
       console.error('Error creating session:', error);
       throw error;
     }
   };
-  
-  // Validate the session with Firestore
-  const validateSession = async (forceCheck = false) => {
-    const now = Date.now();
-    const sessionId = sessionStorage.getItem(SESSION_ID_KEY);
-    const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
-    
-    // Skip validation if checked recently (unless forced)
-    if (!forceCheck && now - lastVerification < 5 * 60 * 1000) { // 5 minutes
-      return true;
-    }
-    
-    if (!sessionId || !token) {
-      return false;
-    }
-    
-    try {
-      // Verify token locally first
-      const payload = verifyToken(token);
-      if (!payload) {
-        return false;
-      }
-      
-      // Then verify with Firestore
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionSnap = await getDoc(sessionRef);
-      
-      if (!sessionSnap.exists()) {
-        return false;
-      }
-      
-      const sessionData = sessionSnap.data();
-      
-      // Check expiration
-      const expiresAt = sessionData.expiresAt.toDate();
-      if (expiresAt < new Date()) {
-        return false;
-      }
-      
-      // Session is valid, update lastVerification time
-      setLastVerification(now);
-      
-      return true;
-    } catch (error) {
-      console.error('Error validating session:', error);
-      return false;
-    }
-  };
-  
+
   // Login function
   const login = async (email, password) => {
     try {
@@ -163,10 +83,10 @@ export const AuthProvider = ({ children }) => {
         email,
         name: userData.name || email,
         role: userData.role || 'author',
-        projects: userData.projects || []
+        projects: userData.projectRoles || {} // Store project roles
       };
 
-      // Create a session in Firestore
+      // Create session in Firestore and sessionStorage
       await createSession(user);
       
       // Update local state
@@ -186,24 +106,26 @@ export const AuthProvider = ({ children }) => {
       const sessionId = sessionStorage.getItem(SESSION_ID_KEY);
       
       if (sessionId) {
-        // Remove session from Firestore
+        // Delete the session from Firestore
         const sessionRef = doc(db, 'sessions', sessionId);
         await deleteDoc(sessionRef);
       }
       
-      // Clear session storage
-      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      // Clear sessionStorage
+      sessionStorage.removeItem(USER_EMAIL_KEY);
+      sessionStorage.removeItem(USER_ROLE_KEY);
       sessionStorage.removeItem(SESSION_ID_KEY);
       
-      // Update local state
+      // Clear local state
       setCurrentUser(null);
       setUserRole(null);
       
       return true;
     } catch (error) {
       console.error('Logout error:', error);
-      // Still clear local session even if Firestore operation fails
-      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      // Still clear session data even if Firestore operation fails
+      sessionStorage.removeItem(USER_EMAIL_KEY);
+      sessionStorage.removeItem(USER_ROLE_KEY);
       sessionStorage.removeItem(SESSION_ID_KEY);
       setCurrentUser(null);
       setUserRole(null);
@@ -211,88 +133,120 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check session validity and restore user state
-  const checkAndRestoreSession = async () => {
+  // Check if session is valid with Firestore
+  const validateSession = async () => {
+    const sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+    
+    if (!sessionId) {
+      return false;
+    }
+    
     try {
-      const sessionId = sessionStorage.getItem(SESSION_ID_KEY);
-      const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
       
-      if (!sessionId || !token) {
-        setSessionChecked(true);
-        setLoading(false);
-        return;
+      if (!sessionSnap.exists()) {
+        return false;
       }
       
-      // Verify token locally first
-      const payload = verifyToken(token);
-      if (!payload) {
-        await logout();
-        setSessionChecked(true);
-        setLoading(false);
-        return;
+      const sessionData = sessionSnap.data();
+      
+      // Check if session is expired
+      if (sessionData.expiresAt < new Date()) {
+        return false;
       }
       
-      // Validate with Firestore
-      const isValid = await validateSession(true);
+      // Update lastActive timestamp
+      await setDoc(sessionRef, { lastActive: serverTimestamp() }, { merge: true });
       
-      if (!isValid) {
-        await logout();
-        setSessionChecked(true);
-        setLoading(false);
-        return;
-      }
-      
-      // Session is valid, fetch user details
-      const userRef = doc(db, 'projectUsers', payload.id);
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists()) {
-        await logout();
-        setSessionChecked(true);
-        setLoading(false);
-        return;
-      }
-      
-      const userData = userSnap.data();
-      
-      const user = {
-        id: userSnap.id,
-        email: userData.email,
-        name: userData.name || userData.email,
-        role: userData.role || 'author',
-        projects: userData.projects || []
-      };
-      
-      setCurrentUser(user);
-      setUserRole(user.role);
-      setLastVerification(Date.now());
-      
+      return true;
     } catch (error) {
-      console.error('Error restoring session:', error);
-      await logout();
-    } finally {
-      setSessionChecked(true);
-      setLoading(false);
+      console.error('Session validation error:', error);
+      return false;
     }
   };
 
-  // Initialize auth state when component mounts
+  // Reset password (placeholder implementation)
+  const resetPassword = async (email) => {
+    // This is a placeholder - in a real implementation, this would
+    // generate a reset token and send an email
+    console.log(`Reset password requested for ${email}`);
+    return true;
+  };
+
+  // Restore session on app load
   useEffect(() => {
-    checkAndRestoreSession();
+    const restoreSession = async () => {
+      try {
+        const email = sessionStorage.getItem(USER_EMAIL_KEY);
+        const role = sessionStorage.getItem(USER_ROLE_KEY);
+        const sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+        
+        if (!email || !role || !sessionId) {
+          setLoading(false);
+          return;
+        }
+        
+        // Optional: Validate session with Firestore
+        // const isValid = await validateSession();
+        // if (!isValid) {
+        //   await logout();
+        //   setLoading(false);
+        //   return;
+        // }
+        
+        // Get user data from Firestore based on email
+        const projectUsersRef = collection(db, 'projectUsers');
+        const q = query(projectUsersRef, where('email', '==', email));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          // User not found, clear session
+          await logout();
+          setLoading(false);
+          return;
+        }
+        
+        const userData = querySnapshot.docs[0].data();
+        
+        // Restore user state
+        const user = {
+          id: querySnapshot.docs[0].id,
+          email,
+          name: userData.name || email,
+          role: userData.role || 'author',
+          projects: userData.projectRoles || {}
+        };
+        
+        setCurrentUser(user);
+        setUserRole(user.role);
+        
+      } catch (error) {
+        console.error('Error restoring session:', error);
+        // Clear session on error
+        await logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    restoreSession();
   }, []);
 
+  // Context value
   const value = {
     currentUser,
     userRole,
     login,
     logout,
-    loading,
-    validateSession
+    resetPassword,
+    validateSession,
+    loading
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {sessionChecked && children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
