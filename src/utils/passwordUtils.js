@@ -1,88 +1,11 @@
-// src/utils/passwordUtils.js
-import * as argon2 from 'argon2-browser';
+// src/utils/passwordUtils.js - PBKDF2 implementation using Web Crypto API
 
 /**
- * Hash a password using Argon2id
+ * Hash a password using PBKDF2 with Web Crypto API
  * @param {string} password - The password to hash
  * @returns {Promise<object>} - Object containing the hash and parameters
  */
 export const hashPassword = async (password) => {
-  try {
-    // Generate a random salt
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    
-    // Hash the password
-    const result = await argon2.hash({
-      pass: password,
-      salt: salt,
-      type: argon2.ArgonType.Argon2id, // Recommended variant
-      time: 3,        // Number of iterations
-      mem: 4096,      // Memory usage in KiB (4 MB)
-      parallelism: 1, // Number of threads
-      hashLen: 32     // Output length
-    });
-    
-    // Convert salt to hex for storage
-    const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    // Return an object that's easily storable in Firestore
-    return {
-      hash: result.encoded, // This contains everything needed for verification
-      salt: saltHex,
-      type: 'argon2id'
-    };
-  } catch (err) {
-    console.error('Error hashing password:', err);
-    
-    // Fallback to PBKDF2 if Argon2 fails
-    return fallbackHashPassword(password);
-  }
-};
-
-/**
- * Verify a password against a stored hash
- * @param {string} password - The password to verify
- * @param {object|string} storedHash - The stored hash object or string
- * @returns {Promise<boolean>} - True if password matches
- */
-export const verifyPassword = async (password, storedHash) => {
-  try {
-    // Handle legacy "default" password
-    if (storedHash === 'default') {
-      return password === 'default';
-    }
-    
-    // Handle Argon2 hash
-    if (typeof storedHash === 'object' && storedHash.type === 'argon2id' && storedHash.hash) {
-      return await argon2.verify({
-        pass: password,
-        encoded: storedHash.hash
-      });
-    }
-    
-    // Handle PBKDF2 fallback
-    if (typeof storedHash === 'object' && storedHash.type === 'pbkdf2') {
-      return fallbackVerifyPassword(password, storedHash);
-    }
-    
-    return false;
-  } catch (err) {
-    console.error('Error verifying password:', err);
-    
-    // Try fallback verification if Argon2 fails
-    if (typeof storedHash === 'object' && storedHash.salt) {
-      return fallbackVerifyPassword(password, storedHash);
-    }
-    
-    return false;
-  }
-};
-
-/**
- * Fallback hash method using PBKDF2 with Web Crypto API
- * Used if WebAssembly/Argon2 fails to load
- */
-const fallbackHashPassword = async (password) => {
   try {
     // Convert password to buffer
     const encoder = new TextEncoder();
@@ -100,8 +23,8 @@ const fallbackHashPassword = async (password) => {
       ['deriveBits']
     );
     
-    // Derive key with PBKDF2
-    const iterations = 600000; // High iteration count for security
+    // Derive key with PBKDF2 - high iteration count for security
+    const iterations = 600000; // OWASP recommended minimum as of 2023
     const derivedBits = await crypto.subtle.deriveBits(
       {
         name: 'PBKDF2',
@@ -127,18 +50,26 @@ const fallbackHashPassword = async (password) => {
       type: 'pbkdf2'
     };
   } catch (err) {
-    console.error('Fallback hashing failed:', err);
+    console.error('Error hashing password:', err);
     throw err;
   }
 };
 
 /**
- * Fallback verify method for PBKDF2
+ * Verify a password against a stored hash
+ * @param {string} password - The password to verify
+ * @param {object|string} storedHash - The stored hash object or string
+ * @returns {Promise<boolean>} - True if password matches
  */
-const fallbackVerifyPassword = async (password, storedHash) => {
+export const verifyPassword = async (password, storedHash) => {
   try {
+    // Handle legacy "default" password
+    if (storedHash === 'default') {
+      return password === 'default';
+    }
+    
     // Handle PBKDF2 hash
-    if (storedHash.type === 'pbkdf2') {
+    if (typeof storedHash === 'object' && storedHash.type === 'pbkdf2') {
       // Convert hex salt to buffer
       const salt = new Uint8Array(storedHash.salt.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
       
@@ -171,15 +102,34 @@ const fallbackVerifyPassword = async (password, storedHash) => {
       const hashArray = Array.from(new Uint8Array(derivedBits));
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       
-      // Compare hashes
-      return hashHex === storedHash.hash;
+      // Compare hashes in constant time to prevent timing attacks
+      return constantTimeEquals(hashHex, storedHash.hash);
     }
     
     return false;
   } catch (err) {
-    console.error('Fallback verification failed:', err);
+    console.error('Error verifying password:', err);
     return false;
   }
+};
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ * @param {string} a - First string
+ * @param {string} b - Second string
+ * @returns {boolean} - True if strings are equal
+ */
+const constantTimeEquals = (a, b) => {
+  if (a.length !== b.length) {
+    return false;
+  }
+  
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  
+  return result === 0;
 };
 
 /**
@@ -188,22 +138,45 @@ const fallbackVerifyPassword = async (password, storedHash) => {
  */
 export const generateTempPassword = () => {
   // Exclude similar-looking characters: 0, O, 1, l, I
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnopqrstuvwxyz23456789';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnopqrstuvwxyz23456789!@#$%^&*';
   let result = '';
   
-  // Create a password between 10-12 characters
-  const length = Math.floor(Math.random() * 3) + 10;
+  // Create a password between 12-14 characters for better security
+  const length = Math.floor(Math.random() * 3) + 12;
   
   // Generate cryptographically secure random values
   const randomValues = new Uint8Array(length);
   window.crypto.getRandomValues(randomValues);
   
+  // Ensure we have at least one number, one letter, and one special char
+  let hasNumber = false;
+  let hasLetter = false;
+  let hasSpecial = false;
+  
   // Map random values to characters
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(randomValues[i] % chars.length);
+    const char = chars.charAt(randomValues[i] % chars.length);
+    result += char;
+    
+    // Track character types
+    if (char.match(/[0-9]/)) hasNumber = true;
+    if (char.match(/[a-zA-Z]/)) hasLetter = true;
+    if (char.match(/[!@#$%^&*]/)) hasSpecial = true;
   }
   
-  return result;
+  // If missing any required character type, replace last characters
+  const replacements = [];
+  if (!hasNumber) replacements.push('23456789'[Math.floor(Math.random() * 8)]);
+  if (!hasLetter) replacements.push('ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnopqrstuvwxyz'[Math.floor(Math.random() * 51)]);
+  if (!hasSpecial) replacements.push('!@#$%^&*'[Math.floor(Math.random() * 8)]);
+  
+  // Apply replacements to last positions
+  let resultArray = result.split('');
+  for (let i = 0; i < replacements.length; i++) {
+    resultArray[resultArray.length - 1 - i] = replacements[i];
+  }
+  
+  return resultArray.join('');
 };
 
 /**
@@ -213,4 +186,50 @@ export const generateTempPassword = () => {
  */
 export const isTemporaryPassword = (passwordSettings) => {
   return typeof passwordSettings === 'object' && passwordSettings.isTemporary === true;
+};
+
+/**
+ * Validate password strength
+ * @param {string} password - The password to validate
+ * @returns {object} - Validation result with isValid and message
+ */
+export const validatePasswordStrength = (password) => {
+  const minLength = 8;
+  const hasNumber = /\d/.test(password);
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  
+  if (password.length < minLength) {
+    return {
+      isValid: false,
+      message: `Password must be at least ${minLength} characters long`
+    };
+  }
+  
+  if (!hasLetter) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one letter'
+    };
+  }
+  
+  if (!hasNumber) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one number'
+    };
+  }
+  
+  // Optional: require special character for stronger passwords
+  // if (!hasSpecial) {
+  //   return {
+  //     isValid: false,
+  //     message: 'Password must contain at least one special character'
+  //   };
+  // }
+  
+  return {
+    isValid: true,
+    message: 'Password is strong'
+  };
 };
