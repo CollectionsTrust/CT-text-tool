@@ -15,6 +15,12 @@ const AdminDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Debug: Log the current user and role
+  useEffect(() => {
+    console.log("AdminDashboard - Current User:", currentUser);
+    console.log("AdminDashboard - User Role:", userRole);
+  }, [currentUser, userRole]);
+
   // Check for pending project requests when component mounts
   useEffect(() => {
     const checkForPendingRequests = async () => {
@@ -40,6 +46,12 @@ const AdminDashboard = () => {
 
     if (currentUser && userRole === 'admin') {
       checkForPendingRequests();
+    } else {
+      // Debug: Log why check isn't running
+      console.log("Not checking for pending requests:", { 
+        hasCurrentUser: !!currentUser, 
+        userRole 
+      });
     }
   }, [currentUser, userRole, navigate, location]);
 
@@ -57,7 +69,13 @@ const AdminDashboard = () => {
   }, [location, pendingRequestsExist, initialCheckDone]);
 
   // Check if user is authorized to access this page
-  if (!currentUser || userRole !== 'admin') {
+  if (!currentUser) {
+    console.log("No current user, redirecting to dashboard");
+    return <Navigate to="/dashboard" />;
+  }
+  
+  if (userRole !== 'admin') {
+    console.log("User role is not admin, redirecting to dashboard");
     return <Navigate to="/dashboard" />;
   }
 
@@ -66,7 +84,7 @@ const AdminDashboard = () => {
       <div className="admin-dashboard">
         <div className="admin-header">
           <div className="admin-user-info">
-            Logged in as: {currentUser.email}
+            Logged in as: {currentUser?.email || "Unknown User"}
           </div>
         </div>
 
