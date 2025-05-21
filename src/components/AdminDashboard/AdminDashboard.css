@@ -1,338 +1,126 @@
-/* === Layout === */
-.admin-dashboard {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: sans-serif;
-}
+/* Add to UserDashboard.css and AdminDashboard.css */
 
-.admin-header {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-
-.admin-user-info {
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
-
-/* === Navigation Tabs === */
-.admin-nav-tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 1rem;
-}
-
-.admin-nav-tab {
-  padding: 8px 16px;
-  border: none;
-  background-color: #e5e7eb;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  color: #1f2937;
-  font-weight: 500;
-}
-
-.admin-nav-tab.active {
-  background-color: #4a4d85 !important;
-  color: white;
-}
-
-/* === Section Header and Archive Toggle === */
-.header-row {
+/* User info container with password change button */
+.user-info-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
 }
 
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
+.user-info, .admin-user-info {
+  font-weight: 500;
+  margin-bottom: 0;
 }
 
-.toggle-archived-btn {
-  background-color: #14b8a6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.toggle-archived-btn:hover {
-  background-color: #0d9488;
-}
-
-/* === Search Input and Clear Button Layout === */
-.search-bar-row {
-  display: flex;
-  margin-bottom: 1rem;
-  position: relative;
-  width: 100%;
-}
-
-.search-input {
-  width: 100%;
-  padding: 8px 12px;
-  padding-right: 40px;
-  font-size: 0.95rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.clear-btn {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 5px 10px;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.clear-btn:hover {
-  color: #333;
-}
-
-/* === Table Layout === */
-.admin-table-container {
-  overflow-x: auto;
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-}
-
-.admin-table tr {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.admin-table th {
-  background-color: #f9fafb;
-  font-weight: bold;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px;
-  text-align: left;
-}
-
-.admin-table td {
-  border-bottom: none; /* Remove individual cell borders */
-  padding: 12px;
-  text-align: left;
-  vertical-align: top;
-}
-
-/* === Column Widths === */
-.admin-table th:nth-child(1),
-.admin-table td:nth-child(1) {
-  width: auto;
-}
-
-.admin-table th:nth-child(2),
-.admin-table td:nth-child(2) {
-  width: 25%;
-  word-break: break-word;
-}
-
-.admin-table th:nth-child(3),
-.admin-table td:nth-child(3) {
-  width: 180px;
-  max-width: 180px;
-  overflow-wrap: break-word;
-}
-
-/* === Project Title Styling === */
-.project-title-text {
-  margin-bottom: 5px;
-  font-size: 1rem;
-}
-
-.project-description {
-  color: #4b5563;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-/* === Button Styles === */
-.actions-cell button {
-  margin-bottom: 6px;
-  display: block;
-  width: 120px;
-  text-align: center;
-}
-
-.primary-btn {
+/* Password change button */
+.password-change-btn {
   background-color: #4f46e5;
   color: white;
-  padding: 8px;
   border: none;
   border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.primary-btn:hover {
+.password-change-btn:hover {
   background-color: #4338ca;
 }
 
-.secondary-btn {
-  background-color: #10b981;
-  color: white;
-  padding: 8px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.secondary-btn:hover {
-  background-color: #059669;
-}
-
-.delete-btn {
-  background-color: #b91c1c;
-  color: white;
-  padding: 8px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.delete-btn:hover:not(:disabled) {
-  background-color: #991b1b;
-}
-
-/* === Status Badges === */
-.status-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-active {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.status-archived {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-/* === Pagination === */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 1rem;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  border: none;
-  background-color: #f3f4f6;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pagination button.active {
-  background-color: #4f46e5;
-  color: white;
-}
-
-/* === Confirmation Dialog === */
-.confirm-dialog-backdrop {
+/* Dialog backdrop */
+.dialog-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 50;
+  z-index: 1000;
 }
 
-.confirm-dialog {
-  background: white;
-  padding: 2rem;
+/* Dialog container */
+.dialog-container {
+  background-color: white;
   border-radius: 8px;
-  max-width: 400px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
 }
 
-.dialog-buttons {
-  margin-top: 1rem;
+/* Dialog header */
+.dialog-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* === Messages === */
-.success-message {
-  background-color: #d1fae5;
-  color: #065f46;
-  padding: 10px;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-}
-
-.error-message {
-  background-color: #fee2e2;
-  color: #991b1b;
-  padding: 10px;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-}
-
-.no-content-message,
-.loading {
-  padding: 1rem;
-  text-align: center;
-  color: #6b7280;
-}
-
-/* === User Management Form === */
-.user-form-row {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 1.5rem;
+  justify-content: space-between;
   align-items: center;
 }
 
-.user-form-input,
-.user-form-select {
-  padding: 8px 12px;
-  font-size: 0.95rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  flex: 1;
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-primary);
 }
 
-.user-form-select {
-  min-width: 120px;
-  max-width: 120px;
+/* Dialog close button */
+.dialog-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
 }
 
-.role-select {
-  width: 100%;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.9rem;
+.dialog-close-btn:hover {
+  color: #111827;
+}
+
+/* Dialog content */
+.dialog-content {
+  padding: 1.5rem;
+}
+
+/* Override auth form container for dialog */
+.dialog-content .auth-form-container {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.dialog-content .auth-form {
+  margin: 0;
+  padding: 0;
+}
+
+.dialog-content .auth-form h2 {
+  display: none; /* Hide duplicate heading */
+}
+
+/* Responsive styles */
+@media (max-width: 640px) {
+  .dialog-container {
+    width: 90%;
+    max-height: 80vh;
+  }
+  
+  .user-info-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .password-change-btn {
+    align-self: flex-start;
+  }
 }
