@@ -18,28 +18,23 @@ const Login = () => {
     setLoading(true);
 
     try {
-      console.log("Login attempt for:", email);
-      // Let AuthContext handle all storage - NO localStorage calls here
+      // Call login function from AuthContext
       const result = await login(email, password);
-      console.log("Login result:", result);
-
-      // Navigate based on user role
-      if (result && result.role) {
+      console.log("Login successful:", result);
+      
+      // IMPORTANT: Use a slight delay to ensure context state has updated
+      // before navigation occurs
+      setTimeout(() => {
         if (result.role === 'admin') {
-          console.log("Navigating to admin dashboard");
           navigate('/admin');
         } else {
-          console.log("Navigating to user dashboard");
-          navigate('/dashboard'); // owners and authors
+          navigate('/dashboard'); // For owners and authors
         }
-      } else {
-        console.error("Login succeeded but no role returned");
-        setError("Login succeeded but user role could not be determined");
-      }
+        setLoading(false);
+      }, 100);
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login. Please check your credentials.');
-    } finally {
       setLoading(false);
     }
   };
