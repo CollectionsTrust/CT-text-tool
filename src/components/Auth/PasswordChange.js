@@ -87,7 +87,7 @@ const PasswordChange = ({ forced = false, onComplete = null }) => {
   return (
     <div className="auth-form-container">
       <form onSubmit={handleSubmit} className="auth-form">
-        <h2>{forced ? 'Password Change Required' : 'Change Password'}</h2>
+        <h2>{forced ? 'Password change required' : 'Change password'}</h2>
         
         {forced && (
           <p className="info-message">
@@ -99,7 +99,7 @@ const PasswordChange = ({ forced = false, onComplete = null }) => {
         {success && <div className="success-message">Password changed successfully!</div>}
         
         <div className="form-group">
-          <label htmlFor="current-password">Current Password</label>
+          <label htmlFor="current-password">Current password</label>
           <input
             type="password"
             id="current-password"
@@ -112,7 +112,7 @@ const PasswordChange = ({ forced = false, onComplete = null }) => {
         </div>
         
         <div className="form-group">
-          <label htmlFor="new-password">New Password</label>
+          <label htmlFor="new-password">New password</label>
           <input
             type="password"
             id="new-password"
@@ -128,7 +128,7 @@ const PasswordChange = ({ forced = false, onComplete = null }) => {
         </div>
         
         <div className="form-group">
-          <label htmlFor="confirm-password">Confirm New Password</label>
+          <label htmlFor="confirm-password">Confirm new password</label>
           <input
             type="password"
             id="confirm-password"
@@ -145,7 +145,7 @@ const PasswordChange = ({ forced = false, onComplete = null }) => {
           className="submit-btn"
           disabled={loading}
         >
-          {loading ? 'Changing Password...' : 'Change Password'}
+          {loading ? 'Changing password...' : 'Change password'}
         </button>
         
         {!forced && (
