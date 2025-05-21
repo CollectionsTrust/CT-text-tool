@@ -1,5 +1,5 @@
-// src/App.js (updated)
-import React, { useEffect } from 'react';
+// src/App.js (updated for PBKDF2)
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -52,23 +52,6 @@ const RequirePasswordChangeCheck = () => {
 };
 
 function App() {
-  // Load WebAssembly for argon2-browser
-  useEffect(() => {
-    // This is just to ensure WebAssembly can load early
-    const preloadWasm = async () => {
-      try {
-        // We don't need to do anything here, just importing the module
-        // will start loading the WASM
-        const argon2 = await import('argon2-browser');
-        console.log('Argon2 WASM preloaded successfully');
-      } catch (err) {
-        console.warn('Argon2 WASM preload failed, fallback will be used:', err);
-      }
-    };
-
-    preloadWasm();
-  }, []);
-
   return (
     <AuthProvider>
       <Router>
