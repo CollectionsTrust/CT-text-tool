@@ -13,12 +13,6 @@
   to = "/index.html"
   status = 200
 
-# Headers for WebAssembly files
-[[headers]]
-  for = "/*.wasm"
-  [headers.values]
-    Content-Type = "application/wasm"
-    
 # Headers for security
 [[headers]]
   for = "/*"
