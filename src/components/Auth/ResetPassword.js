@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const { resetPassword } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,16 +21,30 @@ const ResetPassword = () => {
       setError('');
       setMessage('');
       setLoading(true);
-      
-      await resetPassword(email);
+
+      // Check if user exists in Firestore
+      const projectUsersRef = collection(db, 'projectUsers');
+      const q = query(projectUsersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        throw new Error('No account found with this email address.');
+      }
+
+      // For this simple implementation, we'll just "reset" to the default password
+      // A real implementation would generate a reset token and send an email
+      const userDoc = querySnapshot.docs[0];
+      await updateDoc(doc(db, 'projectUsers', userDoc.id), {
+        password: 'default' // Reset to default password
+      });
       
       setMessage(
-        'Password reset email sent. Check your inbox and follow the instructions.'
+        'Your password has been reset to the default value. Please login with "default" as your password.'
       );
       setEmail('');
     } catch (err) {
       console.error('Password reset error:', err);
-      setError('Failed to send password reset email. Please try again.');
+      setError(err.message || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,7 +76,7 @@ const ResetPassword = () => {
             className="submit-btn"
             disabled={loading}
           >
-            {loading ? 'Sending...' : 'Reset password'}
+            {loading ? 'Processing...' : 'Reset password'}
           </button>
         </form>
         
