@@ -171,7 +171,7 @@ const ProjectsList = () => {
   return (
     <div className="admin-section projects-list">
       <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab">Project requests</Link>
+        <Link to="/admin#requests" className="admin-nav-tab">Requests</Link>
         <Link to="/admin#projects" className="admin-nav-tab active">Manage projects</Link>
         <Link to="/admin#users" className="admin-nav-tab">Manage users</Link>
       </div>
