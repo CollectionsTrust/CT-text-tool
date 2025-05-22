@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { exportToCsv, exportToXml, exportToJson, exportToHtml } from '../TextsPage/utils/exports';
+import { exportToCsv, exportToCsvTwoFiles, exportToXml, exportToJson, exportToHtml } from '../TextsPage/utils/exports';
 import { useProjectForm } from '../ProjectSetup/hooks/useProjectForm';
 
 const ExportControls = ({ texts }) => {
@@ -30,6 +30,9 @@ const ExportControls = ({ texts }) => {
       case 'csv':
         exportToCsv(texts, projectInfo);
         break;
+      case 'csv-two-files':
+        exportToCsvTwoFiles(texts, projectInfo, projectInfo.settings);
+        break;
       case 'xml':
         exportToXml(texts, projectInfo);
         break;
@@ -47,6 +50,7 @@ const ExportControls = ({ texts }) => {
   return (
     <div className="export-controls">
       <button onClick={() => handleExport('csv')}>Export CSV</button>
+      <button onClick={() => handleExport('csv-two-files')}>Export CSV - 2 files</button>
       <button onClick={() => handleExport('xml')}>Export XML</button>
       <button onClick={() => handleExport('json')}>Export JSON</button>
       <button onClick={() => handleExport('html')}>Export HTML</button>
