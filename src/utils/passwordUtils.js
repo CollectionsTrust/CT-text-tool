@@ -189,6 +189,23 @@ export const isTemporaryPassword = (passwordSettings) => {
 };
 
 /**
+ * Check if a temporary password has expired (7 days)
+ * @param {object} passwordSettings - The password settings object
+ * @returns {boolean} Whether the temporary password has expired
+ */
+export const isTemporaryPasswordExpired = (passwordSettings) => {
+  if (!passwordSettings || !passwordSettings.isTemporary || !passwordSettings.createdAt) {
+    return false;
+  }
+  
+  const createdAt = new Date(passwordSettings.createdAt);
+  const expiresAt = new Date(createdAt.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days
+  const now = new Date();
+  
+  return now > expiresAt;
+};
+
+/**
  * Validate password strength
  * @param {string} password - The password to validate
  * @returns {object} - Validation result with isValid and message
