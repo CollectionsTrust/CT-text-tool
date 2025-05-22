@@ -12,6 +12,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 import { useAuth } from '../../context/AuthContext';
 import './UserDashboard.css';
 
@@ -19,6 +20,7 @@ const AuthorManagement = () => {
   const [authors, setAuthors] = useState([]);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserName, setNewUserName] = useState('');
+  const [newUserOrg, setNewUserOrg] = useState('');
   const [selectedProjects, setSelectedProjects] = useState([]);
   const [userProjects, setUserProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +32,10 @@ const AuthorManagement = () => {
   const [editingAuthor, setEditingAuthor] = useState(null);
   const [editAuthorProjects, setEditAuthorProjects] = useState([]);
   const [editAuthorName, setEditAuthorName] = useState('');
+  const [editAuthorOrg, setEditAuthorOrg] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
+  const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
   const { currentUser } = useAuth();
 
   // Fetch authors and owner's projects on component mount
@@ -59,10 +64,14 @@ const AuthorManagement = () => {
       const q = query(projectsRef, where('owner', '==', currentUser.email));
       const snapshot = await getDocs(q);
       
-      const ownedProjects = snapshot.docs.map(doc => ({
-        id: doc.id,
-        title: doc.data().title || 'Untitled Project'
-      }));
+      const ownedProjects = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          title: doc.data().title || 'Untitled Project',
+          status: doc.data().status || 'active'
+        }))
+        .filter(project => project.status === 'active') // Only show active projects
+        .sort((a, b) => a.title.localeCompare(b.title)); // Sort alphabetically
       
       setUserProjects(ownedProjects);
     } catch (err) {
@@ -125,7 +134,9 @@ const AuthorManagement = () => {
             id: userDoc.id,
             email: userData.email,
             name: userData.name || '',
-            authorProjects: authorProjects
+            organization: userData.organization || '',
+            authorProjects: authorProjects,
+            projectCount: authorProjects.length
           });
         }
       }
@@ -151,6 +162,7 @@ const AuthorManagement = () => {
       return (
         (author.name && author.name.toLowerCase().includes(query)) ||
         (author.email && author.email.toLowerCase().includes(query)) ||
+        (author.organization && author.organization.toLowerCase().includes(query)) ||
         (author.authorProjects && author.authorProjects.some(project => 
           project.title.toLowerCase().includes(query)
         ))
@@ -158,20 +170,6 @@ const AuthorManagement = () => {
     });
     
     setFilteredAuthors(filtered);
-  };
-
-  const formatDate = (timestamp) => {
-    if (!timestamp) return 'N/A';
-    try {
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-      return date.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch {
-      return 'Invalid Date';
-    }
   };
 
   const handleDeleteAuthor = async (authorId) => {
@@ -255,6 +253,7 @@ const AuthorManagement = () => {
   const handleStartEdit = (author) => {
     setEditingAuthor(author.id);
     setEditAuthorName(author.name || '');
+    setEditAuthorOrg(author.organization || '');
     setEditAuthorProjects(author.authorProjects.map(p => p.id));
   };
 
@@ -297,8 +296,51 @@ const AuthorManagement = () => {
       // Update the user document
       await updateDoc(authorRef, {
         name: editAuthorName,
+        organization: editAuthorOrg,
         projectRoles: updatedProjectRoles
       });
+      
+      // Generate mailto link for project changes
+      const originalProjects = author.authorProjects.map(p => p.id).sort();
+      const newProjects = editAuthorProjects.sort();
+      const hasChanges = JSON.stringify(originalProjects) !== JSON.stringify(newProjects);
+      
+      if (hasChanges) {
+        const addedProjects = editAuthorProjects.filter(id => !originalProjects.includes(id));
+        const removedProjects = originalProjects.filter(id => !editAuthorProjects.includes(id));
+        
+        let changeDescription = '';
+        if (addedProjects.length > 0) {
+          const addedProjectNames = addedProjects.map(id => {
+            const project = userProjects.find(p => p.id === id);
+            return project ? project.title : 'Unknown project';
+          });
+          changeDescription += `Added to: ${addedProjectNames.join(', ')}`;
+        }
+        
+        if (removedProjects.length > 0) {
+          const removedProjectNames = removedProjects.map(id => {
+            const project = author.authorProjects.find(p => p.id === id);
+            return project ? project.title : 'Unknown project';
+          });
+          if (changeDescription) changeDescription += '\n';
+          changeDescription += `Removed from: ${removedProjectNames.join(', ')}`;
+        }
+        
+        const emailSubject = encodeURIComponent('Your project access has been updated in the CT Text Tool');
+        const emailBody = encodeURIComponent(
+          `Hello ${editAuthorName || author.email},\n\n` +
+          `Your project access in the CT Text Tool has been updated:\n\n` +
+          `${changeDescription}\n\n` +
+          `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
+          `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
+          `Thank you,\n` +
+          `Collections Trust Team`
+        );
+        
+        const mailtoLink = `mailto:${author.email}?subject=${emailSubject}&body=${emailBody}`;
+        window.open(mailtoLink, '_blank');
+      }
       
       // Update local state
       const updatedAuthorProjects = [];
@@ -317,7 +359,9 @@ const AuthorManagement = () => {
           return {
             ...a,
             name: editAuthorName,
-            authorProjects: updatedAuthorProjects
+            organization: editAuthorOrg,
+            authorProjects: updatedAuthorProjects,
+            projectCount: updatedAuthorProjects.length
           };
         }
         return a;
@@ -328,13 +372,16 @@ const AuthorManagement = () => {
           return {
             ...a,
             name: editAuthorName,
-            authorProjects: updatedAuthorProjects
+            organization: editAuthorOrg,
+            authorProjects: updatedAuthorProjects,
+            projectCount: updatedAuthorProjects.length
           };
         }
         return a;
       }));
       
-      setSuccess('Author updated successfully');
+      const emailMessage = hasChanges ? ' A draft email has been opened in your email client.' : '';
+      setSuccess(`Author updated successfully.${emailMessage}`);
       setEditingAuthor(null);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -373,49 +420,103 @@ const AuthorManagement = () => {
         // Add new projects with 'author' role
         const updatedProjectRoles = { ...currentProjectRoles };
         let newProjectsAdded = false;
+        const addedProjectNames = [];
         
         for (const projectId of selectedProjects) {
           if (!updatedProjectRoles[projectId]) {
             updatedProjectRoles[projectId] = 'author';
             newProjectsAdded = true;
+            const project = userProjects.find(p => p.id === projectId);
+            if (project) {
+              addedProjectNames.push(project.title);
+            }
           }
         }
         
         if (newProjectsAdded) {
           await updateDoc(doc(db, 'projectUsers', existingUser.id), {
             projectRoles: updatedProjectRoles,
-            // Only update name if it's empty
-            name: existingUserData.name || newUserName || 'No name provided'
+            // Only update name and org if they're empty
+            name: existingUserData.name || newUserName || 'No name provided',
+            organization: existingUserData.organization || newUserOrg || 'No organization provided'
           });
           
-          setSuccess(`Existing user ${existingUserData.name || newUserEmail} updated with new projects`);
+          // Generate mailto link for existing user
+          const emailSubject = encodeURIComponent('You have been added to new CT Text Tool projects');
+          const emailBody = encodeURIComponent(
+            `Hello ${existingUserData.name || newUserName || existingUserData.email},\n\n` +
+            `You have been added to the following CT Text Tool project${addedProjectNames.length > 1 ? 's' : ''} as an author:\n\n` +
+            `${addedProjectNames.join('\n')}\n\n` +
+            `As an author, you can view objects and create/edit texts for ${addedProjectNames.length > 1 ? 'these projects' : 'this project'}.\n\n` +
+            `You can access the CT Text Tool using your existing login at: https://texts.collectionstrust.org.uk\n\n` +
+            `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
+            `Thank you,\n` +
+            `Collections Trust Team`
+          );
+          
+          const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
+          window.open(mailtoLink, '_blank');
+          
+          setSuccess(`Existing user ${existingUserData.name || newUserEmail} updated with new projects. A draft email has been opened in your email client.`);
         } else {
           setSuccess(`User ${existingUserData.name || newUserEmail} already has these projects assigned`);
         }
       } else {
-        // Create new user
+        // Create new user with temporary password
+        const tempPassword = generateTempPassword();
+        const hashedPassword = await hashPassword(tempPassword);
+        
         // Initialize projectRoles object with selected projects as 'author'
         const projectRoles = {};
+        const selectedProjectNames = [];
         for (const projectId of selectedProjects) {
           projectRoles[projectId] = 'author';
+          const project = userProjects.find(p => p.id === projectId);
+          if (project) {
+            selectedProjectNames.push(project.title);
+          }
         }
         
         await addDoc(collection(db, 'projectUsers'), {
           email: newUserEmail,
           name: newUserName || 'No name provided',
+          organization: newUserOrg || 'No organization provided',
           role: 'author',  // Overall role
           createdAt: serverTimestamp(),
-          projectRoles: projectRoles
+          projectRoles: projectRoles,
+          passwordHash: hashedPassword,
+          passwordSettings: {
+            isTemporary: true,
+            lastChanged: null,
+            createdAt: new Date().toISOString()
+          }
         });
         
-        setSuccess('New author added successfully');
+        // Generate mailto link for new user
+        const emailSubject = encodeURIComponent(`Welcome to the CT Text Tool${selectedProjectNames.length === 1 ? ` - "${selectedProjectNames[0]}"` : ''}`);
+        const emailBody = encodeURIComponent(
+          `Hello ${newUserName || newUserEmail},\n\n` +
+          `You have been invited to join the CT Text Tool project${selectedProjectNames.length > 1 ? 's' : ''} as an author:\n\n` +
+          `${selectedProjectNames.join('\n')}\n\n` +
+          `As an author, you can view objects and create/edit texts for ${selectedProjectNames.length > 1 ? 'these projects' : 'this project'}.\n\n` +
+          `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
+          `Your login credentials are:\n` +
+          `Email: ${newUserEmail}\n` +
+          `Temporary Password: ${tempPassword}\n\n` +
+          `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
+          `If you have any questions, please contact us by replying to this email.\n\n` +
+          `Thank you,\n` +
+          `Collections Trust Team`
+        );
+        
+        const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
+        window.open(mailtoLink, '_blank');
+        
+        setSuccess('New author added successfully. A draft email has been opened in your email client.');
       }
       
       // Reset form
-      setNewUserEmail('');
-      setNewUserName('');
-      setSelectedProjects([]);
-      setShowDropdown(false);
+      clearUserForm();
       
       // Refresh author list
       fetchAuthors();
@@ -425,6 +526,16 @@ const AuthorManagement = () => {
       setError('Failed to add author.');
       setTimeout(() => setError(''), 3000);
     }
+  };
+
+  const clearUserForm = () => {
+    setNewUserEmail('');
+    setNewUserName('');
+    setNewUserOrg('');
+    setSelectedProjects([]);
+    setShowDropdown(false);
+    setError('');
+    setShowDuplicateUserError(false);
   };
 
   const getSelectedProjectsText = () => {
@@ -466,6 +577,13 @@ const AuthorManagement = () => {
             className="user-form-input"
           />
           <input
+            type="text"
+            placeholder="Organization"
+            value={newUserOrg}
+            onChange={(e) => setNewUserOrg(e.target.value)}
+            className="user-form-input"
+          />
+          <input
             type="email"
             placeholder="Email address"
             value={newUserEmail}
@@ -474,7 +592,7 @@ const AuthorManagement = () => {
             required
           />
           
-          {/* Custom dropdown that mimics the Languages dropdown */}
+          {/* Custom dropdown */}
           <div className="custom-select-container" style={{ position: 'relative' }}>
             <div 
               className="custom-select-input" 
@@ -535,6 +653,15 @@ const AuthorManagement = () => {
           </div>
           
           <button type="submit" className="primary-btn">Add author</button>
+          {showDuplicateUserError && (
+            <button 
+              type="button" 
+              className="secondary-btn reset-btn"
+              onClick={clearUserForm}
+            >
+              Clear
+            </button>
+          )}
         </div>
         <div className="form-help-text">
           Click multiple projects to select more than one
@@ -586,6 +713,7 @@ const AuthorManagement = () => {
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Organization</th>
                 <th>Email</th>
                 <th>Projects</th>
                 <th>Edit</th>
@@ -607,13 +735,25 @@ const AuthorManagement = () => {
                       author.name || 'No name provided'
                     )}
                   </td>
+                  <td>
+                    {editingAuthor === author.id ? (
+                      <input
+                        type="text"
+                        value={editAuthorOrg}
+                        onChange={(e) => setEditAuthorOrg(e.target.value)}
+                        className="user-form-input"
+                      />
+                    ) : (
+                      author.organization || 'No organization provided'
+                    )}
+                  </td>
                   <td>{author.email}</td>
                   <td>
                     {editingAuthor === author.id ? (
                       <div className="custom-select-container" style={{ position: 'relative' }}>
                         <div 
                           className="custom-select-input" 
-                          onClick={() => setShowDropdown(!showDropdown)}
+                          onClick={() => setShowEditDropdown(!showEditDropdown)}
                           style={{
                             border: '1px solid #ccc',
                             borderRadius: '4px',
@@ -631,7 +771,7 @@ const AuthorManagement = () => {
                           <span style={{ marginLeft: '8px' }}>▼</span>
                         </div>
                         
-                        {showDropdown && (
+                        {showEditDropdown && (
                           <div 
                             className="custom-select-dropdown"
                             style={{
@@ -669,7 +809,7 @@ const AuthorManagement = () => {
                         )}
                       </div>
                     ) : (
-                      author.authorProjects.map(p => p.title).join('; ') || 'No projects'
+                      `${author.projectCount} project${author.projectCount !== 1 ? 's' : ''}`
                     )}
                     
                     {/* Display selected projects as pills when editing */}
