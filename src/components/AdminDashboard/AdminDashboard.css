@@ -223,8 +223,9 @@
 
 /* Make Reset button same size as Delete button */
 .secondary-btn.reset-btn {
-  width: 80px;
-  padding: 8px;
+  width: auto;
+  min-width: 60px;
+  padding: 8px 12px;
   font-size: 0.9rem;
 }
 
