@@ -66,8 +66,32 @@ function UserGuide({ isPublic = false }) {
     <div 
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '1rem'
+      }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-[50vw] max-w-[50vw] h-[80vh] flex flex-col">
+      <div 
+        className="bg-white rounded-lg shadow-xl flex flex-col"
+        style={{
+          width: '50vw',
+          height: '80vh',
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* Header with close button */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">User Guide</h2>
