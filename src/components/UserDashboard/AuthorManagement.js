@@ -450,8 +450,8 @@ const AuthorManagement = () => {
             `As an author, you can view objects and create/edit texts for ${addedProjectNames.length > 1 ? 'these projects' : 'this project'}.\n\n` +
             `You can access the CT Text Tool using your existing login at: https://texts.collectionstrust.org.uk\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
-            `Thank you,\n` +
-            `Collections Trust Team`
+            `Best regards,\n` +
+            `${currentUser?.name || currentUser?.email || 'Project Owner'}`
           );
           
           const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
@@ -505,8 +505,8 @@ const AuthorManagement = () => {
           `Temporary Password: ${tempPassword}\n\n` +
           `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
           `If you have any questions, please contact us by replying to this email.\n\n` +
-          `Thank you,\n` +
-          `Collections Trust Team`
+          `Best regards,\n` +
+          `${currentUser?.name || currentUser?.email || 'Project Owner'}`
         );
         
         const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
