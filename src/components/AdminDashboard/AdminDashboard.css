@@ -151,14 +151,25 @@
 
 .admin-table th:nth-child(2),
 .admin-table td:nth-child(2) {
-  width: 25%;
+  width: 15%;
   word-break: break-word;
 }
 
 .admin-table th:nth-child(3),
 .admin-table td:nth-child(3) {
-  width: 180px;
-  max-width: 180px;
+  width: 25%;
+  overflow-wrap: break-word;
+}
+
+.admin-table th:nth-child(4),
+.admin-table td:nth-child(4) {
+  width: 15%;
+  overflow-wrap: break-word;
+}
+
+.admin-table th:nth-child(5),
+.admin-table td:nth-child(5) {
+  width: 15%;
   overflow-wrap: break-word;
 }
 
