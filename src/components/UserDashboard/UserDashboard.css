@@ -24,7 +24,6 @@
   font-size: 0.9rem;
   padding: 8px 12px;
   margin: 0;
-  height: 40px;
 }
 
 /* === Navigation Tabs === */
@@ -180,7 +179,6 @@
   margin-bottom: 6px;
   display: block;
   width: 120px;
-  height: 40px;
   text-align: center;
 }
 
@@ -191,7 +189,6 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  height: 40px;
 }
 
 .primary-btn:hover {
@@ -205,7 +202,6 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  height: 40px;
 }
 
 .secondary-btn:hover {
@@ -219,7 +215,6 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  height: 40px;
 }
 
 .delete-btn:hover:not(:disabled) {
