@@ -334,8 +334,8 @@ const AuthorManagement = () => {
           `${changeDescription}\n\n` +
           `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
           `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
-          `Thank you,\n` +
-          `Collections Trust Team`
+          `Best regards,\n` +
+          `${currentUser?.name || currentUser?.email || 'Project Owner'}`
         );
         
         const mailtoLink = `mailto:${author.email}?subject=${emailSubject}&body=${emailBody}`;
@@ -652,7 +652,7 @@ const AuthorManagement = () => {
             )}
           </div>
           
-          <button type="submit" className="primary-btn reset-btn">Add author</button>
+          <button type="submit" className="primary-btn">Add author</button>
           {showDuplicateUserError && (
             <button 
               type="button" 
@@ -833,14 +833,14 @@ const AuthorManagement = () => {
                     {editingAuthor === author.id ? (
                       <button
                         onClick={() => handleSaveEdit(author.id)}
-                        className="primary-btn reset-btn"
+                        className="secondary-btn reset-btn"
                       >
                         Save
                       </button>
                     ) : (
                       <button
                         onClick={() => handleStartEdit(author)}
-                        className="secondary-btn reset-btn"
+                        className="secondary-btn"
                       >
                         Edit
                       </button>
