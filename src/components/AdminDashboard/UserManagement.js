@@ -49,7 +49,7 @@ const UserManagement = () => {
       const snapshot = await getDocs(projectsRef);
       const projectsData = snapshot.docs.map(doc => ({
         id: doc.id,
-        title: doc.data().title || 'Untitled Project',
+        title: doc.data().title || 'Untitled project',
         owner: doc.data().owner
       }));
       setProjects(projectsData);
@@ -147,7 +147,7 @@ const UserManagement = () => {
         `Hello ${user.name || user.email},\n\n` +
         `Your password for the CT Text Tool has been reset by an administrator.\n\n` +
         `Your new temporary password is: ${tempPassword}\n\n` +
-        `Important: You will be required to change this password when you next log in.\n\n` +
+        `Important: You will be required to change this password when you next log in. Please do this within the next 7 days, as the temporary password will expire after a week and you will have to request a new one.\n\n` +
         `If you have any questions, please contact us.\n\n` +
         `Thank you,\n` +
         `Collections Trust Team`
@@ -282,7 +282,7 @@ const UserManagement = () => {
         emailBody = encodeURIComponent(
           `Hello ${userName},\n\n` +
           `Your role on the project "${projectTitle}" has been changed from ${oldRole} to ${newRole} by an administrator.\n\n` +
-          `${newRole === 'owner' ? 'As an Owner, you now have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an Author, you can view objects and create/edit texts for this project.'}\n\n` +
+          `${newRole === 'owner' ? 'As a project owner, you now have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
           `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
           `Thank you,\n` +
           `Collections Trust Team`
@@ -346,7 +346,7 @@ const UserManagement = () => {
 
   const getProjectTitle = (projectId) => {
     const project = projects.find(p => p.id === projectId);
-    return project ? project.title : 'Unknown Project';
+    return project ? project.title : 'Unknown project';
   };
 
   return (
@@ -386,16 +386,7 @@ const UserManagement = () => {
             className="user-form-input"
             required
           />
-          <select
-            value={newUserRole}
-            onChange={(e) => setNewUserRole(e.target.value)}
-            className="user-form-select"
-          >
-            <option value="author">Author</option>
-            <option value="owner">Owner</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button type="submit" className="primary-btn">Add user</button>
+          <button type="submit" className="primary-btn reset-btn">Add user</button>
         </div>
       </form>
 
@@ -442,7 +433,7 @@ const UserManagement = () => {
                       onClick={() => handleEditRoles(user)}
                       className="secondary-btn"
                     >
-                      Edit roles
+                      Edit
                     </button>
                   </td>
                   <td>
@@ -552,7 +543,7 @@ const UserManagement = () => {
       {confirmRoleChange && (
         <div className="confirm-dialog-backdrop">
           <div className="confirm-dialog">
-            <h3>Confirm Role Change</h3>
+            <h3>Confirm role change</h3>
             <p>
               {confirmRoleChange.action === 'remove' 
                 ? `Are you sure you want to remove ${confirmRoleChange.userName} from "${confirmRoleChange.projectTitle}"?`
