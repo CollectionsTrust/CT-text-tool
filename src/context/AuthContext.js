@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { hashPassword, verifyPassword, isTemporaryPassword } from '../utils/passwordUtils';
+import { hashPassword, verifyPassword, isTemporaryPassword, isTemporaryPasswordExpired } from '../utils/passwordUtils';
 
 // Create context
 const AuthContext = createContext();
@@ -60,6 +60,12 @@ export const AuthProvider = ({ children }) => {
         
         // Check if this is a temporary password that needs to be changed
         if (isTemporaryPassword(userData.passwordSettings)) {
+          // Check if temporary password has expired
+          if (isTemporaryPasswordExpired(userData.passwordSettings)) {
+            console.error("Temporary password expired");
+            throw new Error('Your temporary password has expired. Please use the "Forgotten password?" link to request a new one.');
+          }
+          
           setPasswordChangeRequired(true);
           sessionStorage.setItem(PASSWORD_CHANGE_REQUIRED_KEY, 'true');
         } else {
