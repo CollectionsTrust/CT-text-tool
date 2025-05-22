@@ -11,6 +11,8 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
+import { useAuth } from '../../context/AuthContext';
 import './AdminDashboard.css';
 
 const UserManagement = () => {
@@ -26,6 +28,8 @@ const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [userProjects, setUserProjects] = useState({});
+  const [processingPasswordReset, setProcessingPasswordReset] = useState(null);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     fetchUsers();
@@ -118,6 +122,60 @@ const UserManagement = () => {
       console.error('Error updating role:', err);
       setError('Failed to update user role.');
       setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handlePasswordReset = async (userId) => {
+    try {
+      setProcessingPasswordReset(userId);
+      setError('');
+      setSuccess('');
+
+      const user = users.find(u => u.id === userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Generate a new temporary password
+      const tempPassword = generateTempPassword();
+      const hashedPassword = await hashPassword(tempPassword);
+
+      // Update the user's password in Firestore
+      const userRef = doc(db, 'projectUsers', userId);
+      await updateDoc(userRef, {
+        passwordHash: hashedPassword,
+        passwordSettings: {
+          isTemporary: true,
+          lastChanged: null,
+          createdAt: new Date().toISOString()
+        },
+        // Remove old password field if it exists
+        password: null
+      });
+
+      // Generate mailto link with pre-populated content
+      const emailSubject = encodeURIComponent('Your CT Text Tool password has been reset');
+      const emailBody = encodeURIComponent(
+        `Hello ${user.name || user.email},\n\n` +
+        `Your password for the CT Text Tool has been reset by an administrator.\n\n` +
+        `Your new temporary password is: ${tempPassword}\n\n` +
+        `Important: You will be required to change this password when you next log in.\n\n` +
+        `If you have any questions, please contact us.\n\n` +
+        `Thank you,\n` +
+        `Collections Trust Team`
+      );
+      
+      const mailtoLink = `mailto:${user.email}?subject=${emailSubject}&body=${emailBody}`;
+      
+      // Open the mailto link in a new window/tab
+      window.open(mailtoLink, '_blank');
+
+      setSuccess(`Password reset for ${user.name || user.email}. A draft email has been opened in your email client.`);
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      setError(`Failed to reset password: ${err.message}`);
+    } finally {
+      setProcessingPasswordReset(null);
     }
   };
 
@@ -251,6 +309,7 @@ const UserManagement = () => {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Projects</th>
+                <th>Password</th>
                 <th>Delete</th>
               </tr>
             </thead>
@@ -272,6 +331,15 @@ const UserManagement = () => {
                     </select>
                   </td>
                   <td>{userProjects[user.email] || 'No projects'}</td>
+                  <td>
+                    <button
+                      onClick={() => handlePasswordReset(user.id)}
+                      className="secondary-btn"
+                      disabled={processingPasswordReset === user.id}
+                    >
+                      {processingPasswordReset === user.id ? 'Resetting...' : 'Reset'}
+                    </button>
+                  </td>
                   <td>
                     <button
                       onClick={() => setConfirmDelete(user.id)}
