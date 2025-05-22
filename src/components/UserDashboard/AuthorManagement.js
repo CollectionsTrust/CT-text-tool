@@ -840,7 +840,7 @@ const AuthorManagement = () => {
                     ) : (
                       <button
                         onClick={() => handleStartEdit(author)}
-                        className="secondary-btn"
+                        className="secondary-btn reset-btn"
                       >
                         Edit
                       </button>
