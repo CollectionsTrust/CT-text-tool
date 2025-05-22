@@ -83,5 +83,3 @@ function UserGuide() {
 }
 
 export default UserGuide;
-
-export default UserGuide;
