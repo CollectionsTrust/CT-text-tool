@@ -652,7 +652,7 @@ const AuthorManagement = () => {
             )}
           </div>
           
-          <button type="submit" className="primary-btn">Add author</button>
+          <button type="submit" className="primary-btn reset-btn">Add author</button>
           {showDuplicateUserError && (
             <button 
               type="button" 
@@ -833,14 +833,14 @@ const AuthorManagement = () => {
                     {editingAuthor === author.id ? (
                       <button
                         onClick={() => handleSaveEdit(author.id)}
-                        className="primary-btn"
+                        className="primary-btn reset-btn"
                       >
                         Save
                       </button>
                     ) : (
                       <button
                         onClick={() => handleStartEdit(author)}
-                        className="secondary-btn"
+                        className="secondary-btn reset-btn"
                       >
                         Edit
                       </button>
