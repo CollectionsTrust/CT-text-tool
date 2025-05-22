@@ -459,6 +459,10 @@
   max-width: 120px;
 }
 
+.user-form-row button {
+  flex-shrink: 0;
+}
+
 /* === Responsive Adjustments === */
 @media (max-width: 768px) {
   .admin-user-info {
