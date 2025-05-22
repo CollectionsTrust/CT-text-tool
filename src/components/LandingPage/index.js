@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import ProjectRequestForm from './ProjectRequestForm';
 import './LandingPage.css';
 // Import the logo images - with exact case matching
@@ -17,6 +19,11 @@ const LandingPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -47,6 +54,57 @@ const LandingPage = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setForgotPasswordError('');
+      setForgotPasswordMessage('');
+      setForgotPasswordLoading(true);
+
+      if (!forgotPasswordEmail) {
+        setForgotPasswordError('Please enter your email address');
+        return;
+      }
+
+      // Check if user exists in projectUsers collection
+      const projectUsersRef = collection(db, 'projectUsers');
+      const userQuery = query(projectUsersRef, where('email', '==', forgotPasswordEmail));
+      const userSnapshot = await getDocs(userQuery);
+
+      if (userSnapshot.empty) {
+        setForgotPasswordError('No account found with this email address.');
+        return;
+      }
+
+      const userData = userSnapshot.docs[0].data();
+
+      // Create password reset request
+      await addDoc(collection(db, 'passwordResetRequests'), {
+        email: forgotPasswordEmail,
+        name: userData.name || 'Unknown',
+        organization: userData.organization || 'Unknown',
+        status: 'pending',
+        createdAt: Timestamp.now()
+      });
+
+      setForgotPasswordMessage('Password reset request submitted. An administrator will review your request and contact you shortly.');
+      setForgotPasswordEmail('');
+      
+      // Auto-close the form after 3 seconds
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotPasswordMessage('');
+      }, 3000);
+      
+    } catch (err) {
+      console.error('Error submitting password reset request:', err);
+      setForgotPasswordError('Failed to submit request. Please try again.');
+    } finally {
+      setForgotPasswordLoading(false);
     }
   };
 
@@ -136,58 +194,111 @@ const LandingPage = () => {
             <div className="landing-form-container">
               <h2>Existing users</h2>
               {loginError && <div className="error-message">{loginError}</div>}
-              <form onSubmit={handleLogin} className="landing-form">
-                <div className="form-group">
-                  <label htmlFor="email">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="form-input"
-                    aria-label="Email address"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="password">Password</label>
-                  <div className="password-input-container">
+              
+              {!showForgotPassword ? (
+                <form onSubmit={handleLogin} className="landing-form">
+                  <div className="form-group">
+                    <label htmlFor="email">Email</label>
                     <input
-                      type={showPassword ? 'text' : 'password'}
-                      id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       className="form-input"
-                      aria-label="Password"
-                      autoComplete="current-password"
+                      aria-label="Email address"
                     />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <div className="password-input-container">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="form-input"
+                        aria-label="Password"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle-btn"
+                        onClick={togglePasswordVisibility}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="submit-btn" disabled={loading}>
+                    {loading ? 'Logging in...' : 'Log in'}
+                  </button>
+
+                  {process.env.NODE_ENV === 'development' && (
                     <button
                       type="button"
-                      className="password-toggle-btn"
-                      onClick={togglePasswordVisibility}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="dev-btn"
+                      onClick={fillAdminCredentials}
                     >
-                      {showPassword ? 'Hide' : 'Show'}
+                      Fill Admin Credentials (Dev Only)
+                    </button>
+                  )}
+                  
+                  <div className="forgot-password-link">
+                    <button
+                      type="button"
+                      className="link-btn"
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Forgotten password?
                     </button>
                   </div>
-                </div>
+                </form>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="landing-form">
+                  <h3>Reset password</h3>
+                  <p className="form-description">
+                    Enter your email address and we'll send you instructions to reset your password.
+                  </p>
+                  
+                  {forgotPasswordError && <div className="error-message">{forgotPasswordError}</div>}
+                  {forgotPasswordMessage && <div className="success-message">{forgotPasswordMessage}</div>}
+                  
+                  <div className="form-group">
+                    <label htmlFor="forgot-email">Email address</label>
+                    <input
+                      type="email"
+                      id="forgot-email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      required
+                      className="form-input"
+                      aria-label="Email address for password reset"
+                    />
+                  </div>
 
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Logging in...' : 'Log in'}
-                </button>
-
-                {process.env.NODE_ENV === 'development' && (
+                  <button type="submit" className="submit-btn" disabled={forgotPasswordLoading}>
+                    {forgotPasswordLoading ? 'Submitting...' : 'Submit request'}
+                  </button>
+                  
                   <button
                     type="button"
-                    className="dev-btn"
-                    onClick={fillAdminCredentials}
+                    className="link-btn"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotPasswordEmail('');
+                      setForgotPasswordError('');
+                      setForgotPasswordMessage('');
+                    }}
                   >
-                    Fill Admin Credentials (Dev Only)
+                    Back to login
                   </button>
-                )}
-              </form>
+                </form>
+              )}
             </div>
 
             <div className="landing-form-container">
