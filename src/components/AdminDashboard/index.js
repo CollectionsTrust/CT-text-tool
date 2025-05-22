@@ -79,12 +79,22 @@ const AdminDashboard = () => {
     return <Navigate to="/dashboard" />;
   }
 
+  const handleChangePassword = () => {
+    navigate('/change-password');
+  };
+
   return (
     <div className="container">
       <div className="admin-dashboard">
         <div className="admin-header">
           <div className="admin-user-info">
-            Logged in as: {currentUser?.email || "Unknown User"}
+            <span>Logged in as: {currentUser?.email || "Unknown User"}</span>
+            <button 
+              onClick={handleChangePassword}
+              className="secondary-btn change-password-btn"
+            >
+              Change password
+            </button>
           </div>
         </div>
 
