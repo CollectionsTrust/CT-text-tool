@@ -235,7 +235,7 @@ const UserManagement = () => {
   return (
     <div className="admin-section user-management">
       <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab">Project requests</Link>
+        <Link to="/admin#requests" className="admin-nav-tab">Requests</Link>
         <Link to="/admin#projects" className="admin-nav-tab">Manage projects</Link>
         <Link to="/admin#users" className="admin-nav-tab active">Manage users</Link>
       </div>
