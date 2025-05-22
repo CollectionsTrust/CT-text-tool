@@ -15,6 +15,15 @@
 .user-info {
   margin-bottom: 1rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.change-password-btn {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  margin: 0;
 }
 
 /* === Navigation Tabs === */
@@ -447,6 +456,16 @@
 
 /* === Responsive Adjustments === */
 @media (max-width: 768px) {
+  .user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .change-password-btn {
+    align-self: flex-start;
+  }
+  
   .user-form-row {
     flex-direction: column;
     gap: 10px;
