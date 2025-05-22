@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function UserGuide() {
   const [guideContent, setGuideContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/user-guide.html')
@@ -24,6 +26,10 @@ function UserGuide() {
       });
   }, []);
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -41,11 +47,41 @@ function UserGuide() {
   }
 
   return (
-    <div 
-      className="user-guide-wrapper"
-      dangerouslySetInnerHTML={{ __html: guideContent }}
-    />
+    <div className="min-h-screen bg-gray-50">
+      {/* Back button header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-width-1200px mx-auto px-4 py-3">
+          <button 
+            onClick={handleBack}
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+          >
+            <svg 
+              className="w-4 h-4 mr-2" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M15 19l-7-7 7-7" 
+              />
+            </svg>
+            Back
+          </button>
+        </div>
+      </div>
+      
+      {/* User guide content */}
+      <div 
+        className="user-guide-wrapper"
+        dangerouslySetInnerHTML={{ __html: guideContent }}
+      />
+    </div>
   );
 }
+
+export default UserGuide;
 
 export default UserGuide;
