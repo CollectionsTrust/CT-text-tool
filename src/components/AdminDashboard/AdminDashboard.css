@@ -221,6 +221,13 @@
   background-color: #991b1b;
 }
 
+/* Make Reset button same size as Delete button */
+.secondary-btn.reset-btn {
+  width: 120px;
+  padding: 8px;
+  font-size: 0.9rem;
+}
+
 /* === Status Badges === */
 .status-badge {
   display: inline-block;
