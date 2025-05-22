@@ -35,6 +35,8 @@ const UserManagement = () => {
   const [showAddRole, setShowAddRole] = useState(false);
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedRole, setSelectedRole] = useState('author');
+  const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
+  const [ownershipConflict, setOwnershipConflict] = useState(null);
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -202,6 +204,7 @@ const UserManagement = () => {
       const existingUser = users.find(user => user.email.toLowerCase() === newUserEmail.toLowerCase());
       if (existingUser) {
         setError('A user with this email already exists');
+        setShowDuplicateUserError(true);
         return;
       }
 
@@ -215,10 +218,7 @@ const UserManagement = () => {
       });
 
       setSuccess('New user added successfully. They will receive an email when assigned to a project.');
-      setNewUserEmail('');
-      setNewUserName('');
-      setNewUserOrg('');
-      setNewUserRole('author');
+      clearUserForm();
       fetchUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -226,6 +226,15 @@ const UserManagement = () => {
       setError('Failed to add user.');
       setTimeout(() => setError(''), 3000);
     }
+  };
+
+  const clearUserForm = () => {
+    setNewUserEmail('');
+    setNewUserName('');
+    setNewUserOrg('');
+    setNewUserRole('author');
+    setError('');
+    setShowDuplicateUserError(false);
   };
 
   const handleEditRoles = (user) => {
@@ -263,6 +272,24 @@ const UserManagement = () => {
       return;
     }
 
+    // Check for ownership conflict
+    if (selectedRole === 'owner') {
+      const project = projects.find(p => p.id === selectedProject);
+      if (project && project.owner) {
+        // Find the current owner in users list
+        const currentOwner = users.find(u => u.email === project.owner);
+        setOwnershipConflict({
+          projectId: selectedProject,
+          projectTitle: project.title,
+          currentOwnerEmail: project.owner,
+          currentOwnerName: currentOwner ? currentOwner.name : project.owner,
+          newOwnerEmail: editingUserRoles.email,
+          newOwnerName: editingUserRoles.name || editingUserRoles.email
+        });
+        return;
+      }
+    }
+
     // Add the new role
     setUserRoles(prev => ({
       ...prev,
@@ -273,6 +300,76 @@ const UserManagement = () => {
     setSelectedProject('');
     setSelectedRole('author');
     setShowAddRole(false);
+    setError('');
+  };
+
+  const handleOwnershipTransfer = async (makeNewOwner) => {
+    const { projectId, currentOwnerEmail, newOwnerEmail } = ownershipConflict;
+    
+    if (makeNewOwner) {
+      // Transfer ownership: demote current owner to author, promote new user to owner
+      
+      // Find current owner's user document
+      const currentOwnerUser = users.find(u => u.email === currentOwnerEmail);
+      if (currentOwnerUser) {
+        // Update current owner's roles to author
+        const currentOwnerRoles = { ...currentOwnerUser.projectRoles };
+        currentOwnerRoles[projectId] = 'author';
+        
+        const currentOwnerRef = doc(db, 'projectUsers', currentOwnerUser.id);
+        await updateDoc(currentOwnerRef, {
+          projectRoles: currentOwnerRoles
+        });
+        
+        // Update local users state for current owner
+        setUsers(prev => prev.map(user => {
+          if (user.id === currentOwnerUser.id) {
+            return {
+              ...user,
+              projectRoles: currentOwnerRoles
+            };
+          }
+          return user;
+        }));
+      }
+      
+      // Update project document to change owner
+      const projectRef = doc(db, 'projects', projectId);
+      await updateDoc(projectRef, {
+        owner: newOwnerEmail
+      });
+      
+      // Update local projects state
+      setProjects(prev => prev.map(project => {
+        if (project.id === projectId) {
+          return {
+            ...project,
+            owner: newOwnerEmail
+          };
+        }
+        return project;
+      }));
+      
+      // Add the new role (owner)
+      setUserRoles(prev => ({
+        ...prev,
+        [projectId]: 'owner'
+      }));
+      
+      setSuccess('Ownership transferred successfully. The previous owner has been made an author.');
+    } else {
+      // Don't transfer ownership, make new user an author instead
+      setUserRoles(prev => ({
+        ...prev,
+        [projectId]: 'author'
+      }));
+    }
+    
+    // Clear the form and conflict
+    setSelectedProject('');
+    setSelectedRole('author');
+    setShowAddRole(false);
+    setOwnershipConflict(null);
     setError('');
   };
 
@@ -494,6 +591,15 @@ const UserManagement = () => {
             required
           />
           <button type="submit" className="primary-btn reset-btn">Add user</button>
+          {showDuplicateUserError && (
+            <button 
+              type="button" 
+              className="secondary-btn reset-btn"
+              onClick={clearUserForm}
+            >
+              Clear
+            </button>
+          )}
         </div>
       </form>
 
@@ -728,6 +834,37 @@ const UserManagement = () => {
                 onClick={executeRoleChange}
               >
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ownership conflict dialog */}
+      {ownershipConflict && (
+        <div className="confirm-dialog-backdrop">
+          <div className="confirm-dialog">
+            <h3>Ownership Conflict</h3>
+            <p>
+              The project "{ownershipConflict.projectTitle}" already has an owner: {ownershipConflict.currentOwnerName} ({ownershipConflict.currentOwnerEmail}).
+            </p>
+            <p>
+              You are trying to make {ownershipConflict.newOwnerName} ({ownershipConflict.newOwnerEmail}) the owner.
+            </p>
+            <p><strong>There can only be one owner per project.</strong></p>
+            <p>What would you like to do?</p>
+            <div className="dialog-buttons">
+              <button 
+                className="secondary-btn" 
+                onClick={() => handleOwnershipTransfer(false)}
+              >
+                Make {ownershipConflict.newOwnerName.split(' ')[0]} an Author instead
+              </button>
+              <button 
+                className="primary-btn" 
+                onClick={() => handleOwnershipTransfer(true)}
+              >
+                Transfer ownership to {ownershipConflict.newOwnerName.split(' ')[0]}
               </button>
             </div>
           </div>
