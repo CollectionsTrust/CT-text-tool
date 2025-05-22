@@ -334,7 +334,7 @@ const UserManagement = () => {
                   <td>
                     <button
                       onClick={() => handlePasswordReset(user.id)}
-                      className="secondary-btn"
+                      className="secondary-btn reset-btn"
                       disabled={processingPasswordReset === user.id}
                     >
                       {processingPasswordReset === user.id ? 'Resetting...' : 'Reset'}
