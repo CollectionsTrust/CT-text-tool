@@ -502,7 +502,7 @@ const UserManagement = () => {
             `Email: ${editingUserRoles.email}\n` +
             `Temporary Password: ${tempPassword}\n\n` +
             `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
-            If you have any questions, please contact us by replying to this email.\n\n` +
+            `If you have any questions, please contact us by replying to this email.\n\n` +
             `Thank you,\n` +
             `Collections Trust Team`
           );
