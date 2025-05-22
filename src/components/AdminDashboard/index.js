@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import ProjectRequests from './ProjectRequests';
+import Requests from './Requests';
 import ProjectsList from './ProjectsList';
 import UserManagement from './UserManagement';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="admin-content">
-          {activeTab === 'requests' && <ProjectRequests />}
+          {activeTab === 'requests' && <Requests />}
           {activeTab === 'projects' && <ProjectsList />}
           {activeTab === 'users' && <UserManagement />}
         </div>
