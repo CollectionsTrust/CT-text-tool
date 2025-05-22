@@ -32,6 +32,9 @@ const UserManagement = () => {
   const [editingUserRoles, setEditingUserRoles] = useState(null);
   const [userRoles, setUserRoles] = useState({});
   const [confirmRoleChange, setConfirmRoleChange] = useState(null);
+  const [showAddRole, setShowAddRole] = useState(false);
+  const [selectedProject, setSelectedProject] = useState('');
+  const [selectedRole, setSelectedRole] = useState('author');
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -47,11 +50,15 @@ const UserManagement = () => {
     try {
       const projectsRef = collection(db, 'projects');
       const snapshot = await getDocs(projectsRef);
-      const projectsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        title: doc.data().title || 'Untitled project',
-        owner: doc.data().owner
-      }));
+      const projectsData = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          title: doc.data().title || 'Untitled project',
+          owner: doc.data().owner,
+          status: doc.data().status || 'active'
+        }))
+        .filter(project => project.status === 'active') // Only show active projects
+        .sort((a, b) => a.title.localeCompare(b.title)); // Sort alphabetically
       setProjects(projectsData);
     } catch (err) {
       console.error('Error fetching projects:', err);
@@ -207,7 +214,7 @@ const UserManagement = () => {
         projectRoles: {} // Initialize with empty project roles
       });
 
-      setSuccess('New user added successfully');
+      setSuccess('New user added successfully. They will receive an email when assigned to a project.');
       setNewUserEmail('');
       setNewUserName('');
       setNewUserOrg('');
@@ -224,6 +231,9 @@ const UserManagement = () => {
   const handleEditRoles = (user) => {
     setEditingUserRoles(user);
     setUserRoles({ ...user.projectRoles });
+    setShowAddRole(false);
+    setSelectedProject('');
+    setSelectedRole('author');
   };
 
   const handleRoleChange = (projectId, newRole) => {
@@ -239,6 +249,31 @@ const UserManagement = () => {
       delete updated[projectId];
       return updated;
     });
+  };
+
+  const handleAddRole = () => {
+    if (!selectedProject) {
+      setError('Please select a project');
+      return;
+    }
+
+    // Check if user is already assigned to this project
+    if (userRoles[selectedProject]) {
+      setError('User is already assigned to this project');
+      return;
+    }
+
+    // Add the new role
+    setUserRoles(prev => ({
+      ...prev,
+      [selectedProject]: selectedRole
+    }));
+
+    // Clear the form
+    setSelectedProject('');
+    setSelectedRole('author');
+    setShowAddRole(false);
+    setError('');
   };
 
   const confirmRoleChangeAction = (action, projectId, projectTitle, oldRole, newRole = null) => {
@@ -318,9 +353,76 @@ const UserManagement = () => {
   const saveRoleChanges = async () => {
     try {
       const userRef = doc(db, 'projectUsers', editingUserRoles.id);
+      const originalRoles = editingUserRoles.projectRoles || {};
+      
+      // Update Firestore
       await updateDoc(userRef, {
         projectRoles: userRoles
       });
+
+      // Check for new role assignments and send emails
+      const newRoles = {};
+      for (const [projectId, role] of Object.entries(userRoles)) {
+        if (!originalRoles[projectId]) {
+          newRoles[projectId] = role;
+        }
+      }
+
+      // Send emails for new role assignments
+      for (const [projectId, role] of Object.entries(newRoles)) {
+        const project = projects.find(p => p.id === projectId);
+        const projectTitle = project ? project.title : 'Unknown project';
+        
+        // Check if this is a new user (no previous project assignments)
+        const isNewUser = Object.keys(originalRoles).length === 0;
+        
+        let emailSubject, emailBody;
+        
+        if (isNewUser) {
+          // Generate temporary password for new users
+          const tempPassword = generateTempPassword();
+          const hashedPassword = await hashPassword(tempPassword);
+          
+          // Update user with password
+          await updateDoc(userRef, {
+            passwordHash: hashedPassword,
+            passwordSettings: {
+              isTemporary: true,
+              lastChanged: null,
+              createdAt: new Date().toISOString()
+            }
+          });
+          
+          emailSubject = encodeURIComponent(`Welcome to the CT Text Tool - "${projectTitle}"`);
+          emailBody = encodeURIComponent(
+            `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +
+            `You have been invited to join the project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
+            `Your login credentials are:\n` +
+            `Email: ${editingUserRoles.email}\n` +
+            `Temporary Password: ${tempPassword}\n\n` +
+            `${role === 'owner' ? 'As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
+            `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
+            `You can access the CT Text Tool at: [your website URL]\n\n` +
+            `If you have any questions, please contact us by replying to this email.\n\n` +
+            `Thank you,\n` +
+            `Collections Trust Team`
+          );
+        } else {
+          emailSubject = encodeURIComponent(`You have been added to a new CT Text Tool project`);
+          emailBody = encodeURIComponent(
+            `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +
+            `You have been added to the project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
+            `${role === 'owner' ? 'As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
+            `You can access this project using your existing CT Text Tool login.\n\n` +
+            `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
+            `Thank you,\n` +
+            `Collections Trust Team`
+          );
+        }
+        
+        const mailtoLink = `mailto:${editingUserRoles.email}?subject=${emailSubject}&body=${emailBody}`;
+        window.open(mailtoLink, '_blank');
+      }
 
       // Update local state
       setUsers(prev => prev.map(user => {
@@ -334,7 +436,8 @@ const UserManagement = () => {
         return user;
       }));
 
-      setSuccess('Roles updated successfully');
+      const emailCount = Object.keys(newRoles).length;
+      setSuccess(`Roles updated successfully${emailCount > 0 ? `. ${emailCount} draft email${emailCount > 1 ? 's have' : ' has'} been opened in your email client.` : '.'}`);
       setEditingUserRoles(null);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -347,6 +450,10 @@ const UserManagement = () => {
   const getProjectTitle = (projectId) => {
     const project = projects.find(p => p.id === projectId);
     return project ? project.title : 'Unknown project';
+  };
+
+  const getAvailableProjects = () => {
+    return projects.filter(project => !userRoles[project.id]);
   };
 
   return (
@@ -463,15 +570,15 @@ const UserManagement = () => {
       {/* Role editing modal */}
       {editingUserRoles && (
         <div className="confirm-dialog-backdrop">
-          <div className="roles-modal">
-            <h3>Edit Roles for {editingUserRoles.name || editingUserRoles.email}</h3>
+          <div className="roles-modal-wide">
+            <h3>Edit roles for {editingUserRoles.name || editingUserRoles.email}</h3>
             <div className="roles-table-container">
               <table className="roles-table">
                 <thead>
                   <tr>
-                    <th>Project</th>
-                    <th>Current Role</th>
-                    <th>Actions</th>
+                    <th style={{width: '50%'}}>Project</th>
+                    <th style={{width: '25%'}}>Current role</th>
+                    <th style={{width: '25%'}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -518,12 +625,55 @@ const UserManagement = () => {
                 </tbody>
               </table>
             </div>
+            
+            {/* Add role section */}
+            <div className="add-role-section">
+              <button 
+                className="secondary-btn" 
+                onClick={() => setShowAddRole(!showAddRole)}
+              >
+                {showAddRole ? 'Cancel' : 'Add role'}
+              </button>
+              
+              {showAddRole && (
+                <div className="add-role-form">
+                  <select
+                    value={selectedProject}
+                    onChange={(e) => setSelectedProject(e.target.value)}
+                    className="role-select"
+                  >
+                    <option value="">Select project</option>
+                    {getAvailableProjects().map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="role-select"
+                  >
+                    <option value="author">Author</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                  <button 
+                    className="primary-btn" 
+                    onClick={handleAddRole}
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+            </div>
+            
             <div className="dialog-buttons">
               <button 
                 className="secondary-btn" 
                 onClick={() => {
                   setEditingUserRoles(null);
                   setUserRoles({});
+                  setShowAddRole(false);
                 }}
               >
                 Cancel
