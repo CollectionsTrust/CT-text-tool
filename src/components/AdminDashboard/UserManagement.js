@@ -157,6 +157,7 @@ const UserManagement = () => {
         `Your password for the CT Text Tool has been reset by an administrator.\n\n` +
         `Your new temporary password is: ${tempPassword}\n\n` +
         `Important: You will be required to change this password when you next log in. Please do this within the next 7 days, as the temporary password will expire after a week and you will have to request a new one.\n\n` +
+		`You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
         `If you have any questions, please contact us.\n\n` +
         `Thank you,\n` +
         `Collections Trust Team`
@@ -403,7 +404,7 @@ const UserManagement = () => {
         emailSubject = encodeURIComponent('Your access to a CT Text Tool project has been removed');
         emailBody = encodeURIComponent(
           `Hello ${userName},\n\n` +
-          `Your access to the project "${projectTitle}" has been removed by an administrator.\n\n` +
+          `Your access to the CT Text Tool project "${projectTitle}" has been removed by an administrator.\n\n` +
           `You will no longer be able to view or edit content for this project.\n\n` +
           `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
           `Thank you,\n` +
@@ -413,8 +414,9 @@ const UserManagement = () => {
         emailSubject = encodeURIComponent('Your role has been updated in the CT Text Tool');
         emailBody = encodeURIComponent(
           `Hello ${userName},\n\n` +
-          `Your role on the project "${projectTitle}" has been changed from ${oldRole} to ${newRole} by an administrator.\n\n` +
+          `Your role on the CT Text Tool project "${projectTitle}" has been changed from ${oldRole} to ${newRole} by an administrator.\n\n` +
           `${newRole === 'owner' ? 'As a project owner, you now have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
+		  `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
           `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
           `Thank you,\n` +
           `Collections Trust Team`
@@ -493,14 +495,14 @@ const UserManagement = () => {
           emailSubject = encodeURIComponent(`Welcome to the CT Text Tool - "${projectTitle}"`);
           emailBody = encodeURIComponent(
             `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +
-            `You have been invited to join the project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
-            `Your login credentials are:\n` +
+            `You have been invited to join the CT Text Tool project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
+            `${role === 'owner' ? 'As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
+			`You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
+			`Your login credentials are:\n` +
             `Email: ${editingUserRoles.email}\n` +
             `Temporary Password: ${tempPassword}\n\n` +
-            `${role === 'owner' ? 'As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
             `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
-            `You can access the CT Text Tool at: [your website URL]\n\n` +
-            `If you have any questions, please contact us by replying to this email.\n\n` +
+            If you have any questions, please contact us by replying to this email.\n\n` +
             `Thank you,\n` +
             `Collections Trust Team`
           );
@@ -508,9 +510,9 @@ const UserManagement = () => {
           emailSubject = encodeURIComponent(`You have been added to a new CT Text Tool project`);
           emailBody = encodeURIComponent(
             `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +
-            `You have been added to the project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
+            `You have been added to the CT Text Tool project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
             `${role === 'owner' ? 'As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
-            `You can access this project using your existing CT Text Tool login.\n\n` +
+            `You can access this project using your existing CT Text Tool login at: https://texts.collectionstrust.org.uk.\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
             `Thank you,\n` +
             `Collections Trust Team`
@@ -644,7 +646,7 @@ const UserManagement = () => {
                   <td>
                     <button
                       onClick={() => handleEditRoles(user)}
-                      className="secondary-btn"
+                      className="secondary-btn reset-btn"
                     >
                       Edit
                     </button>
@@ -735,7 +737,7 @@ const UserManagement = () => {
             {/* Add role section */}
             <div className="add-role-section">
               <button 
-                className="secondary-btn" 
+                className="secondary-btn reset-btn" 
                 onClick={() => setShowAddRole(!showAddRole)}
               >
                 {showAddRole ? 'Cancel' : 'Add role'}
@@ -764,7 +766,7 @@ const UserManagement = () => {
                     <option value="owner">Owner</option>
                   </select>
                   <button 
-                    className="primary-btn" 
+                    className="primary-btn reset-btn" 
                     onClick={handleAddRole}
                   >
                     Add
@@ -775,7 +777,7 @@ const UserManagement = () => {
             
             <div className="dialog-buttons">
               <button 
-                className="secondary-btn" 
+                className="secondary-btn reset-btn" 
                 onClick={() => {
                   setEditingUserRoles(null);
                   setUserRoles({});
@@ -785,10 +787,10 @@ const UserManagement = () => {
                 Cancel
               </button>
               <button 
-                className="primary-btn" 
+                className="primary-btn reset-btn" 
                 onClick={saveRoleChanges}
               >
-                Save Changes
+                Save changes
               </button>
             </div>
           </div>
