@@ -136,6 +136,10 @@ const UserDashboard = () => {
     fetchProjects();
   }, [currentUser, userRole, authLoading]);
 
+  const handleChangePassword = () => {
+    navigate('/change-password');
+  };
+
   return (
     <>
       <MainHeader />
@@ -143,7 +147,13 @@ const UserDashboard = () => {
         <div className="user-dashboard">
           <div className="user-header">
             <div className="user-info">
-              Logged in as: {currentUser?.email}
+              <span>Logged in as: {currentUser?.email}</span>
+              <button 
+                onClick={handleChangePassword}
+                className="secondary-btn change-password-btn"
+              >
+                Change password
+              </button>
             </div>
           </div>
 
