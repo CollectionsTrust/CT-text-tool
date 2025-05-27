@@ -1,237 +1,496 @@
-// src/components/ObjectsPage/ObjectsDataProvider.js
+/* File: src/components/ProjectSetup/ProjectSetup.css */
 
-import React, { createContext, useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { searchRecords } from './utils/search';
-import { saveRecordsToStorage, getRecordsFromStorage } from './utils/localStorage';
+.project-setup-form {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
 
-export const ObjectsDataContext = createContext();
+.section-title {
+  font-size: 1.5rem;
+  margin: 2rem 0 1rem;
+  color: #333;
+}
 
-export const ObjectsDataProvider = ({ children }) => {
-  const { projectId } = useParams();
-  const [searchParams] = useSearchParams();
+.form-section {
+  margin-bottom: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
 
-  const [allRecords, setAllRecords] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState({ loaded: 0 });
-  const [error, setError] = useState('');
+.form-section h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
 
-  const [showCollection, setShowCollection] = useState(false);
-  const [showTitle, setShowTitle] = useState(false);
-  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const [selectedRecords, setSelectedRecords] = useState(new Set());
+/* Form row layout for two fields side by side */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
 
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  const handleClearSearch = () => setSearchQuery('');
+.half-width {
+  flex: 1;
+  min-width: 200px;
+}
 
-  const handleRecordSelection = (record) => {
-    const objectUid = record["@admin"]?.uid;
-    if (!objectUid) return;
-    
-    const updated = new Set(selectedRecords);
-    updated.has(objectUid) ? updated.delete(objectUid) : updated.add(objectUid);
-    setSelectedRecords(updated);
-  };
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
 
-  const handleHeaderCheckboxChange = () => {
-    // For the current page of records, toggle their selection state
-    const visibleRecords = showSelectedOnly 
-      ? allRecords.filter(record => selectedRecords.has(record["@admin"]?.uid))
-      : filteredData;
-    
-    // Check if all visible records are selected
-    const allSelected = visibleRecords.every(record => 
-      selectedRecords.has(record["@admin"]?.uid)
-    );
-    
-    if (allSelected) {
-      // Deselect all visible records
-      const updated = new Set(selectedRecords);
-      visibleRecords.forEach(record => {
-        const uid = record["@admin"]?.uid;
-        if (uid) updated.delete(uid);
-      });
-      setSelectedRecords(updated);
-    } else {
-      // Select all visible records
-      const updated = new Set(selectedRecords);
-      visibleRecords.forEach(record => {
-        const uid = record["@admin"]?.uid;
-        if (uid) updated.add(uid);
-      });
-      setSelectedRecords(updated);
-    }
-  };
+.form-group label {
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+}
 
-  const extractEssentialFields = (record) => {
-    const essentialRecord = {
-      "@admin": {
-        uid: record["@admin"]?.uid || null,
-        data_source: {
-          organisation: record["@admin"]?.data_source?.organisation || null
-        }
-      },
-      "@document": {
-        units: []
-      }
-    };
+.required-indicator {
+  color: #e74c3c;
+  margin-left: 0.25rem;
+}
 
-    const neededFields = [
-      "spectrum/object_number",
-      "spectrum/title",
-      "spectrum/object_name",
-      "spectrum/brief_description"
-    ];
+.tooltip-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: #ddd;
+  color: #333;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 16px;
+  font-size: 12px;
+  margin-left: 5px;
+  cursor: help;
+}
 
-    if (record["@document"]?.units) {
-      essentialRecord["@document"].units = record["@document"].units
-        .filter(unit => neededFields.includes(unit.type))
-        .map(unit => ({
-          type: unit.type,
-          value: unit.value,
-          label: unit.label
-        }));
-    }
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
 
-    return essentialRecord;
-  };
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
 
-  const processRecordsWithDelay = async (records, processFn, batchSize = 100, delayMs = 5) => {
-    const result = [];
-    for (let i = 0; i < records.length; i += batchSize) {
-      const batch = records.slice(i, i + batchSize);
-      const processed = batch.map(processFn);
-      result.push(...processed);
-      setLoadingProgress(prev => ({ loaded: prev.loaded + processed.length }));
-      if (i + batchSize < records.length) {
-        await new Promise(res => setTimeout(res, delayMs));
-      }
-    }
-    return result;
-  };
+.form-group input:disabled {
+  background-color: #f5f5f5;
+  color: #888;
+}
 
-  const fetchAllMdsRecords = async (resumeToken) => {
-    const apiUrl = `https://mds-data-1.ciim.k-int.com/api/v1/extract?resume=${resumeToken}`;
-    const fullData = [];
-    let truncated = false;
-    let currentUrl = apiUrl;
+/* Make both save buttons have the same styling */
+.header-save-button {
+  background-color: #333366;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
 
-    const MAX_RECORDS = 50000;
-    const FETCH_BATCH_SIZE = 1000;
+.header-save-button:hover:not(:disabled) {
+  background-color: #2a2a88;
+}
 
-    try {
-      while (fullData.length < MAX_RECORDS) {
-        console.log(`Fetching from: ${currentUrl}`);
-        const response = await fetch(currentUrl);
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
-        const json = await response.json();
+.header-save-button:disabled {
+  background-color: #999;
+  color: #eee;
+  cursor: not-allowed;
+}
 
-        console.log(`Received batch: ${json.data.length} records`);
-        const nextBatch = json.data.slice(0, FETCH_BATCH_SIZE);
-        const processed = await processRecordsWithDelay(nextBatch, extractEssentialFields);
-        fullData.push(...processed);
+/* WYSIWYG editor styling */
+.wysiwyg-editor {
+  min-height: 150px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0 0 4px 4px;
+  background-color: white;
+  overflow-y: auto;
+}
 
-        console.log(`Loaded so far: ${fullData.length}`);
+.wysiwyg-editor:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(81, 86, 121, 0.2);
+}
 
-        if (json.has_next && json.next_url && fullData.length < MAX_RECORDS) {
-          currentUrl = json.next_url;
-        } else {
-          if (json.has_next && !json.next_url) {
-            console.warn("has_next is true but no next_url provided!");
-          }
-          if (json.has_next) truncated = true;
-          break;
-        }
-      }
+.rich-text-toolbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
 
-      console.log(`Final record count: ${fullData.length}`);
-      return { records: fullData, truncated };
-    } catch (err) {
-      console.error('MDS fetch error:', err);
-      throw err;
-    }
-  };
+.toolbar-btn {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError('');
-      setLoadingProgress({ loaded: 0 });
+.toolbar-btn:hover {
+  background-color: #f0f0f0;
+}
 
-      try {
-        const token = localStorage.getItem(`mdsApiToken_${projectId}`);
-        if (!token) {
-          setError('Missing MDS API token. Please complete project setup.');
-          setLoading(false);
-          return;
-        }
+/* Token Input Styling */
+.token-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
 
-        const { success, data, tokenMeta } = getRecordsFromStorage(token, projectId);
-        if (success && Array.isArray(data)) {
-          setAllRecords(data);
-          setLoading(false);
-          return;
-        }
+.token-help {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
 
-        await new Promise(res => setTimeout(res, 100)); // allow UI to show loading
+/* NEW: Token lock styling */
+.token-locked-indicator {
+  color: #dc3545;
+  font-weight: 500;
+  margin-left: 10px;
+  font-size: 0.9rem;
+}
 
-        const { records, truncated } = await fetchAllMdsRecords(token);
-        setAllRecords(records);
+.token-warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 10px;
+  color: #856404;
+}
 
-        setTimeout(() => {
-          saveRecordsToStorage(records, { token, timestamp: Date.now() }, projectId);
-        }, 100);
+.token-warning p {
+  margin: 0 0 10px 0;
+}
 
-        if (truncated) {
-          setError('Showing first 50,000 records only.');
-        }
-      } catch (err) {
-        setError('Failed to fetch records: ' + (err.message || 'Unknown error'));
-      } finally {
-        setLoading(false);
-      }
-    };
+.token-warning ul,
+.token-warning ol {
+  margin: 10px 0;
+  padding-left: 20px;
+}
 
-    loadData();
-  }, [projectId]);
+.token-warning li {
+  margin: 5px 0;
+}
 
-  useEffect(() => {
-    let result = searchRecords(allRecords, searchQuery);
+.token-input.token-locked {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+}
 
-    if (showSelectedOnly && selectedRecords.size > 0) {
-      result = result.filter(record => 
-        selectedRecords.has(record["@admin"]?.uid)
-      );
-    }
+.token-input.token-locked:focus {
+  box-shadow: none;
+  border-color: #dee2e6;
+}
 
-    setFilteredData(result);
-  }, [allRecords, searchQuery, showSelectedOnly, selectedRecords]);
+/* Authors display styling */
+.authors-display {
+  margin-top: 0.5rem;
+  background-color: #f5f8ff;
+  border-radius: 4px;
+  padding: 12px;
+}
 
-  const value = {
-    filteredData,
-    searchQuery,
-    handleSearchChange,
-    handleClearSearch,
-    showCollection,
-    showTitle,
-    showSelectedOnly,
-    setShowCollection,
-    setShowTitle,
-    setShowSelectedOnly,
-    selectedRecords,
-    setSelectedRecords,
-    handleRecordSelection,
-    handleHeaderCheckboxChange,
-    loading,
-    loadingProgress,
-    error
-  };
+.authors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-  return (
-    <ObjectsDataContext.Provider value={value}>
-      {children}
-    </ObjectsDataContext.Provider>
-  );
-};
+.author-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 500;
+}
+
+.author-item:last-child {
+  border-bottom: none;
+}
+
+.no-authors-message {
+  color: #6b7280;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Language selection */
+.language-selection {
+  margin-top: 0.5rem;
+}
+
+.language-input-container {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+/* Language suggestions */
+.language-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.language-suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.language-suggestion-item:hover {
+  background-color: #f3f4f6;
+}
+
+/* Selected items list */
+.selected-items-container {
+  margin-top: 1rem;
+}
+
+.selected-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.selected-item {
+  background-color: #00968D;
+  color: white;
+  border-radius: 3px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.remove-item-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.remove-item-btn:hover {
+  color: white;
+}
+
+/* License selection */
+.licence-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.custom-option-input {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.custom-input {
+  flex: 1;
+}
+
+.add-option-btn {
+  background-color: #444967;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.add-option-btn:hover {
+  background-color: #333366;
+}
+
+/* Success and error messages */
+.success-message {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 12px 16px;
+  margin: 1rem 0;
+  border-radius: 4px;
+  border-left: 4px solid #10b981;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border-left: 4px solid #ef4444;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #666;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .project-setup-form {
+    padding: 1rem;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+  }
+  
+  .form-buttons button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .half-width {
+    width: 100%;
+  }
+}
+
+/* Text Settings Styling */
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-item label {
+  margin-bottom: 0;
+  font-weight: normal;
+}
+
+.form-section h3 {
+  font-size: 1.2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.input-with-button {
+  display: flex;
+  margin-top: 1rem;
+  gap: 0.5rem;
+}
+
+.input-with-button .text-input {
+  flex: 1;
+}
+
+.input-with-button .add-option-btn {
+  background-color: #444967;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  min-width: 80px;
+}
+
+.input-with-button .add-option-btn:hover {
+  background-color: #333366;
+}
+
+/* Text Status and Tags styling */
+.form-group h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-group p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Project setup header with duplicate save button */
+.project-setup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.project-setup-header h1 {
+  margin: 0;
+}
+
+/* Fix 3: Reposition the Save button */
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-bottom: 2rem;
+}
