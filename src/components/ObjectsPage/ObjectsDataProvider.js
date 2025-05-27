@@ -26,78 +26,44 @@ export const ObjectsDataProvider = ({ children }) => {
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
   const handleClearSearch = () => setSearchQuery('');
 
-  // FIXED: More robust record selection handler
   const handleRecordSelection = (record) => {
     const objectUid = record["@admin"]?.uid;
-    if (!objectUid) {
-      console.warn('Record missing UID:', record);
-      return;
-    }
+    if (!objectUid) return;
     
-    setSelectedRecords(prevSelected => {
-      const updated = new Set(prevSelected);
-      if (updated.has(objectUid)) {
-        updated.delete(objectUid);
-        console.log('Deselected:', objectUid);
-      } else {
-        updated.add(objectUid);
-        console.log('Selected:', objectUid);
-      }
-      return updated;
-    });
+    const updated = new Set(selectedRecords);
+    updated.has(objectUid) ? updated.delete(objectUid) : updated.add(objectUid);
+    setSelectedRecords(updated);
   };
 
-  // FIXED: Clear selection function
-  const handleClearSelection = () => {
-    console.log('Clearing all selections');
-    setSelectedRecords(new Set());
-  };
-
-  // FIXED: Header checkbox with better logic
   const handleHeaderCheckboxChange = () => {
+    // For the current page of records, toggle their selection state
     const visibleRecords = showSelectedOnly 
       ? allRecords.filter(record => selectedRecords.has(record["@admin"]?.uid))
       : filteredData;
     
     // Check if all visible records are selected
-    const visibleUids = visibleRecords
-      .map(record => record["@admin"]?.uid)
-      .filter(uid => uid); // Remove any null/undefined UIDs
-    
-    const allSelected = visibleUids.length > 0 && 
-                       visibleUids.every(uid => selectedRecords.has(uid));
+    const allSelected = visibleRecords.every(record => 
+      selectedRecords.has(record["@admin"]?.uid)
+    );
     
     if (allSelected) {
       // Deselect all visible records
-      setSelectedRecords(prevSelected => {
-        const updated = new Set(prevSelected);
-        visibleUids.forEach(uid => updated.delete(uid));
-        console.log('Deselected all visible records');
-        return updated;
+      const updated = new Set(selectedRecords);
+      visibleRecords.forEach(record => {
+        const uid = record["@admin"]?.uid;
+        if (uid) updated.delete(uid);
       });
+      setSelectedRecords(updated);
     } else {
       // Select all visible records
-      setSelectedRecords(prevSelected => {
-        const updated = new Set(prevSelected);
-        visibleUids.forEach(uid => updated.add(uid));
-        console.log('Selected all visible records');
-        return updated;
+      const updated = new Set(selectedRecords);
+      visibleRecords.forEach(record => {
+        const uid = record["@admin"]?.uid;
+        if (uid) updated.add(uid);
       });
+      setSelectedRecords(updated);
     }
   };
-
-  // FIXED: Add event listener for clear selection
-  useEffect(() => {
-    const handleClearSelectionEvent = () => {
-      handleClearSelection();
-    };
-
-    document.addEventListener('clearSelection', handleClearSelectionEvent);
-    
-    return () => {
-      document.removeEventListener('clearSelection', handleClearSelectionEvent);
-    };
-  }, []);
 
   const extractEssentialFields = (record) => {
     const essentialRecord = {
@@ -258,7 +224,6 @@ export const ObjectsDataProvider = ({ children }) => {
     setSelectedRecords,
     handleRecordSelection,
     handleHeaderCheckboxChange,
-    handleClearSelection, // ADDED: Expose clear selection function
     loading,
     loadingProgress,
     error
