@@ -22,45 +22,32 @@ export const ObjectsDataProvider = ({ children }) => {
   const [showTitle, setShowTitle] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState(new Set());
+  
+  // Add a counter to force re-renders when needed
+  const [updateCounter, setUpdateCounter] = useState(0);
 
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
   const handleClearSearch = () => setSearchQuery('');
 
-  const handleRecordSelection = useCallback((record) => {
-    console.log('🔍 handleRecordSelection called');
-    console.log('Record:', record);
-    
+  const handleRecordSelection = (record) => {
     const objectUid = record["@admin"]?.uid;
-    console.log('UID:', objectUid);
+    if (!objectUid) return;
     
-    if (!objectUid) {
-      console.log('❌ No UID found');
-      return;
+    // Create new Set instead of modifying existing one
+    const currentSelection = new Set(selectedRecords);
+    
+    if (currentSelection.has(objectUid)) {
+      currentSelection.delete(objectUid);
+    } else {
+      currentSelection.add(objectUid);
     }
     
-    setSelectedRecords(prevSelected => {
-      console.log('Current selectedRecords size:', prevSelected.size);
-      console.log('Current selectedRecords:', Array.from(prevSelected));
-      console.log('Is currently selected:', prevSelected.has(objectUid));
-      
-      const updated = new Set(prevSelected);
-      
-      if (updated.has(objectUid)) {
-        console.log('🔄 REMOVING from selection');
-        updated.delete(objectUid);
-      } else {
-        console.log('🔄 ADDING to selection');
-        updated.add(objectUid);
-      }
-      
-      console.log('New selection size:', updated.size);
-      console.log('New selection:', Array.from(updated));
-      
-      return updated;
-    });
-  }, []);
+    // Set the new Set and force update
+    setSelectedRecords(currentSelection);
+    setUpdateCounter(prev => prev + 1);
+  };
 
-  const handleHeaderCheckboxChange = useCallback(() => {
+  const handleHeaderCheckboxChange = () => {
     // For the current page of records, toggle their selection state
     const visibleRecords = showSelectedOnly 
       ? allRecords.filter(record => selectedRecords.has(record["@admin"]?.uid))
@@ -71,31 +58,31 @@ export const ObjectsDataProvider = ({ children }) => {
       selectedRecords.has(record["@admin"]?.uid)
     );
     
-    setSelectedRecords(prevSelected => {
-      const updated = new Set(prevSelected);
-      
-      if (allSelected) {
-        // Deselect all visible records
-        visibleRecords.forEach(record => {
-          const uid = record["@admin"]?.uid;
-          if (uid) updated.delete(uid);
-        });
-      } else {
-        // Select all visible records
-        visibleRecords.forEach(record => {
-          const uid = record["@admin"]?.uid;
-          if (uid) updated.add(uid);
-        });
-      }
-      
-      return updated;
-    });
-  }, [showSelectedOnly, allRecords, filteredData, selectedRecords]);
+    const newSelection = new Set(selectedRecords);
+    
+    if (allSelected) {
+      // Deselect all visible records
+      visibleRecords.forEach(record => {
+        const uid = record["@admin"]?.uid;
+        if (uid) newSelection.delete(uid);
+      });
+    } else {
+      // Select all visible records
+      visibleRecords.forEach(record => {
+        const uid = record["@admin"]?.uid;
+        if (uid) newSelection.add(uid);
+      });
+    }
+    
+    setSelectedRecords(newSelection);
+    setUpdateCounter(prev => prev + 1);
+  };
 
   // Add event listener for clear selection
   useEffect(() => {
     const handleClearSelection = () => {
       setSelectedRecords(new Set());
+      setUpdateCounter(prev => prev + 1);
     };
 
     document.addEventListener('clearSelection', handleClearSelection);
@@ -162,30 +149,22 @@ export const ObjectsDataProvider = ({ children }) => {
 
     try {
       while (fullData.length < MAX_RECORDS) {
-        console.log(`Fetching from: ${currentUrl}`);
         const response = await fetch(currentUrl);
         if (!response.ok) throw new Error(`API error: ${response.status}`);
         const json = await response.json();
 
-        console.log(`Received batch: ${json.data.length} records`);
         const nextBatch = json.data.slice(0, FETCH_BATCH_SIZE);
         const processed = await processRecordsWithDelay(nextBatch, extractEssentialFields);
         fullData.push(...processed);
 
-        console.log(`Loaded so far: ${fullData.length}`);
-
         if (json.has_next && json.next_url && fullData.length < MAX_RECORDS) {
           currentUrl = json.next_url;
         } else {
-          if (json.has_next && !json.next_url) {
-            console.warn("has_next is true but no next_url provided!");
-          }
           if (json.has_next) truncated = true;
           break;
         }
       }
 
-      console.log(`Final record count: ${fullData.length}`);
       return { records: fullData, truncated };
     } catch (err) {
       console.error('MDS fetch error:', err);
@@ -214,7 +193,7 @@ export const ObjectsDataProvider = ({ children }) => {
           return;
         }
 
-        await new Promise(res => setTimeout(res, 100)); // allow UI to show loading
+        await new Promise(res => setTimeout(res, 100));
 
         const { records, truncated } = await fetchAllMdsRecords(token);
         setAllRecords(records);
@@ -246,7 +225,7 @@ export const ObjectsDataProvider = ({ children }) => {
     }
 
     setFilteredData(result);
-  }, [allRecords, searchQuery, showSelectedOnly, selectedRecords]);
+  }, [allRecords, searchQuery, showSelectedOnly, selectedRecords, updateCounter]);
 
   const value = {
     filteredData,
