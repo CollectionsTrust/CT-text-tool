@@ -1,13 +1,13 @@
 // File: src/components/ProjectSetup/hooks/useProjectForm.js
 
 import { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 
 export const useProjectForm = (projectId) => {
   const [formData, setFormData] = useState({
     projectReferenceNumber: '',
-    textNumberPrefix: 'TXT',
+    textNumberPrefix: 'TXT', // Default value
     projectTitle: '',
     projectOrganiser: '',
     projectStartDate: '',
@@ -20,25 +20,26 @@ export const useProjectForm = (projectId) => {
     creditLine: '',
     textAudience: '',
     rightsReferenceNumber: '',
+    // Text settings fields
     hasHierarchicalText: false,
     tracksTextStatus: false,
     wantsTextTags: false,
-    doNotSaveAuthorNames: false,
-    textStatuses: ['Draft', 'Approved'],
+    doNotSaveAuthorNames: false, // New field for issue #7
+    textStatuses: ['Draft', 'Approved'], // Default statuses
     textTags: []
   });
 
   const [assignedAuthors, setAssignedAuthors] = useState([]);
-  const [selectedLanguages, setSelectedLanguages] = useState(['English']);
+  const [selectedLanguages, setSelectedLanguages] = useState(['English']); // Default to English
   const [token, setToken] = useState('');
   const [originalToken, setOriginalToken] = useState(''); // Track original token
-  const [pendingToken, setPendingToken] = useState(''); // Token user is trying to set
-  const [tokenChangeApproved, setTokenChangeApproved] = useState(false); // Track if change was approved
+  const [tokenLocked, setTokenLocked] = useState(false); // NEW: Track if token is locked
+  const [linkedObjectsInfo, setLinkedObjectsInfo] = useState(null); // NEW: Store linked objects info
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Check if there are texts with linked objects
+  // NEW: Check if there are texts with linked objects
   const checkForLinkedObjects = async () => {
     try {
       const textsRef = collection(db, 'texts');
@@ -73,112 +74,46 @@ export const useProjectForm = (projectId) => {
     }
   };
 
-  // Remove all linked objects from texts
-  const removeAllLinkedObjects = async () => {
-    try {
-      const textsRef = collection(db, 'texts');
-      const q = query(textsRef, where('projectId', '==', projectId));
-      const snapshot = await getDocs(q);
-      
-      const batch = writeBatch(db);
-      let updatedCount = 0;
-      
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.linkedObjects && data.linkedObjects.length > 0) {
-          const textRef = doc(db, 'texts', doc.id);
-          batch.update(textRef, {
-            linkedObjects: [],
-            updatedAt: serverTimestamp()
-          });
-          updatedCount++;
-        }
-      });
-      
-      if (updatedCount > 0) {
-        await batch.commit();
-        console.log(`Removed linked objects from ${updatedCount} texts`);
-      }
-      
-      return updatedCount;
-    } catch (err) {
-      console.error('Error removing linked objects:', err);
-      throw new Error('Failed to clean up linked objects');
-    }
-  };
-
-  // NEW: Handle token field change with validation
+  // NEW: Custom setToken that checks for linked objects
   const handleTokenChange = async (newToken) => {
-    // If it's the same as current token, just update
-    if (newToken === token) {
+    // If token hasn't changed, just update
+    if (newToken === originalToken) {
+      setToken(newToken);
       return;
     }
 
-    // If no original token exists (new project), allow change
+    // If no original token, allow change (new project)
     if (!originalToken) {
       setToken(newToken);
       return;
     }
 
-    // If token is being cleared/shortened significantly, don't validate yet
-    if (newToken.length < originalToken.length * 0.5) {
-      // User might be clearing to paste new token - store as pending
-      setPendingToken(newToken);
-      setToken(newToken);
+    // If user is trying to change an existing token, check for linked objects
+    const linkCheck = await checkForLinkedObjects();
+    
+    if (linkCheck.hasLinkedObjects) {
+      // Show error and revert token
+      const message = `❌ Cannot Change API Token
+
+This project has texts with linked objects:
+• ${linkCheck.textsWithLinkedObjects} texts have linked objects
+• ${linkCheck.totalLinkedObjects} total object links exist
+
+To change the API token, you must first:
+1. Go to the Objects page
+2. Edit each text that has linked objects  
+3. Remove all object links manually
+4. Then return here to change the token
+
+This prevents orphaned object references.`;
+
+      alert(message);
+      setToken(originalToken); // Revert to original
       return;
     }
 
-    // If new token is significantly different from original, validate
-    if (newToken !== originalToken && newToken.length > 50) {
-      try {
-        const linkCheck = await checkForLinkedObjects();
-        
-        if (linkCheck.hasLinkedObjects && !tokenChangeApproved) {
-          const message = `⚠️ MDS API Token Change Warning
-
-You are about to change the MDS API token for this project.
-
-Current situation:
-• ${linkCheck.totalTexts} texts exist in this project
-• ${linkCheck.textsWithLinkedObjects} texts have linked objects
-• ${linkCheck.totalLinkedObjects} total object links will be removed
-
-When you change the token:
-✓ All texts will be preserved
-✓ All linked objects will be automatically removed
-✓ No orphaned object references will remain
-✓ You can re-link objects after the token change
-
-Do you want to proceed with changing the token?`;
-
-          const userConfirmed = window.confirm(message);
-          
-          if (userConfirmed) {
-            // User approved the change
-            setTokenChangeApproved(true);
-            setToken(newToken);
-            
-            // Show a message that cleanup will happen on save
-            alert('Token change approved. Object links will be removed when you save the project.');
-          } else {
-            // User cancelled - revert to original token
-            setToken(originalToken);
-            setPendingToken('');
-            return;
-          }
-        } else {
-          // No linked objects or already approved, allow change
-          setToken(newToken);
-        }
-      } catch (err) {
-        console.error('Error validating token change:', err);
-        // Allow change but show warning
-        setToken(newToken);
-      }
-    } else {
-      // Normal token update
-      setToken(newToken);
-    }
+    // No linked objects, allow change
+    setToken(newToken);
   };
 
   useEffect(() => {
@@ -198,6 +133,7 @@ Do you want to proceed with changing the token?`;
       try {
         setLoading(true);
         
+        // Load project data from Firestore
         const projectRef = doc(db, 'projects', projectId);
         const projectSnap = await getDoc(projectRef);
         
@@ -219,10 +155,11 @@ Do you want to proceed with changing the token?`;
             creditLine: projectData.creditLine || '',
             textAudience: projectData.textAudience || '',
             rightsReferenceNumber: projectData.rightsReferenceNumber || '',
+            // Load text settings data
             hasHierarchicalText: projectData.hasHierarchicalText || false,
             tracksTextStatus: projectData.tracksTextStatus || false,
             wantsTextTags: projectData.wantsTextTags || false,
-            doNotSaveAuthorNames: projectData.doNotSaveAuthorNames || false,
+            doNotSaveAuthorNames: projectData.doNotSaveAuthorNames || false, // Load new field
             textStatuses: projectData.textStatuses || ['Draft', 'Approved'],
             textTags: projectData.textTags || []
           }));
@@ -240,9 +177,12 @@ Do you want to proceed with changing the token?`;
         if (requestSnap.exists()) {
           const requestData = requestSnap.data();
           
+          // Debug: Log all fields in the requestData to find the organization field
           console.log("Project Request document fields:", Object.keys(requestData));
           console.log("Entire Project Request data:", requestData);
           
+          // Try to find any field that might contain organization information
+          // Check all these possible field names
           const organizationValue = 
             requestData.organization || 
             requestData.Organisation || 
@@ -259,6 +199,7 @@ Do you want to proceed with changing the token?`;
           console.log("Found organization value:", organizationValue);
           
           setFormData((prev) => {
+            // Only update if we are not overwriting existing values
             const updatedFormData = {...prev};
             
             if (!prev.projectTitle && requestData.projectTitle) {
@@ -277,7 +218,14 @@ Do you want to proceed with changing the token?`;
           });
         }
         
+        // Load assigned authors for this project
         await loadAssignedAuthors();
+
+        // NEW: Check for linked objects to determine if token should be locked
+        const linkCheck = await checkForLinkedObjects();
+        setLinkedObjectsInfo(linkCheck);
+        setTokenLocked(linkCheck.hasLinkedObjects);
+        
       } catch (err) {
         console.error('Error fetching project data:', err);
         setError('Failed to load project data');
@@ -286,18 +234,23 @@ Do you want to proceed with changing the token?`;
       }
     };
     
+    // Fix for issue #5: Modified to also include the project owner
     const loadAssignedAuthors = async () => {
       try {
+        // Find all users who have this project in their projectRoles
         const usersRef = collection(db, 'projectUsers');
         const userSnapshot = await getDocs(usersRef);
         
         const authors = [];
+        let ownerFound = false;
         
         userSnapshot.forEach(userDoc => {
           const userData = userDoc.data();
           const projectRoles = userData.projectRoles || {};
           
+          // Check if user is assigned to this project
           if (projectRoles[projectId]) {
+            // Add project owner with special marking
             if (projectRoles[projectId] === 'owner') {
               authors.push({
                 id: userDoc.id,
@@ -305,7 +258,9 @@ Do you want to proceed with changing the token?`;
                 email: userData.email,
                 role: 'owner'
               });
+              ownerFound = true;
             } 
+            // Add project authors
             else if (projectRoles[projectId] === 'author') {
               authors.push({
                 id: userDoc.id,
@@ -332,35 +287,23 @@ Do you want to proceed with changing the token?`;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // UPDATED: Save project with cleanup if token changed and approved
   const saveProjectToFirestore = async () => {
     setSaveSuccess(false);
     try {
-      let cleanupPerformed = false;
-      let updatedTextsCount = 0;
-
-      // If token was changed and approved, clean up linked objects
-      if (tokenChangeApproved && token !== originalToken) {
-        try {
-          updatedTextsCount = await removeAllLinkedObjects();
-          cleanupPerformed = true;
-        } catch (err) {
-          throw new Error(`Failed to clean up linked objects: ${err.message}`);
-        }
-      }
-
       const projectRef = doc(db, 'projects', projectId);
+
+      // Extract author names for saving
       const authorNames = assignedAuthors.map(author => author.name);
 
       const updatePayload = {
         projectReferenceNumber: formData.projectReferenceNumber,
         textNumberPrefix: formData.textNumberPrefix,
-        title: formData.projectTitle,
+        title: formData.projectTitle, // Maps to title in Firestore
         projectOrganiser: formData.projectOrganiser,
         projectStartDate: formData.projectStartDate,
         projectEndDate: formData.projectEndDate,
-        description: formData.projectNote,
-        authors: authorNames,
+        description: formData.projectNote, // Maps to description in Firestore
+        authors: authorNames, // Use the author names from assignedAuthors
         languages: selectedLanguages,
         copyrightLicensor: formData.copyrightLicensor,
         usageLicence: formData.usageLicence,
@@ -370,44 +313,34 @@ Do you want to proceed with changing the token?`;
         textAudience: formData.textAudience,
         rightsReferenceNumber: formData.rightsReferenceNumber,
         mdsApiToken: token,
+        // Save the text settings
         hasHierarchicalText: formData.hasHierarchicalText || false,
         tracksTextStatus: formData.tracksTextStatus || false,
         wantsTextTags: formData.wantsTextTags || false,
-        doNotSaveAuthorNames: formData.doNotSaveAuthorNames || false,
+        doNotSaveAuthorNames: formData.doNotSaveAuthorNames || false, // Save new field for issue #7
         textStatuses: formData.textStatuses || ['Draft', 'Approved'],
         textTags: formData.textTags || [],
         updatedAt: serverTimestamp(),
-        setupComplete: true
+        setupComplete: true // Mark setup as complete
       };
 
       await updateDoc(projectRef, updatePayload);
       
-      // Save to localStorage
+      // Save to combined project data in localStorage
       localStorage.setItem(`projectData_${projectId}`, JSON.stringify({
         ...formData,
         languages: selectedLanguages,
         mdsApiToken: token
       }));
       
+      // ADDED: Save the MDS API token with the specific key format
       localStorage.setItem(`mdsApiToken_${projectId}`, token);
       
       // Update original token after successful save
       setOriginalToken(token);
-      setTokenChangeApproved(false); // Reset approval flag
       
       setSaveSuccess(true);
-      
-      // Show success message with cleanup info if applicable
-      if (cleanupPerformed) {
-        const cleanupMessage = `Project saved successfully!\n\nToken updated and ${updatedTextsCount} texts had their object links removed to prevent orphaned references.`;
-        alert(cleanupMessage);
-      }
-      
-      return { 
-        success: true, 
-        cleanupPerformed,
-        updatedTextsCount 
-      };
+      return { success: true };
     } catch (err) {
       console.error('Error saving project to Firestore:', err);
       return { success: false, error: err.message };
@@ -422,12 +355,13 @@ Do you want to proceed with changing the token?`;
     selectedLanguages,
     setSelectedLanguages,
     token,
-    setToken: handleTokenChange, // Use our custom handler
+    setToken: handleTokenChange, // Use our protected handler
+    tokenLocked, // NEW: Expose locked state
+    linkedObjectsInfo, // NEW: Expose linked objects info
     saveProjectToFirestore,
     loading,
     error,
     saveSuccess,
-    setSaveSuccess,
-    checkForLinkedObjects
+    setSaveSuccess // Added to export this function
   };
 };
