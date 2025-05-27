@@ -91,8 +91,14 @@ const ProjectSetup = () => {
         setTimeout(() => {
           navigate(`/projects/${projectId}/objects`);
         }, 1500);
+        
       } else {
-        setSaveError(result.error || 'Failed to save project');
+        // Handle cancelled save (when user cancels token change)
+        if (result.cancelled) {
+          setSaveError('Save cancelled - token change was not applied');
+        } else {
+          setSaveError(result.error || 'Failed to save project');
+        }
       }
     } catch (err) {
       console.error('Error in form submission:', err);
