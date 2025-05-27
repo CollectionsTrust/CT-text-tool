@@ -32,89 +32,9 @@ export const useProjectForm = (projectId) => {
   const [assignedAuthors, setAssignedAuthors] = useState([]);
   const [selectedLanguages, setSelectedLanguages] = useState(['English']); // Default to English
   const [token, setToken] = useState('');
-  const [originalToken, setOriginalToken] = useState(''); // Track original token
-  const [tokenLocked, setTokenLocked] = useState(false); // NEW: Track if token is locked
-  const [linkedObjectsInfo, setLinkedObjectsInfo] = useState(null); // NEW: Store linked objects info
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // NEW: Check if there are texts with linked objects
-  const checkForLinkedObjects = async () => {
-    try {
-      const textsRef = collection(db, 'texts');
-      const q = query(textsRef, where('projectId', '==', projectId));
-      const snapshot = await getDocs(q);
-      
-      const textsWithLinkedObjects = [];
-      let totalLinkedObjects = 0;
-      
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.linkedObjects && data.linkedObjects.length > 0) {
-          textsWithLinkedObjects.push({
-            id: doc.id,
-            textReferenceNumber: data.textReferenceNumber,
-            linkedObjectsCount: data.linkedObjects.length
-          });
-          totalLinkedObjects += data.linkedObjects.length;
-        }
-      });
-      
-      return {
-        hasLinkedObjects: textsWithLinkedObjects.length > 0,
-        totalTexts: snapshot.size,
-        textsWithLinkedObjects: textsWithLinkedObjects.length,
-        totalLinkedObjects,
-        affectedTexts: textsWithLinkedObjects
-      };
-    } catch (err) {
-      console.error('Error checking for linked objects:', err);
-      return { hasLinkedObjects: false, totalTexts: 0, textsWithLinkedObjects: 0, totalLinkedObjects: 0, affectedTexts: [] };
-    }
-  };
-
-  // NEW: Custom setToken that checks for linked objects
-  const handleTokenChange = async (newToken) => {
-    // If token hasn't changed, just update
-    if (newToken === originalToken) {
-      setToken(newToken);
-      return;
-    }
-
-    // If no original token, allow change (new project)
-    if (!originalToken) {
-      setToken(newToken);
-      return;
-    }
-
-    // If user is trying to change an existing token, check for linked objects
-    const linkCheck = await checkForLinkedObjects();
-    
-    if (linkCheck.hasLinkedObjects) {
-      // Show error and revert token
-      const message = `❌ Cannot Change API Token
-
-This project has texts with linked objects:
-• ${linkCheck.textsWithLinkedObjects} texts have linked objects
-• ${linkCheck.totalLinkedObjects} total object links exist
-
-To change the API token, you must first:
-1. Go to the Objects page
-2. Edit each text that has linked objects  
-3. Remove all object links manually
-4. Then return here to change the token
-
-This prevents orphaned object references.`;
-
-      alert(message);
-      setToken(originalToken); // Revert to original
-      return;
-    }
-
-    // No linked objects, allow change
-    setToken(newToken);
-  };
 
   useEffect(() => {
     const loadLocalData = () => {
@@ -123,9 +43,7 @@ This prevents orphaned object references.`;
         const parsed = JSON.parse(storedData);
         setFormData((prev) => ({ ...prev, ...parsed }));
         setSelectedLanguages(parsed.languages || ['English']);
-        const storedToken = parsed.mdsApiToken || '';
-        setToken(storedToken);
-        setOriginalToken(storedToken);
+        setToken(parsed.mdsApiToken || '');
       }
     };
 
@@ -165,9 +83,7 @@ This prevents orphaned object references.`;
           }));
           
           setSelectedLanguages(projectData.languages || ['English']);
-          const projectToken = projectData.mdsApiToken || '';
-          setToken(projectToken);
-          setOriginalToken(projectToken);
+          setToken(projectData.mdsApiToken || '');
         }
         
         // Try to load initial data from projectRequests if available
@@ -220,12 +136,6 @@ This prevents orphaned object references.`;
         
         // Load assigned authors for this project
         await loadAssignedAuthors();
-
-        // NEW: Check for linked objects to determine if token should be locked
-        const linkCheck = await checkForLinkedObjects();
-        setLinkedObjectsInfo(linkCheck);
-        setTokenLocked(linkCheck.hasLinkedObjects);
-        
       } catch (err) {
         console.error('Error fetching project data:', err);
         setError('Failed to load project data');
@@ -336,9 +246,6 @@ This prevents orphaned object references.`;
       // ADDED: Save the MDS API token with the specific key format
       localStorage.setItem(`mdsApiToken_${projectId}`, token);
       
-      // Update original token after successful save
-      setOriginalToken(token);
-      
       setSaveSuccess(true);
       return { success: true };
     } catch (err) {
@@ -355,9 +262,7 @@ This prevents orphaned object references.`;
     selectedLanguages,
     setSelectedLanguages,
     token,
-    setToken: handleTokenChange, // Use our protected handler
-    tokenLocked, // NEW: Expose locked state
-    linkedObjectsInfo, // NEW: Expose linked objects info
+    setToken,
     saveProjectToFirestore,
     loading,
     error,
