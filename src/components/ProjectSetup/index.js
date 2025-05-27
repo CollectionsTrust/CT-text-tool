@@ -20,6 +20,8 @@ const ProjectSetup = () => {
     setSelectedLanguages,
     token,
     setToken,
+    tokenLocked, // NEW: Get locked state
+    linkedObjectsInfo, // NEW: Get linked objects info
     saveProjectToFirestore,
     loading,
     error,
@@ -91,14 +93,8 @@ const ProjectSetup = () => {
         setTimeout(() => {
           navigate(`/projects/${projectId}/objects`);
         }, 1500);
-        
       } else {
-        // Handle cancelled save (when user cancels token change)
-        if (result.cancelled) {
-          setSaveError('Save cancelled - token change was not applied');
-        } else {
-          setSaveError(result.error || 'Failed to save project');
-        }
+        setSaveError(result.error || 'Failed to save project');
       }
     } catch (err) {
       console.error('Error in form submission:', err);
@@ -360,21 +356,47 @@ const ProjectSetup = () => {
             </div>
           </div>
           
-          {/* MDS API token */}
+          {/* MDS API token - UPDATED WITH LOCK PROTECTION */}
           <div className="form-group">
             <label htmlFor="token">
               MDS API token
               <span className="required-indicator">*</span>
               <span className="tooltip-icon" title="The API token needed to access the Museum Data Service. This is required to fetch object records.">ⓘ</span>
+              {tokenLocked && (
+                <span className="token-locked-indicator" title="Token is locked because texts have linked objects">
+                  🔒 Locked
+                </span>
+              )}
             </label>
+            
+            {tokenLocked && linkedObjectsInfo && (
+              <div className="token-warning">
+                <p><strong>⚠️ Token is locked</strong></p>
+                <p>This token cannot be changed because:</p>
+                <ul>
+                  <li>{linkedObjectsInfo.textsWithLinkedObjects} texts have linked objects</li>
+                  <li>{linkedObjectsInfo.totalLinkedObjects} total object links exist</li>
+                </ul>
+                <p>To change the token:</p>
+                <ol>
+                  <li>Go to the <strong>Objects</strong> page</li>
+                  <li>Edit each text with linked objects</li>
+                  <li>Remove all object links manually</li>
+                  <li>Return here to change the token</li>
+                </ol>
+              </div>
+            )}
+            
             <textarea
               id="token"
-              className="token-input"
+              className={`token-input ${tokenLocked ? 'token-locked' : ''}`}
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Paste your MDS API token here..."
               rows={6}
               required
+              readOnly={tokenLocked}
+              title={tokenLocked ? "Token is locked - remove object links first" : ""}
             />
             <p className="token-help">Your token should look similar to: 9AyjhGNQQFkSCT5QtkaPdQ7-Cz7onxXq231/T8F-QRk1xVnplfxcvDRgm081xpDxKINpIz0zW-vnLXs...</p>
           </div>
