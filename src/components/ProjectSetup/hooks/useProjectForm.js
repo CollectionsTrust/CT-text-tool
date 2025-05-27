@@ -32,11 +32,13 @@ export const useProjectForm = (projectId) => {
   const [selectedLanguages, setSelectedLanguages] = useState(['English']);
   const [token, setToken] = useState('');
   const [originalToken, setOriginalToken] = useState(''); // Track original token
+  const [pendingToken, setPendingToken] = useState(''); // Token user is trying to set
+  const [tokenChangeApproved, setTokenChangeApproved] = useState(false); // Track if change was approved
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // NEW: Check if there are texts with linked objects
+  // Check if there are texts with linked objects
   const checkForLinkedObjects = async () => {
     try {
       const textsRef = collection(db, 'texts');
@@ -71,7 +73,7 @@ export const useProjectForm = (projectId) => {
     }
   };
 
-  // NEW: Remove all linked objects from texts
+  // Remove all linked objects from texts
   const removeAllLinkedObjects = async () => {
     try {
       const textsRef = collection(db, 'texts');
@@ -105,23 +107,34 @@ export const useProjectForm = (projectId) => {
     }
   };
 
-  // NEW: Validate token change and handle cleanup
-  const validateAndHandleTokenChange = async (newToken) => {
-    // If token hasn't changed, no validation needed
-    if (newToken === originalToken) {
-      return { canProceed: true };
+  // NEW: Handle token field change with validation
+  const handleTokenChange = async (newToken) => {
+    // If it's the same as current token, just update
+    if (newToken === token) {
+      return;
     }
 
-    // If no original token exists, allow the change
+    // If no original token exists (new project), allow change
     if (!originalToken) {
-      return { canProceed: true };
+      setToken(newToken);
+      return;
     }
 
-    // Check for linked objects
-    const linkCheck = await checkForLinkedObjects();
-    
-    if (linkCheck.hasLinkedObjects) {
-      const message = `⚠️ MDS API Token Change Warning
+    // If token is being cleared/shortened significantly, don't validate yet
+    if (newToken.length < originalToken.length * 0.5) {
+      // User might be clearing to paste new token - store as pending
+      setPendingToken(newToken);
+      setToken(newToken);
+      return;
+    }
+
+    // If new token is significantly different from original, validate
+    if (newToken !== originalToken && newToken.length > 50) {
+      try {
+        const linkCheck = await checkForLinkedObjects();
+        
+        if (linkCheck.hasLinkedObjects && !tokenChangeApproved) {
+          const message = `⚠️ MDS API Token Change Warning
 
 You are about to change the MDS API token for this project.
 
@@ -136,34 +149,36 @@ When you change the token:
 ✓ No orphaned object references will remain
 ✓ You can re-link objects after the token change
 
-Do you want to proceed with changing the token and cleaning up object links?`;
+Do you want to proceed with changing the token?`;
 
-      const userConfirmed = window.confirm(message);
-      
-      if (userConfirmed) {
-        try {
-          // Remove all linked objects before proceeding
-          const updatedCount = await removeAllLinkedObjects();
+          const userConfirmed = window.confirm(message);
           
-          return {
-            canProceed: true,
-            cleanupPerformed: true,
-            updatedTextsCount: updatedCount,
-            linkedObjectsInfo: linkCheck
-          };
-        } catch (err) {
-          throw new Error(`Failed to clean up linked objects: ${err.message}`);
+          if (userConfirmed) {
+            // User approved the change
+            setTokenChangeApproved(true);
+            setToken(newToken);
+            
+            // Show a message that cleanup will happen on save
+            alert('Token change approved. Object links will be removed when you save the project.');
+          } else {
+            // User cancelled - revert to original token
+            setToken(originalToken);
+            setPendingToken('');
+            return;
+          }
+        } else {
+          // No linked objects or already approved, allow change
+          setToken(newToken);
         }
-      } else {
-        return {
-          canProceed: false,
-          userCancelled: true
-        };
+      } catch (err) {
+        console.error('Error validating token change:', err);
+        // Allow change but show warning
+        setToken(newToken);
       }
+    } else {
+      // Normal token update
+      setToken(newToken);
     }
-
-    // No linked objects, safe to proceed
-    return { canProceed: true };
   };
 
   useEffect(() => {
@@ -173,8 +188,9 @@ Do you want to proceed with changing the token and cleaning up object links?`;
         const parsed = JSON.parse(storedData);
         setFormData((prev) => ({ ...prev, ...parsed }));
         setSelectedLanguages(parsed.languages || ['English']);
-        setToken(parsed.mdsApiToken || '');
-        setOriginalToken(parsed.mdsApiToken || ''); // Store original token
+        const storedToken = parsed.mdsApiToken || '';
+        setToken(storedToken);
+        setOriginalToken(storedToken);
       }
     };
 
@@ -212,8 +228,9 @@ Do you want to proceed with changing the token and cleaning up object links?`;
           }));
           
           setSelectedLanguages(projectData.languages || ['English']);
-          setToken(projectData.mdsApiToken || '');
-          setOriginalToken(projectData.mdsApiToken || ''); // Store original token
+          const projectToken = projectData.mdsApiToken || '';
+          setToken(projectToken);
+          setOriginalToken(projectToken);
         }
         
         // Try to load initial data from projectRequests if available
@@ -315,18 +332,21 @@ Do you want to proceed with changing the token and cleaning up object links?`;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // UPDATED: Save project with token validation
+  // UPDATED: Save project with cleanup if token changed and approved
   const saveProjectToFirestore = async () => {
     setSaveSuccess(false);
     try {
-      // Validate token change before saving
-      const tokenValidation = await validateAndHandleTokenChange(token);
-      
-      if (!tokenValidation.canProceed) {
-        if (tokenValidation.userCancelled) {
-          return { success: false, cancelled: true };
+      let cleanupPerformed = false;
+      let updatedTextsCount = 0;
+
+      // If token was changed and approved, clean up linked objects
+      if (tokenChangeApproved && token !== originalToken) {
+        try {
+          updatedTextsCount = await removeAllLinkedObjects();
+          cleanupPerformed = true;
+        } catch (err) {
+          throw new Error(`Failed to clean up linked objects: ${err.message}`);
         }
-        throw new Error('Token change validation failed');
       }
 
       const projectRef = doc(db, 'projects', projectId);
@@ -373,19 +393,20 @@ Do you want to proceed with changing the token and cleaning up object links?`;
       
       // Update original token after successful save
       setOriginalToken(token);
+      setTokenChangeApproved(false); // Reset approval flag
       
       setSaveSuccess(true);
       
       // Show success message with cleanup info if applicable
-      if (tokenValidation.cleanupPerformed) {
-        const cleanupMessage = `Project saved successfully!\n\nToken updated and ${tokenValidation.updatedTextsCount} texts had their object links removed to prevent orphaned references.`;
+      if (cleanupPerformed) {
+        const cleanupMessage = `Project saved successfully!\n\nToken updated and ${updatedTextsCount} texts had their object links removed to prevent orphaned references.`;
         alert(cleanupMessage);
       }
       
       return { 
         success: true, 
-        cleanupPerformed: tokenValidation.cleanupPerformed,
-        updatedTextsCount: tokenValidation.updatedTextsCount 
+        cleanupPerformed,
+        updatedTextsCount 
       };
     } catch (err) {
       console.error('Error saving project to Firestore:', err);
@@ -401,13 +422,12 @@ Do you want to proceed with changing the token and cleaning up object links?`;
     selectedLanguages,
     setSelectedLanguages,
     token,
-    setToken,
+    setToken: handleTokenChange, // Use our custom handler
     saveProjectToFirestore,
     loading,
     error,
     saveSuccess,
     setSaveSuccess,
-    // NEW: Expose the validation function for external use if needed
     checkForLinkedObjects
   };
 };
