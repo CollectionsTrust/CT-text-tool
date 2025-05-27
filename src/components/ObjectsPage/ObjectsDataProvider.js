@@ -1,6 +1,6 @@
 // src/components/ObjectsPage/ObjectsDataProvider.js
 
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { searchRecords } from './utils/search';
 import { saveRecordsToStorage, getRecordsFromStorage } from './utils/localStorage';
@@ -26,16 +26,41 @@ export const ObjectsDataProvider = ({ children }) => {
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
   const handleClearSearch = () => setSearchQuery('');
 
-  const handleRecordSelection = (record) => {
-    const objectUid = record["@admin"]?.uid;
-    if (!objectUid) return;
+  const handleRecordSelection = useCallback((record) => {
+    console.log('🔍 handleRecordSelection called');
+    console.log('Record:', record);
     
-    const updated = new Set(selectedRecords);
-    updated.has(objectUid) ? updated.delete(objectUid) : updated.add(objectUid);
-    setSelectedRecords(updated);
-  };
+    const objectUid = record["@admin"]?.uid;
+    console.log('UID:', objectUid);
+    
+    if (!objectUid) {
+      console.log('❌ No UID found');
+      return;
+    }
+    
+    setSelectedRecords(prevSelected => {
+      console.log('Current selectedRecords size:', prevSelected.size);
+      console.log('Current selectedRecords:', Array.from(prevSelected));
+      console.log('Is currently selected:', prevSelected.has(objectUid));
+      
+      const updated = new Set(prevSelected);
+      
+      if (updated.has(objectUid)) {
+        console.log('🔄 REMOVING from selection');
+        updated.delete(objectUid);
+      } else {
+        console.log('🔄 ADDING to selection');
+        updated.add(objectUid);
+      }
+      
+      console.log('New selection size:', updated.size);
+      console.log('New selection:', Array.from(updated));
+      
+      return updated;
+    });
+  }, []);
 
-  const handleHeaderCheckboxChange = () => {
+  const handleHeaderCheckboxChange = useCallback(() => {
     // For the current page of records, toggle their selection state
     const visibleRecords = showSelectedOnly 
       ? allRecords.filter(record => selectedRecords.has(record["@admin"]?.uid))
@@ -46,24 +71,38 @@ export const ObjectsDataProvider = ({ children }) => {
       selectedRecords.has(record["@admin"]?.uid)
     );
     
-    if (allSelected) {
-      // Deselect all visible records
-      const updated = new Set(selectedRecords);
-      visibleRecords.forEach(record => {
-        const uid = record["@admin"]?.uid;
-        if (uid) updated.delete(uid);
-      });
-      setSelectedRecords(updated);
-    } else {
-      // Select all visible records
-      const updated = new Set(selectedRecords);
-      visibleRecords.forEach(record => {
-        const uid = record["@admin"]?.uid;
-        if (uid) updated.add(uid);
-      });
-      setSelectedRecords(updated);
-    }
-  };
+    setSelectedRecords(prevSelected => {
+      const updated = new Set(prevSelected);
+      
+      if (allSelected) {
+        // Deselect all visible records
+        visibleRecords.forEach(record => {
+          const uid = record["@admin"]?.uid;
+          if (uid) updated.delete(uid);
+        });
+      } else {
+        // Select all visible records
+        visibleRecords.forEach(record => {
+          const uid = record["@admin"]?.uid;
+          if (uid) updated.add(uid);
+        });
+      }
+      
+      return updated;
+    });
+  }, [showSelectedOnly, allRecords, filteredData, selectedRecords]);
+
+  // Add event listener for clear selection
+  useEffect(() => {
+    const handleClearSelection = () => {
+      setSelectedRecords(new Set());
+    };
+
+    document.addEventListener('clearSelection', handleClearSelection);
+    return () => {
+      document.removeEventListener('clearSelection', handleClearSelection);
+    };
+  }, []);
 
   const extractEssentialFields = (record) => {
     const essentialRecord = {
