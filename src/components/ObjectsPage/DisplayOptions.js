@@ -12,16 +12,15 @@ const DisplayOptions = ({
   handleHeaderCheckboxChange,
   isEditMode
 }) => {
-  const { showSelectedOnly, setShowSelectedOnly } = useContext(ObjectsDataContext);
+  const { 
+    showSelectedOnly, 
+    setShowSelectedOnly,
+    handleClearSelection // FIXED: Get clear function directly from context
+  } = useContext(ObjectsDataContext);
+  
   const selectedCount = selectedRecords.size;
 
-  // Handle clearing selection
-  const handleClearSelection = () => {
-    const event = new CustomEvent('clearSelection');
-    document.dispatchEvent(event);
-  };
-
-  // Toggle button handler - either select all or clear all
+  // FIXED: Use direct function call instead of custom event
   const handleToggleSelection = () => {
     if (selectedCount > 0) {
       // If records are selected, clear them
