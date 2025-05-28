@@ -1,0 +1,280 @@
+/* src/components/UserGuide/UserGuide.css */
+
+/* Overlay backdrop */
+.user-guide-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+/* Modal container */
+.user-guide-modal {
+  width: 90vw;
+  max-width: 1000px;
+  height: 85vh;
+  background-color: var(--color-white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+.user-guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  background-color: var(--color-white);
+  flex-shrink: 0;
+}
+
+.user-guide-title {
+  color: var(--color-primary);
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.user-guide-close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-text-light);
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.user-guide-close-btn:hover {
+  background-color: #f5f5f5;
+  color: var(--color-text);
+}
+
+.user-guide-close-btn:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Content wrapper with scroll */
+.user-guide-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: var(--color-white);
+}
+
+/* Loading state */
+.user-guide-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+}
+
+.user-guide-loading p {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Error state */
+.user-guide-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Content styling overrides */
+.user-guide-content {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+  line-height: 1.6 !important;
+  color: var(--color-text) !important;
+}
+
+/* Override the embedded HTML styles to match your site */
+.user-guide-content * {
+  max-width: none !important;
+}
+
+.user-guide-content body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  line-height: 1.6 !important;
+  color: var(--color-text) !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.user-guide-content h1 {
+  color: var(--color-primary) !important;
+  font-size: 2.25rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 3px solid var(--color-secondary) !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.user-guide-content h2 {
+  color: var(--color-primary) !important;
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 2px solid #ecf0f1 !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.user-guide-content h3 {
+  color: var(--color-primary) !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.user-guide-content h4 {
+  color: var(--color-text) !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.user-guide-content p {
+  margin-bottom: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.user-guide-content a {
+  color: var(--color-secondary) !important;
+  text-decoration: underline !important;
+}
+
+.user-guide-content a:hover {
+  color: #00999B !important;
+}
+
+.user-guide-content ul,
+.user-guide-content ol {
+  margin-bottom: 1rem !important;
+  padding-left: 1.5rem !important;
+}
+
+.user-guide-content li {
+  margin-bottom: 0.5rem !important;
+}
+
+.user-guide-content code {
+  background-color: #f1f2f6 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: 'Monaco', 'Consolas', monospace !important;
+  font-size: 0.9em !important;
+}
+
+.user-guide-content .toc {
+  background-color: #f8f9fa !important;
+  padding: 1.5rem !important;
+  border-radius: 8px !important;
+  margin: 1.5rem 0 !important;
+  border-left: 4px solid var(--color-secondary) !important;
+}
+
+.user-guide-content .highlight {
+  background-color: #fff3cd !important;
+  padding: 1rem !important;
+  border-left: 4px solid #ffc107 !important;
+  margin: 1rem 0 !important;
+  border-radius: 4px !important;
+}
+
+.user-guide-content .info-box {
+  background-color: #d1ecf1 !important;
+  padding: 1rem !important;
+  border-left: 4px solid var(--color-secondary) !important;
+  margin: 1rem 0 !important;
+  border-radius: 4px !important;
+}
+
+.user-guide-content .warning-box {
+  background-color: #f8d7da !important;
+  padding: 1rem !important;
+  border-left: 4px solid #dc3545 !important;
+  margin: 1rem 0 !important;
+  border-radius: 4px !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .user-guide-modal {
+    width: 95vw;
+    height: 90vh;
+  }
+  
+  .user-guide-header {
+    padding: 1rem;
+  }
+  
+  .user-guide-content-wrapper {
+    padding: 1rem;
+  }
+  
+  .user-guide-title {
+    font-size: 1.25rem;
+  }
+  
+  .user-guide-content h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  .user-guide-content h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  .user-guide-content h3 {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-guide-overlay {
+    padding: 0.5rem;
+  }
+  
+  .user-guide-modal {
+    width: 100vw;
+    height: 95vh;
+    border-radius: 0;
+  }
+  
+  .user-guide-header {
+    padding: 0.75rem;
+  }
+  
+  .user-guide-content-wrapper {
+    padding: 0.75rem;
+  }
+}
