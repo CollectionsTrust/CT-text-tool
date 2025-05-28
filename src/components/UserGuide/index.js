@@ -71,7 +71,7 @@ function UserGuide({ isPublic = false }) {
       <div className="user-guide-modal">
         {/* Header with close button */}
         <div className="user-guide-header">
-          <h2 className="user-guide-title">User guide</h2>
+          <h2 className="user-guide-title">/h2>
           <button
             onClick={handleClose}
             className="user-guide-close-btn"
