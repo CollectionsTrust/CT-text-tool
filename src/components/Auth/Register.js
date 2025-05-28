@@ -1,8 +1,9 @@
 // src/components/Auth/Register.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -17,10 +19,11 @@ const Register = () => {
     setError('');
 
     try {
-      const userRef = doc(db, 'projectUsers', email);
-      const userSnap = await getDoc(userRef);
+      const projectUsersRef = collection(db, 'projectUsers');
+      const q = query(projectUsersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
 
-      if (!userSnap.exists()) {
+      if (querySnapshot.empty) {
         throw new Error('You are not approved to register. Please request access.');
       }
 
@@ -28,8 +31,9 @@ const Register = () => {
         throw new Error('Invalid password. Use the default password provided.');
       }
 
-      localStorage.setItem('userEmail', email); // ✅ Persist for auto login after refresh
-
+      // Login directly after successful registration check
+      await login(email, password);
+      
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);

@@ -1,3 +1,4 @@
+// src/components/AdminDashboard/ProjectRequests.js (updated)
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -12,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
+import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 import './AdminDashboard.css';
 
 const ProjectRequests = () => {
@@ -84,6 +86,10 @@ const ProjectRequests = () => {
         createdBy: currentUser.email
       });
 
+      // Generate a temporary password
+      const tempPassword = generateTempPassword();
+      const hashedPassword = await hashPassword(tempPassword);
+
       // Check if user already exists in Firestore
       const usersRef = collection(db, 'projectUsers');
       const userQuery = query(usersRef, where('email', '==', request.email));
@@ -93,7 +99,7 @@ const ProjectRequests = () => {
       let projectUserId;
       
       if (userSnapshot.empty) {
-        // User doesn't exist, create a new projectUser
+        // User doesn't exist, create a new projectUser with hashed password
         projectUserRef = await addDoc(collection(db, 'projectUsers'), {
           email: request.email,
           name: request.name,
@@ -102,7 +108,12 @@ const ProjectRequests = () => {
           createdAt: serverTimestamp(),
           status: 'approved',
           approvedBy: currentUser.email,
-          password: 'default',
+          passwordHash: hashedPassword,
+          passwordSettings: {
+            isTemporary: true,
+            lastChanged: null,
+            createdAt: new Date().toISOString()
+          },
           projectRoles: {
             [projectRef.id]: 'owner'  // Set role for this specific project
           }
@@ -134,10 +145,30 @@ const ProjectRequests = () => {
         processedAt: serverTimestamp(),
         projectId: projectRef.id,
         projectUserId: projectUserId,
-        approvedBy: currentUser.email
+        approvedBy: currentUser.email,
+        tempPassword: tempPassword // Store temp password in the request record for email generation
       });
 
-      setSuccessMessage(`Project request for ${request.name} has been approved.`);
+      // Generate a mailto link with pre-populated content for the admin to send
+      const emailSubject = encodeURIComponent(`Your CT Text Tool project "${request.projectTitle || 'Project Request'}" has been approved`);
+      const emailBody = encodeURIComponent(
+        `Hello ${request.name},\n\n` +
+        `Your project request for "${request.projectTitle || 'the CT Text Tool'}" has been approved. You can now log in to the CT Text Tool with the following credentials:\n\n` +
+        `Email: ${request.email}\n` +
+        `Temporary Password: ${tempPassword}\n\n` +
+        `Important: You will be required to change your password when you first log in.\n\n` +
+        `Your project "${request.projectTitle || 'Project'}" is now set up and ready for you to begin working on.\n\n` +
+        `For any questions, please contact us.\n\n` +
+        `Thank you,\n` +
+        `Collections Trust Team`
+      );
+      
+      const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
+      
+      // Open the mailto link in a new window/tab
+      window.open(mailtoLink, '_blank');
+
+      setSuccessMessage(`Project request for ${request.name} has been approved. A draft email has been opened in your email client.`);
       setRequests(prev => prev.filter(r => r.id !== requestId));
     } catch (err) {
       console.error('Error approving request:', err);
@@ -160,7 +191,23 @@ const ProjectRequests = () => {
         rejectedBy: currentUser.email
       });
 
-      setSuccessMessage(`Project request for ${request.name} has been rejected.`);
+      // Generate a mailto link for rejection email
+      const emailSubject = encodeURIComponent(`Regarding your project request: ${request.projectTitle || 'Project Request'}`);
+      const emailBody = encodeURIComponent(
+        `Hello ${request.name},\n\n` +
+        `We've reviewed your project request for "${request.projectTitle || 'Project'}" and we regret to inform you that we are unable to approve it at this time.\n\n` +
+        `If you have any questions or would like to discuss this further, please feel free to reply to this email.\n\n` +
+        `Thank you for your interest in the CT Text Tool.\n\n` +
+        `Regards,\n` +
+        `Collections Trust Team`
+      );
+      
+      const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
+      
+      // Open the mailto link in a new window/tab
+      window.open(mailtoLink, '_blank');
+
+      setSuccessMessage(`Project request for ${request.name} has been rejected. A draft email has been opened in your email client.`);
       setRequests(prev => prev.filter(r => r.id !== requestId));
     } catch (err) {
       console.error('Error rejecting request:', err);

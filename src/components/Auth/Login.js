@@ -1,5 +1,4 @@
 // src/components/Auth/Login.js
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -18,19 +17,29 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { role } = await login(email, password);
-      localStorage.setItem('userEmail', email);
-
-      if (role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard'); // owners and authors
+      // Call login function from AuthContext
+      const result = await login(email, password);
+      console.log("Login successful:", result);
+      
+      // Check if password change is required
+      if (result.passwordChangeRequired) {
+        navigate('/change-password-required');
+        return;
       }
-
+      
+      // IMPORTANT: Use a slight delay to ensure context state has updated
+      // before navigation occurs
+      setTimeout(() => {
+        if (result.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard'); // For owners and authors
+        }
+        setLoading(false);
+      }, 100);
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login. Please check your credentials.');
-    } finally {
       setLoading(false);
     }
   };
@@ -75,7 +84,7 @@ const Login = () => {
           </button>
         )}
 
-        <p className="login-note">Use your email and the default password ("default").</p>
+        <p className="login-note">If you've forgotten your password, contact an administrator.</p>
       </form>
     </div>
   );
