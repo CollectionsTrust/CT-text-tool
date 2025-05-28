@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './UserGuide.css';
 
 function UserGuide({ isPublic = false }) {
   const [guideContent, setGuideContent] = useState('');
@@ -64,40 +65,16 @@ function UserGuide({ isPublic = false }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="user-guide-overlay"
       onClick={handleBackdropClick}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '1rem'
-      }}
     >
-      <div 
-        className="bg-white rounded-lg shadow-xl flex flex-col"
-        style={{
-          width: '50vw',
-          height: '80vh',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
+      <div className="user-guide-modal">
         {/* Header with close button */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">User Guide</h2>
+        <div className="user-guide-header">
+          <h2 className="user-guide-title">User Guide</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+            className="user-guide-close-btn"
             aria-label="Close user guide"
           >
             ×
@@ -105,16 +82,19 @@ function UserGuide({ isPublic = false }) {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="user-guide-content-wrapper">
           {loading && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-lg">Loading user guide...</div>
+            <div className="user-guide-loading">
+              <div className="loading-spinner"></div>
+              <p>Loading user guide...</p>
             </div>
           )}
           
           {error && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-red-600">Error loading user guide: {error}</div>
+            <div className="user-guide-error">
+              <div className="error-message">
+                <p>Error loading user guide: {error}</p>
+              </div>
             </div>
           )}
           
