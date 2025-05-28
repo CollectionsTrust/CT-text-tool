@@ -347,6 +347,215 @@
   text-decoration: none;
 }
 
+/* Checkbox group styling */
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.checkbox-input {
+  width: auto;
+  margin: 0;
+  flex-shrink: 0;
+  margin-top: 0.25rem; /* Align with first line of text */
+}
+
+.checkbox-label {
+  margin: 0;
+  font-weight: normal;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.terms-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  display: inline;
+}
+
+.terms-link:hover {
+  color: #444967;
+  text-decoration: none;
+}
+
+.terms-link:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Terms and Conditions Popup Styling */
+.terms-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.terms-modal {
+  width: 90vw;
+  max-width: 1000px;
+  height: 85vh;
+  background-color: var(--color-white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.terms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  background-color: var(--color-white);
+  flex-shrink: 0;
+}
+
+.terms-title {
+  color: var(--color-primary);
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.terms-close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-text-light);
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.terms-close-btn:hover {
+  background-color: #f5f5f5;
+  color: var(--color-text);
+}
+
+.terms-close-btn:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.terms-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: var(--color-white);
+}
+
+.terms-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+}
+
+.terms-loading p {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.terms-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.terms-content {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+  line-height: 1.6 !important;
+  color: var(--color-text) !important;
+}
+
+.terms-content * {
+  max-width: none !important;
+}
+
+.terms-content body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  line-height: 1.6 !important;
+  color: var(--color-text) !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.terms-content h1 {
+  color: var(--color-primary) !important;
+  font-size: 2.25rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 3px solid var(--color-secondary) !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.terms-content h2 {
+  color: var(--color-primary) !important;
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 2px solid #ecf0f1 !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.terms-content h3 {
+  color: var(--color-primary) !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.terms-content p {
+  margin-bottom: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.terms-content ul,
+.terms-content ol {
+  margin-bottom: 1rem !important;
+  padding-left: 1.5rem !important;
+}
+
+.terms-content li {
+  margin-bottom: 0.5rem !important;
+}
+
 /* Additional responsive adjustments specific to landing */
 @media (max-width: 768px) {
   .landing-logo-area {
@@ -377,5 +586,51 @@
   
   .landing-logos {
     max-width: 100%;
+  }
+
+  /* Terms popup responsive */
+  .terms-modal {
+    width: 95vw;
+    height: 90vh;
+  }
+  
+  .terms-header {
+    padding: 1rem;
+  }
+  
+  .terms-content-wrapper {
+    padding: 1rem;
+  }
+  
+  .terms-title {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .terms-overlay {
+    padding: 0.5rem;
+  }
+  
+  .terms-modal {
+    width: 100vw;
+    height: 95vh;
+    border-radius: 0;
+  }
+  
+  .terms-header {
+    padding: 0.75rem;
+  }
+  
+  .terms-content-wrapper {
+    padding: 0.75rem;
+  }
+  
+  .checkbox-group {
+    align-items: flex-start;
+  }
+  
+  .checkbox-label {
+    font-size: 0.85rem;
   }
 }
