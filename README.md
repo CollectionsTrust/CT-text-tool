@@ -191,7 +191,6 @@ ct-text-tool/
 │   │       └── UserGuide.css
 │   │
 │   └── styles/                      # Additional stylesheets
-│       ├── Auth.css
 │       └── ProjectSetup.css
 │
 ├── netlify.toml                     # Netlify deployment configuration

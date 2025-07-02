@@ -1,6 +1,4 @@
-// src/components/TextsPage/TextsTable.js
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { truncateToWords } from '../ObjectsPage/utils/dataExtractors';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';

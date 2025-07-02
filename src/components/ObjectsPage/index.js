@@ -1,7 +1,5 @@
-// src/components/ObjectsPage/index.js
-
-import React, { useContext, useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useContext, useEffect, useState, useCallback } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
@@ -18,7 +16,6 @@ import './ObjectsPage.css';
 const ObjectsPageContent = () => {
   const { projectId } = useParams();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const {
     filteredData,
@@ -27,7 +24,6 @@ const ObjectsPageContent = () => {
     searchQuery,
     showCollection,
     showTitle,
-    showSelectedOnly,
     setShowCollection,
     setShowTitle,
     setShowSelectedOnly,
@@ -47,11 +43,9 @@ const ObjectsPageContent = () => {
   const [layoutMode, setLayoutMode] = useState('split');
   const [activeView, setActiveView] = useState('text');
 
-  const [isEditingText, setIsEditingText] = useState(true);
-  const [currentTextData, setCurrentTextData] = useState(null);
+  const [ setCurrentTextData] = useState(null);
   const [textEditId, setTextEditId] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const [projectConfig, setProjectConfig] = useState({});
 
@@ -88,7 +82,6 @@ const ObjectsPageContent = () => {
 
     if (editTextId) {
       setTextEditId(editTextId);
-      setIsEditingText(true);
       setIsEditMode(true);
 
       const fetchTextData = async () => {
@@ -117,9 +110,7 @@ const ObjectsPageContent = () => {
     }
   }, [searchParams, filteredData, setSelectedRecords, setShowSelectedOnly]);
 
-  const handleTextFormChange = (hasChanges) => setHasUnsavedChanges(hasChanges);
   const handleCancelEdit = () => setIsEditMode(false);
-  const handleSaveText = () => setHasUnsavedChanges(false);
 
   const handleViewRecord = useCallback((record) => {
     setSelectedRecord(record);
@@ -181,11 +172,11 @@ const ObjectsPageContent = () => {
         projectId={projectId}
         projectReferenceNumber={projectConfig.projectReferenceNumber || ""}
         textId={textEditId}
-        onSave={handleSaveText}
+        // onSave={handleSaveText}
         onCancel={handleCancelEdit}
         projectConfig={projectConfig}
         linkedObjects={Array.from(selectedRecords)}
-        onTextChange={handleTextFormChange}
+        // onTextChange={handleTextFormChange}
       />
     </div>
   );

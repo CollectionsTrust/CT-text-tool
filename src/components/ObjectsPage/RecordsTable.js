@@ -1,4 +1,3 @@
-import React from 'react';
 import { getOrganisation, getPropertyValue, getArrayPropertyValues, truncateToWords } from './utils/dataExtractors';
 
 const RecordsTable = ({

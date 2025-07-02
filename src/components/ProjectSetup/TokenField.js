@@ -1,7 +1,3 @@
-// File: src/components/ProjectSetup/TokenField.js
-
-import React from 'react';
-
 const TokenField = ({ token, setToken, error }) => {
   return (
     <div className="form-group">

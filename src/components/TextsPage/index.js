@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { 
   collection, 
   query, 
@@ -8,7 +7,6 @@ import {
   getDocs, 
   doc, 
   getDoc, 
-  deleteDoc, 
   addDoc,
   updateDoc,
   serverTimestamp,
@@ -26,7 +24,6 @@ import './TextsPage.css';
  */
 const TextsPage = () => {
   const { projectId } = useParams();
-  const { currentUser, userRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -184,15 +181,6 @@ const TextsPage = () => {
     }
   }, [editMode, selectedTextIds, texts]);
   
-  // Improved logout that respects user role
-  const handleLogout = () => {
-    // Redirect based on user role
-    if (userRole === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/login');
-    }
-  };
   
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -202,25 +190,6 @@ const TextsPage = () => {
   // Clear search
   const handleClearSearch = () => {
     setSearchQuery('');
-  };
-  
-  // Handle creating a new text
-  const handleCreateText = () => {
-    if (projectArchived) {
-      setError("This project is archived. You cannot create new texts.");
-      
-      // Announce to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
-      if (liveRegion) {
-        liveRegion.textContent = 'This project is archived. You cannot create new texts.';
-      }
-      return;
-    }
-    
-    setEditMode(false);
-    setSelectedTextIds(new Set());
-    setTextToEdit(null);
-    setLayoutMode('edit');
   };
   
   // Handle redirection to Objects page for linked objects
@@ -391,9 +360,6 @@ const TextsPage = () => {
       setLoading(false);
     }
   };
-  
-  // Determine if we should show admin navigation
-  const showAdminNav = userRole === 'admin';
   
   // Handle saving a text (new or edit) to Firestore
   const handleSaveText = async (textData) => {

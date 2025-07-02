@@ -1,7 +1,5 @@
-// src/components/ObjectsPage/ObjectsDataProvider.js
-
-import React, { createContext, useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { createContext, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { searchRecords } from './utils/search';
 import { saveRecordsToStorage, getRecordsFromStorage } from './utils/localStorage';
 
@@ -9,7 +7,6 @@ export const ObjectsDataContext = createContext();
 
 export const ObjectsDataProvider = ({ children }) => {
   const { projectId } = useParams();
-  const [searchParams] = useSearchParams();
 
   const [allRecords, setAllRecords] = useState([]);
   const [filteredData, setFilteredData] = useState([]);

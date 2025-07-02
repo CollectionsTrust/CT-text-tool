@@ -1,6 +1,4 @@
-// File: src/components/ProjectSetup/RichTextEditor.js
-
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 const RichTextEditor = ({ value, onChange }) => {
   const editorRef = useRef(null);

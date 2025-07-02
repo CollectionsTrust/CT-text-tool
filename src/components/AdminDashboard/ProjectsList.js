@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   collection,
@@ -16,7 +16,7 @@ import './AdminDashboard.css';
 const ITEMS_PER_PAGE = 25;
 
 const ProjectsList = () => {
-  const { currentUser, userRole } = useAuth();
+  const { currentUser } = useAuth();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,3 @@
-// File: src/components/ProjectSetup/OptionalFields.js
-
-import React from 'react';
 import FormField from '../common/FormField';
 
 const OptionalFields = ({ formData, handleFormChange }) => {

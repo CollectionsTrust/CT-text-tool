@@ -1,6 +1,4 @@
-// File: src/components/ProjectSetup/LanguageSelector.js
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // List of ISO languages
 const isoLanguages = [

@@ -1,14 +1,10 @@
-// src/components/UserDashboard/index.js
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   collection,
   getDocs,
   query,
   where,
-  doc,
-  getDoc
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';

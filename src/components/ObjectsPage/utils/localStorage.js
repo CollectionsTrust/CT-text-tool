@@ -1,5 +1,3 @@
-// src/components/ObjectsPage/utils/localStorage.js
-
 const CHUNK_SIZE = 1000;
 
 export const saveRecordsToStorage = (data, tokenMeta, projectId) => {

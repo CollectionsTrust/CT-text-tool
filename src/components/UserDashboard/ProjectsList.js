@@ -1,6 +1,4 @@
-// src/components/UserDashboard/ProjectsList.js
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -9,11 +7,8 @@ const ITEMS_PER_PAGE = 25;
 
 const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccessMessage, currentUser }) => {
   const [filteredProjects, setFilteredProjects] = useState([]);
-  // Keep state but don't display UI for it (for future use)
-  const [showArchived, setShowArchived] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  // NOTE: Archive functionality is kept in the code but UI is hidden
   const [confirmArchive, setConfirmArchive] = useState(null);
   const [confirmActivate, setConfirmActivate] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -89,7 +84,7 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
 
     setFilteredProjects(visible);
     setCurrentPage(1);
-  }, [searchQuery, projects, showArchived]);
+  }, [searchQuery, projects]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
@@ -178,11 +173,6 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
     <div className="user-section projects-list">
       <div className="header-row">
         <h2 className="section-title">Your projects</h2>
-        {/* Archive toggle button hidden for now
-        <button className="secondary-btn toggle-archived-btn" onClick={() => setShowArchived(!showArchived)}>
-          {showArchived ? 'Hide archived projects' : 'Show archived projects'}
-        </button>
-        */}
       </div>
 
       <div className="search-bar-row">

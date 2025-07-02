@@ -1,4 +1,3 @@
-import React from 'react';
 import './ObjectsPage.css';
 
 const SearchBar = ({ searchQuery, handleSearchChange, handleClearSearch }) => {

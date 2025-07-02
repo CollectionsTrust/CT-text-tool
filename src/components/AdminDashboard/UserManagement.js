@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   collection,
@@ -7,12 +7,9 @@ import {
   updateDoc,
   deleteDoc,
   addDoc,
-  query,
-  where
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
-import { useAuth } from '../../context/AuthContext';
 import './AdminDashboard.css';
 
 const UserManagement = () => {
@@ -37,7 +34,6 @@ const UserManagement = () => {
   const [selectedRole, setSelectedRole] = useState('author');
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
   const [ownershipConflict, setOwnershipConflict] = useState(null);
-  const { currentUser } = useAuth();
 
   useEffect(() => {
     fetchUsers();
@@ -45,7 +41,26 @@ const UserManagement = () => {
   }, []);
 
   useEffect(() => {
-    filterUsers();
+    const filterUsers = () => {
+      if (!searchQuery.trim()) {
+        setFilteredUsers(users);
+        return;
+      }
+
+      const query = searchQuery.toLowerCase().trim();
+      const filtered = users.filter(user => {
+        return (
+          (user.name && user.name.toLowerCase().includes(query)) ||
+          (user.email && user.email.toLowerCase().includes(query)) ||
+          (user.organization && user.organization.toLowerCase().includes(query)) ||
+          (user.role && user.role.toLowerCase().includes(query))
+        );
+      });
+      
+      setFilteredUsers(filtered); 
+    }
+
+    filterUsers()
   }, [searchQuery, users]);
 
   const fetchProjects = async () => {
@@ -101,25 +116,6 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterUsers = () => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = users.filter(user => {
-      return (
-        (user.name && user.name.toLowerCase().includes(query)) ||
-        (user.email && user.email.toLowerCase().includes(query)) ||
-        (user.organization && user.organization.toLowerCase().includes(query)) ||
-        (user.role && user.role.toLowerCase().includes(query))
-      );
-    });
-    
-    setFilteredUsers(filtered);
   };
 
   const handlePasswordReset = async (userId) => {
@@ -389,7 +385,7 @@ const UserManagement = () => {
 
   const executeRoleChange = async () => {
     try {
-      const { action, projectId, projectTitle, oldRole, newRole, userId, userName, userEmail } = confirmRoleChange;
+      const { action, projectTitle, oldRole, newRole, userId, userName, userEmail } = confirmRoleChange;
       
       // Update Firestore
       const userRef = doc(db, 'projectUsers', userId);

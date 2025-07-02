@@ -1,6 +1,4 @@
-// File: src/components/ProjectSetup/index.js
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './ProjectSetup.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProjectForm } from './hooks/useProjectForm';

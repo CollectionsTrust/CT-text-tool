@@ -1,7 +1,3 @@
-// File: src/components/ProjectSetup/ProjectMetaFields.js
-
-import React from 'react';
-
 const ProjectMetaFields = ({ formData, handleFieldChange }) => {
   return (
     <>

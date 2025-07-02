@@ -1,7 +1,3 @@
-// File: src/components/common/FormField.js
-
-import React from 'react';
-
 const FormField = ({
   id,
   name,

@@ -1,5 +1,4 @@
-// src/components/Auth/PasswordChange.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import MainHeader from '../navigation/MainHeader';
@@ -14,7 +13,7 @@ const PasswordChange = ({ forced = false, onComplete = null }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { changePassword, currentUser, passwordChangeRequired } = useAuth();
+  const { changePassword, passwordChangeRequired } = useAuth();
   const navigate = useNavigate();
 
   // Check if this is a forced password change

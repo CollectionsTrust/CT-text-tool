@@ -1,6 +1,4 @@
-// File: src/components/ProjectSetup/LicenseSelector.js
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const LicenseSelector = ({ formData, handleFormChange, licenceOptions, setLicenceOptions }) => {
   const [newLicence, setNewLicence] = useState('');

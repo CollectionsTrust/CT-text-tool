@@ -1,6 +1,3 @@
-// File: src/components/TextsPage/ExportControls.js
-
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { exportToCsv, exportToCsvTwoFiles, exportToXml, exportToJson, exportToHtml } from '../TextsPage/utils/exports';
 import { useProjectForm } from '../ProjectSetup/hooks/useProjectForm';

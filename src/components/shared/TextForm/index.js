@@ -1,6 +1,4 @@
-// src/components/shared/TextForm/index.js - With Edit Mode Button Modifications
-
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, getDocs, query, where, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import QuillEditor from '../QuillEditor/QuillEditor';

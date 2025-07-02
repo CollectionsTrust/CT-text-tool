@@ -1,5 +1,4 @@
-// src/context/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { hashPassword, verifyPassword, isTemporaryPassword, isTemporaryPasswordExpired } from '../utils/passwordUtils';

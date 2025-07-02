@@ -34,6 +34,8 @@ body {
   line-height: 1.6;
   color: var(--color-text);
   background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -420,4 +422,11 @@ label {
   resize: vertical;
 }
 
-/* Rest of your existing App.css content... */
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .auth-form-container {
+    padding: 1.5rem;
+    margin: 1.5rem;
+    max-width: none;
+  }
+}
