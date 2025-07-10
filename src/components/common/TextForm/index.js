@@ -15,9 +15,6 @@ const TextForm = ({
   linkedObjects = [],
   onTextChange,
 }) => {
-  // Debug log to verify projectConfig is being received correctly
-  console.log("TextForm received projectConfig:", JSON.stringify(projectConfig, null, 2));
-  
   const [formKey, setFormKey] = useState(Date.now());
   const [textReferenceNumber, setTextReferenceNumber] = useState('');
   const [textAuthors, setTextAuthors] = useState([]);

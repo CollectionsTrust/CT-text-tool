@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { Link } from 'react-router-dom';
 import {
   collection,
@@ -23,6 +24,7 @@ const Requests = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [processingRequestId, setProcessingRequestId] = useState(null);
   const { currentUser } = useAuth();
+  const auth = getAuth();
 
   const fetchRequests = async () => {
     try {
@@ -86,6 +88,7 @@ const Requests = () => {
       setSuccessMessage('');
 
       const request = projectRequests.find(r => r.id === requestId);
+
       if (!request) throw new Error('Request not found');
 
       // First create the project with the correct title from the project request
@@ -95,7 +98,7 @@ const Requests = () => {
         owner: request.email,
         status: 'active',
         createdAt: serverTimestamp(),
-        createdBy: currentUser.email
+        createdBy: 'currentUser.email' // @TODO add back
       });
 
       // Generate a temporary password
@@ -106,10 +109,10 @@ const Requests = () => {
       const usersRef = collection(db, 'projectUsers');
       const userQuery = query(usersRef, where('email', '==', request.email));
       const userSnapshot = await getDocs(userQuery);
-      
+
       let projectUserRef;
       let projectUserId;
-      
+
       if (userSnapshot.empty) {
         // User doesn't exist, create a new projectUser with hashed password
         projectUserRef = await addDoc(collection(db, 'projectUsers'), {
@@ -119,7 +122,7 @@ const Requests = () => {
           role: 'owner',
           createdAt: serverTimestamp(),
           status: 'approved',
-          approvedBy: currentUser.email,
+          approvedBy: 'currentUser.email', // @TODO add back
           passwordHash: hashedPassword,
           passwordSettings: {
             isTemporary: true,
@@ -135,10 +138,10 @@ const Requests = () => {
         // User already exists, update their projectRoles
         const existingUserDoc = userSnapshot.docs[0];
         projectUserId = existingUserDoc.id;
-        
+
         const userData = existingUserDoc.data();
         const currentProjectRoles = userData.projectRoles || {};
-        
+
         await updateDoc(doc(db, 'projectUsers', projectUserId), {
           projectRoles: {
             ...currentProjectRoles,
@@ -155,7 +158,7 @@ const Requests = () => {
         processedAt: serverTimestamp(),
         projectId: projectRef.id,
         projectUserId: projectUserId,
-        approvedBy: currentUser.email,
+        approvedBy: 'currentUser.email', // @TODO add back
         tempPassword: tempPassword
       });
 
@@ -172,12 +175,26 @@ const Requests = () => {
         `Thank you,\n` +
         `Collections Trust Team`
       );
-      
+
       const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
       window.open(mailtoLink, '_blank');
 
       setSuccessMessage(`Project request for ${request.name} has been approved. A draft email has been opened in your email client.`);
       setProjectRequests(prev => prev.filter(r => r.id !== requestId));
+
+      // I've added this but it won't work until firebase auth is turned on.
+      createUserWithEmailAndPassword(auth, request.email, tempPassword)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log('USER SIGNED UP!')
+          console.log('USER: ', user)
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.log(errorCode, errorMessage)
+        });
+
     } catch (err) {
       console.error('Error approving project request:', err);
       setError(`Failed to approve request: ${err.message}`);
@@ -209,7 +226,7 @@ const Requests = () => {
         `Regards,\n` +
         `Collections Trust Team`
       );
-      
+
       const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
       window.open(mailtoLink, '_blank');
 
@@ -276,7 +293,7 @@ const Requests = () => {
         `Thank you,\n` +
         `Collections Trust Team`
       );
-      
+
       const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
       window.open(mailtoLink, '_blank');
 
@@ -312,7 +329,7 @@ const Requests = () => {
         `Thank you,\n` +
         `Collections Trust Team`
       );
-      
+
       const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
       window.open(mailtoLink, '_blank');
 
@@ -367,16 +384,16 @@ const Requests = () => {
                     <div className="truncated-text">{request.projectDescription}</div>
                   </td>
                   <td className="actions-cell">
-                    <button 
-                      className="primary-btn approve-btn" 
-                      onClick={() => handleApproveProject(request.id)} 
+                    <button
+                      className="primary-btn approve-btn"
+                      onClick={() => handleApproveProject(request.id)}
                       disabled={processingRequestId === request.id}
                     >
                       {processingRequestId === request.id ? 'Processing...' : 'Approve'}
                     </button>
-                    <button 
-                      className="secondary-btn reject-btn" 
-                      onClick={() => handleRejectProject(request.id)} 
+                    <button
+                      className="secondary-btn reject-btn"
+                      onClick={() => handleRejectProject(request.id)}
                       disabled={processingRequestId === request.id}
                     >
                       Reject
@@ -413,16 +430,16 @@ const Requests = () => {
                   <td>{request.organization}</td>
                   <td>{formatDate(request.createdAt)}</td>
                   <td className="actions-cell">
-                    <button 
-                      className="primary-btn approve-btn" 
-                      onClick={() => handleApprovePasswordReset(request.id)} 
+                    <button
+                      className="primary-btn approve-btn"
+                      onClick={() => handleApprovePasswordReset(request.id)}
                       disabled={processingRequestId === request.id}
                     >
                       {processingRequestId === request.id ? 'Processing...' : 'Approve'}
                     </button>
-                    <button 
-                      className="secondary-btn reject-btn" 
-                      onClick={() => handleRejectPasswordReset(request.id)} 
+                    <button
+                      className="secondary-btn reject-btn"
+                      onClick={() => handleRejectPasswordReset(request.id)}
                       disabled={processingRequestId === request.id}
                     >
                       Reject

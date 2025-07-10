@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import TextsTable from './TextsTable';
-import TextForm from '../shared/TextForm';
+import TextForm from '../common/TextForm';
 import './TextsPage.css';
 
 /**

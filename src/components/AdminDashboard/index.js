@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Requests from './Requests';
 import ProjectsList from './ProjectsList';
@@ -14,12 +14,6 @@ const AdminDashboard = () => {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Debug: Log the current user and role
-  useEffect(() => {
-    console.log("AdminDashboard - Current User:", currentUser);
-    console.log("AdminDashboard - User Role:", userRole);
-  }, [currentUser, userRole]);
 
   // Check for pending project requests when component mounts
   useEffect(() => {
@@ -46,12 +40,6 @@ const AdminDashboard = () => {
 
     if (currentUser && userRole === 'admin') {
       checkForPendingRequests();
-    } else {
-      // Debug: Log why check isn't running
-      console.log("Not checking for pending requests:", { 
-        hasCurrentUser: !!currentUser, 
-        userRole 
-      });
     }
   }, [currentUser, userRole, navigate, location]);
 
@@ -67,15 +55,8 @@ const AdminDashboard = () => {
       setActiveTab(pendingRequestsExist ? 'requests' : 'projects');
     }
   }, [location, pendingRequestsExist, initialCheckDone]);
-
-  // Check if user is authorized to access this page
-  if (!currentUser) {
-    console.log("No current user, redirecting to dashboard");
-    return <Navigate to="/dashboard" />;
-  }
   
   if (userRole !== 'admin') {
-    console.log("User role is not admin, redirecting to dashboard");
     return <Navigate to="/dashboard" />;
   }
 

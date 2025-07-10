@@ -1,12 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 
 // Auth components
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
-import ResetPassword from './components/Auth/ResetPassword';
 import PasswordChange from './components/Auth/PasswordChange';
-import ForcedPasswordChange from './components/Auth/ForcedPasswordChange';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 // Navigation
@@ -36,18 +32,6 @@ const ProjectLayout = () => (
   </>
 );
 
-// Check if password change is required before allowing access
-const RequirePasswordChangeCheck = () => {
-  const { passwordChangeRequired } = useAuth();
-  
-  // If password change is required, redirect to forced password change
-  if (passwordChangeRequired) {
-    return <Navigate to="/change-password-required" replace />;
-  }
-  
-  return <Outlet />;
-};
-
 function App() {
   return (
     <AuthProvider>
@@ -55,35 +39,19 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/guide" element={<UserGuide isPublic={true} />} />
+          <Route path="/user-guide" element={<UserGuide />} />
           
-          {/* Forced password change route */}
-          <Route path="/change-password-required" element={<ForcedPasswordChange />} />
-          
-          {/* Protected routes that require password change check */}
+          {/* Protected routes that require user to be logged in */}
           <Route element={<ProtectedRoute allowedRoles={['admin', 'owner', 'author']} />}>
-            <Route element={<RequirePasswordChangeCheck />}>
-              {/* User dashboard */}
-              <Route path="/dashboard" element={<UserDashboard />} />
-              
-              {/* Admin dashboard */}
-              <Route path="/admin" element={<><MainHeader /><AdminDashboard /></>} />
-              
-              {/* User guide for logged-in users */}
-              <Route path="/user-guide" element={<UserGuide isPublic={false} />} />
-              
-              {/* Password change */}
-              <Route path="/change-password" element={<PasswordChange />} />
-              
-              {/* Project-specific pages */}
-              <Route path="/projects/:projectId" element={<ProjectLayout />}>
-                <Route index element={<ProjectSetup />} />
-                <Route path="objects" element={<ObjectsPage />} />
-                <Route path="texts" element={<TextsPage />} />
-              </Route>
+            <Route path="/dashboard" element={<UserDashboard />} />            
+            <Route path="/admin" element={<><MainHeader /><AdminDashboard /></>} />
+            <Route path="/change-password" element={<PasswordChange />} />
+            
+            {/* Project-specific pages */}
+            <Route path="/projects/:projectId" element={<ProjectLayout />}>
+              <Route index element={<ProjectSetup />} />
+              <Route path="objects" element={<ObjectsPage />} />
+              <Route path="texts" element={<TextsPage />} />
             </Route>
           </Route>
 

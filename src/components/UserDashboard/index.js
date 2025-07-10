@@ -34,9 +34,9 @@ const UserDashboard = () => {
     }
   }, [location]);
 
-  useEffect(() => {
+  useEffect(() => {    
     if (!currentUser || authLoading) return;
-
+    
     const fetchProjects = async () => {
       try {
         setLoading(true);

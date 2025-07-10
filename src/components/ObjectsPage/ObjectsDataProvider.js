@@ -2,11 +2,13 @@ import { createContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { searchRecords } from './utils/search';
 import { saveRecordsToStorage, getRecordsFromStorage } from './utils/localStorage';
+import { useProject } from '../../hooks/useProject'
 
 export const ObjectsDataContext = createContext();
 
 export const ObjectsDataProvider = ({ children }) => {
   const { projectId } = useParams();
+  const { project } = useProject(projectId);
 
   const [allRecords, setAllRecords] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -169,35 +171,44 @@ export const ObjectsDataProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
+  useEffect(() => {    
+    const loadData = async () => {      
       setLoading(true);
       setError('');
       setLoadingProgress({ loaded: 0 });
 
       try {
-        const token = localStorage.getItem(`mdsApiToken_${projectId}`);
-        if (!token) {
+        const token = localStorage.getItem(`mdsApiToken_${projectId}`)
+                
+        // If there is no token in the localStorage then wait until the project is
+        // loaded so we can get the token from there
+        if (!token && !project) {
+          return;
+        } 
+
+        // @TODO when auth is set up, we can change this message for authors to say
+        // that the project owner needs to complete the project setup.
+        if (!token && !project.mdsApiToken) {
           setError('Missing MDS API token. Please complete project setup.');
-          setLoading(false);
           return;
         }
 
-        const { success, data, tokenMeta } = getRecordsFromStorage(token, projectId);
+        if (!token) {
+          // Set the token in storage so next page load doesn't need to wait for useProject response
+          localStorage.setItem(`mdsApiToken_${projectId}`, project.mdsApiToken);
+        }
+
+        const { success, data } = getRecordsFromStorage(token, projectId);
+
         if (success && Array.isArray(data)) {
           setAllRecords(data);
-          setLoading(false);
           return;
         }
+        
+        const { records, truncated } = await fetchAllMdsRecords(token || project.mdsApiToken);
 
-        await new Promise(res => setTimeout(res, 100));
-
-        const { records, truncated } = await fetchAllMdsRecords(token);
         setAllRecords(records);
-
-        setTimeout(() => {
-          saveRecordsToStorage(records, { token, timestamp: Date.now() }, projectId);
-        }, 100);
+        saveRecordsToStorage(records, { token: token || project.mdsApiToken, timestamp: Date.now() }, projectId);
 
         if (truncated) {
           setError('Showing first 50,000 records only.');
@@ -210,7 +221,7 @@ export const ObjectsDataProvider = ({ children }) => {
     };
 
     loadData();
-  }, [projectId]);
+  }, [projectId, project]);
 
   useEffect(() => {
     let result = searchRecords(allRecords, searchQuery);

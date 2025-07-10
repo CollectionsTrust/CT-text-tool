@@ -237,14 +237,6 @@ export const validatePasswordStrength = (password) => {
     };
   }
   
-  // Optional: require special character for stronger passwords
-  // if (!hasSpecial) {
-  //   return {
-  //     isValid: false,
-  //     message: 'Password must contain at least one special character'
-  //   };
-  // }
-  
   return {
     isValid: true,
     message: 'Password is strong'

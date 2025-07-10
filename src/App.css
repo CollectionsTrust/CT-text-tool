@@ -249,6 +249,10 @@ label {
   border-color: #bbb;
 }
 
+.password-change-btn {
+  margin-right: 12px;
+}
+
 /* Message components */
 .success-message {
   background-color: var(--color-success-bg);

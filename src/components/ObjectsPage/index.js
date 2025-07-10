@@ -9,8 +9,8 @@ import DisplayOptions from './DisplayOptions';
 import RecordsTable from './RecordsTable';
 import RecordModal from './RecordModal';
 import PaginationControls from './PaginationControls';
-import SplitLayout from '../shared/AccessibleLayout/SplitLayout';
-import TextForm from '../shared/TextForm/index';
+import SplitLayout from '../common/AccessibleLayout/SplitLayout';
+import TextForm from '../common/TextForm/index';
 import './ObjectsPage.css';
 
 const ObjectsPageContent = () => {
@@ -43,7 +43,7 @@ const ObjectsPageContent = () => {
   const [layoutMode, setLayoutMode] = useState('split');
   const [activeView, setActiveView] = useState('text');
 
-  const [ setCurrentTextData] = useState(null);
+  const [setCurrentTextData] = useState(null);
   const [textEditId, setTextEditId] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -136,13 +136,15 @@ const ObjectsPageContent = () => {
         isEditMode={isEditMode}
       />
 
-      {loading ? (
+      {error && <p className="error-message">{error}</p>}
+
+      {!error && loading && (
         <p className="status-message">
           Loading records... {loadingProgress?.loaded?.toLocaleString()}
         </p>
-      ) : error ? (
-        <p className="error-message">{error}</p>
-      ) : (
+      )}
+
+      {!error && !loading && paginatedData.length > 0 && (
         <>
           <RecordsTable
             filteredData={paginatedData}
@@ -176,7 +178,7 @@ const ObjectsPageContent = () => {
         onCancel={handleCancelEdit}
         projectConfig={projectConfig}
         linkedObjects={Array.from(selectedRecords)}
-        // onTextChange={handleTextFormChange}
+      // onTextChange={handleTextFormChange}
       />
     </div>
   );

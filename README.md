@@ -99,8 +99,6 @@ ct-text-tool/
 │   │   ├── Auth/                    # Authentication components
 │   │   │   ├── Login.js
 │   │   │   ├── PasswordChange.js
-│   │   │   ├── ForcedPasswordChange.js
-│   │   │   ├── ResetPassword.js
 │   │   │   └── ProtectedRoute.js
 │   │   │
 │   │   ├── LandingPage/             # Public landing page
@@ -168,7 +166,7 @@ ct-text-tool/
 │   │   │       ├── exportToJson.js
 │   │   │       └── exportToHtml.js
 │   │   │
-│   │   ├── shared/                  # Reusable components
+│   │   ├── common/                  # Reusable components
 │   │   │   ├── FormField.js
 │   │   │   ├── Tooltip.js
 │   │   │   │
@@ -285,7 +283,6 @@ The application uses a custom authentication system built on Firebase with sever
 - **Session Management**: Uses sessionStorage for secure session persistence
 - **Password Security**: PBKDF2 hashing with 600,000 iterations and random salts
 - **Temporary Passwords**: 7-day expiration with automatic cleanup
-- **Legacy Support**: Handles migration from older password systems
 
 ### User Dashboard
 The user dashboard provides different interfaces based on user roles:
@@ -374,7 +371,7 @@ Built with support from Arts Council England as part of Collections Trust's dyna
 
 - **Application Support**: Katie Brown (katie@collectionstrust.org.uk)
 - **MDS Integration**: Arran Rees (support@museumdata.uk)
-- **User Guide**: Comprehensive documentation available at `/guide`
+- **User Guide**: Comprehensive documentation available at `/user-guide`
 - **Collections Trust**: https://collectionstrust.org.uk
 - **Museum Data Service**: https://museumdata.uk
 

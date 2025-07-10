@@ -4,6 +4,7 @@
   padding: 15px 20px;
   width: 100%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.2;
 }
 
 .header-container {
@@ -19,6 +20,10 @@
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.header-logo-link {
+  text-decoration: none;
 }
 
 .logo-container {
@@ -135,28 +140,6 @@
   border-width: 0;
 }
 
-/* The header-button class is kept for backward compatibility */
-.header-button {
-  background-color: #00a9ac; /* Updated to match nav-button */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
-  font-size: 0.9rem;
-  font-weight: 400;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-button:hover {
-  background-color: #008f92; /* Slightly darker teal for hover */
-  color: white;
-  text-decoration: none;
-}
 
 /* Responsive styles */
 @media (max-width: 768px) {
@@ -171,8 +154,7 @@
     width: 100%;
   }
   
-  .nav-button,
-  .header-button {
+  .nav-button {
     flex: 1;
     min-width: 120px;
     text-align: center;
@@ -189,8 +171,7 @@
     width: 100%;
   }
   
-  .nav-button,
-  .header-button {
+  .nav-button {
     width: 100%;
   }
   
