@@ -13,18 +13,18 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
-import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 import './AdminDashboard.css';
+import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
+
 
 const Requests = () => {
   const [projectRequests, setProjectRequests] = useState([]);
-  const [passwordResetRequests, setPasswordResetRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [processingRequestId, setProcessingRequestId] = useState(null);
-  const { currentUser } = useAuth();
-  const auth = getAuth();
+  const { user } = useAuth();
+  const auth = getAuth();  
 
   const fetchRequests = async () => {
     try {
@@ -41,18 +41,7 @@ const Requests = () => {
         projectRequestsData.push({ id: doc.id, ...doc.data() });
       });
 
-      // Fetch password reset requests
-      const passwordResetRequestsRef = collection(db, 'passwordResetRequests');
-      const passwordQuery = query(passwordResetRequestsRef, where('status', '==', 'pending'));
-      const passwordSnapshot = await getDocs(passwordQuery);
-
-      const passwordResetRequestsData = [];
-      passwordSnapshot.forEach((doc) => {
-        passwordResetRequestsData.push({ id: doc.id, ...doc.data() });
-      });
-
       setProjectRequests(projectRequestsData);
-      setPasswordResetRequests(passwordResetRequestsData);
     } catch (err) {
       console.error('Error fetching requests:', err);
       setError('Failed to load requests. Please try again.');
@@ -98,12 +87,8 @@ const Requests = () => {
         owner: request.email,
         status: 'active',
         createdAt: serverTimestamp(),
-        createdBy: 'currentUser.email' // @TODO add back
+        createdBy: user.email // @TODO test this is working
       });
-
-      // Generate a temporary password
-      const tempPassword = generateTempPassword();
-      const hashedPassword = await hashPassword(tempPassword);
 
       // Check if user already exists in Firestore
       const usersRef = collection(db, 'projectUsers');
@@ -112,6 +97,10 @@ const Requests = () => {
 
       let projectUserRef;
       let projectUserId;
+
+      // Create new user with temporary password
+      const tempPassword = generateTempPassword();
+      const hashedPassword = await hashPassword(tempPassword);
 
       if (userSnapshot.empty) {
         // User doesn't exist, create a new projectUser with hashed password
@@ -122,7 +111,7 @@ const Requests = () => {
           role: 'owner',
           createdAt: serverTimestamp(),
           status: 'approved',
-          approvedBy: 'currentUser.email', // @TODO add back
+          approvedBy: user.email,
           passwordHash: hashedPassword,
           passwordSettings: {
             isTemporary: true,
@@ -158,10 +147,12 @@ const Requests = () => {
         processedAt: serverTimestamp(),
         projectId: projectRef.id,
         projectUserId: projectUserId,
-        approvedBy: 'currentUser.email', // @TODO add back
+        approvedBy: user.email, // @TODO add back
         tempPassword: tempPassword
       });
 
+      // @TODO change the email to send out an email to the set password page?
+      // @TODO this is also sending a new password to users who already have an account
       // Generate a mailto link with pre-populated content for the admin to send
       const emailSubject = encodeURIComponent(`Your CT Text Tool project "${request.projectTitle || 'Project Request'}" has been approved`);
       const emailBody = encodeURIComponent(
@@ -194,7 +185,6 @@ const Requests = () => {
           const errorMessage = error.message;
           console.log(errorCode, errorMessage)
         });
-
     } catch (err) {
       console.error('Error approving project request:', err);
       setError(`Failed to approve request: ${err.message}`);
@@ -213,7 +203,7 @@ const Requests = () => {
       await updateDoc(doc(db, 'projectRequests', requestId), {
         status: 'rejected',
         processedAt: serverTimestamp(),
-        rejectedBy: currentUser.email
+        rejectedBy: user.email
       });
 
       // Generate a mailto link for rejection email
@@ -235,109 +225,6 @@ const Requests = () => {
     } catch (err) {
       console.error('Error rejecting project request:', err);
       setError(`Failed to reject request: ${err.message}`);
-    } finally {
-      setProcessingRequestId(null);
-    }
-  };
-
-  const handleApprovePasswordReset = async (requestId) => {
-    try {
-      setProcessingRequestId(requestId);
-      setError('');
-      setSuccessMessage('');
-
-      const request = passwordResetRequests.find(r => r.id === requestId);
-      if (!request) throw new Error('Request not found');
-
-      // Generate a new temporary password
-      const tempPassword = generateTempPassword();
-      const hashedPassword = await hashPassword(tempPassword);
-
-      // Find and update the user's password in Firestore
-      const usersRef = collection(db, 'projectUsers');
-      const userQuery = query(usersRef, where('email', '==', request.email));
-      const userSnapshot = await getDocs(userQuery);
-
-      if (userSnapshot.empty) {
-        throw new Error('User not found');
-      }
-
-      const userDoc = userSnapshot.docs[0];
-      await updateDoc(doc(db, 'projectUsers', userDoc.id), {
-        passwordHash: hashedPassword,
-        passwordSettings: {
-          isTemporary: true,
-          lastChanged: null,
-          createdAt: new Date().toISOString()
-        },
-        password: null // Remove old password field if it exists
-      });
-
-      // Update the password reset request
-      await updateDoc(doc(db, 'passwordResetRequests', requestId), {
-        status: 'approved',
-        processedAt: serverTimestamp(),
-        approvedBy: currentUser.email,
-        tempPassword: tempPassword
-      });
-
-      // Generate mailto link
-      const emailSubject = encodeURIComponent('Your CT Text Tool password has been reset');
-      const emailBody = encodeURIComponent(
-        `Hello ${request.name},\n\n` +
-        `Your password reset request has been approved. You can now log in to the CT Text Tool with your new temporary password:\n\n` +
-        `Email: ${request.email}\n` +
-        `Temporary Password: ${tempPassword}\n\n` +
-        `Important: You will be required to change this password when you next log in.\n\n` +
-        `If you have any questions, please contact us.\n\n` +
-        `Thank you,\n` +
-        `Collections Trust Team`
-      );
-
-      const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
-      window.open(mailtoLink, '_blank');
-
-      setSuccessMessage(`Password reset approved for ${request.name}. A draft email has been opened in your email client.`);
-      setPasswordResetRequests(prev => prev.filter(r => r.id !== requestId));
-    } catch (err) {
-      console.error('Error approving password reset:', err);
-      setError(`Failed to approve password reset: ${err.message}`);
-    } finally {
-      setProcessingRequestId(null);
-    }
-  };
-
-  const handleRejectPasswordReset = async (requestId) => {
-    try {
-      setProcessingRequestId(requestId);
-      setError('');
-      setSuccessMessage('');
-
-      const request = passwordResetRequests.find(r => r.id === requestId);
-      await updateDoc(doc(db, 'passwordResetRequests', requestId), {
-        status: 'rejected',
-        processedAt: serverTimestamp(),
-        rejectedBy: currentUser.email
-      });
-
-      // Generate mailto link for rejection
-      const emailSubject = encodeURIComponent('Regarding your password reset request');
-      const emailBody = encodeURIComponent(
-        `Hello ${request.name},\n\n` +
-        `We've reviewed your password reset request and we are unable to process it at this time.\n\n` +
-        `If you have any questions or believe this is an error, please contact us directly.\n\n` +
-        `Thank you,\n` +
-        `Collections Trust Team`
-      );
-
-      const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
-      window.open(mailtoLink, '_blank');
-
-      setSuccessMessage(`Password reset request for ${request.name} has been rejected. A draft email has been opened in your email client.`);
-      setPasswordResetRequests(prev => prev.filter(r => r.id !== requestId));
-    } catch (err) {
-      console.error('Error rejecting password reset:', err);
-      setError(`Failed to reject password reset: ${err.message}`);
     } finally {
       setProcessingRequestId(null);
     }
@@ -404,53 +291,7 @@ const Requests = () => {
             </tbody>
           </table>
         </div>
-      )}
-
-      {/* Password Reset Requests Section */}
-      <h2 className="section-title" style={{ marginTop: '3rem' }}>Password reset requests</h2>
-      {passwordResetRequests.length === 0 ? (
-        <div className="no-content-message">There are no pending password reset requests at this time.</div>
-      ) : (
-        <div className="admin-table-container">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Organization</th>
-                <th>Request date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {passwordResetRequests.map(request => (
-                <tr key={request.id}>
-                  <td>{request.name}</td>
-                  <td>{request.email}</td>
-                  <td>{request.organization}</td>
-                  <td>{formatDate(request.createdAt)}</td>
-                  <td className="actions-cell">
-                    <button
-                      className="primary-btn approve-btn"
-                      onClick={() => handleApprovePasswordReset(request.id)}
-                      disabled={processingRequestId === request.id}
-                    >
-                      {processingRequestId === request.id ? 'Processing...' : 'Approve'}
-                    </button>
-                    <button
-                      className="secondary-btn reject-btn"
-                      onClick={() => handleRejectPasswordReset(request.id)}
-                      disabled={processingRequestId === request.id}
-                    >
-                      Reject
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      )}      
     </div>
   );
 };

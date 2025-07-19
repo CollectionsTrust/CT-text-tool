@@ -1,6 +1,4 @@
-// File: exportToXml.js (Updated with URL Prefixing and HTML Preservation)
-
-import { cleanHtml, formatDate, downloadFile, formatObjectUrl } from './exportUtils';
+import { formatDate, downloadFile, formatObjectUrl } from './exportUtils';
 
 function escapeXml(unsafe = '') {
   return unsafe.replace(/[<>&'"]/g, function (c) {

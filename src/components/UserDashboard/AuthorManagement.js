@@ -36,7 +36,7 @@ const AuthorManagement = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEditDropdown, setShowEditDropdown] = useState(false);
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
 
   // Fetch authors and owner's projects on component mount
   useEffect(() => {
@@ -57,11 +57,11 @@ const AuthorManagement = () => {
   }, [userProjects]);
 
   const fetchOwnedProjects = async () => {
-    if (!currentUser) return;
+    if (!user) return;
 
     try {
       const projectsRef = collection(db, 'projects');
-      const q = query(projectsRef, where('owner', '==', currentUser.email));
+      const q = query(projectsRef, where('owner', '==', user.email));
       const snapshot = await getDocs(q);
       
       const ownedProjects = snapshot.docs
@@ -81,14 +81,14 @@ const AuthorManagement = () => {
   };
 
   const fetchAuthors = async () => {
-    if (!currentUser) return;
+    if (!user) return;
 
     try {
       setLoading(true);
       
       // First get all projects owned by current user
       const projectsRef = collection(db, 'projects');
-      const projectsQuery = query(projectsRef, where('owner', '==', currentUser.email));
+      const projectsQuery = query(projectsRef, where('owner', '==', user.email));
       const projectsSnapshot = await getDocs(projectsQuery);
       
       const ownedProjectIds = projectsSnapshot.docs.map(doc => doc.id);
@@ -335,7 +335,7 @@ const AuthorManagement = () => {
           `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
           `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
           `Best regards,\n` +
-          `${currentUser?.name || currentUser?.email || 'Project Owner'}`
+          `${user?.name || user?.email || 'Project Owner'}`
         );
         
         const mailtoLink = `mailto:${author.email}?subject=${emailSubject}&body=${emailBody}`;
@@ -451,7 +451,7 @@ const AuthorManagement = () => {
             `You can access the CT Text Tool using your existing login at: https://texts.collectionstrust.org.uk\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
             `Best regards,\n` +
-            `${currentUser?.name || currentUser?.email || 'Project Owner'}`
+            `${user?.name || user?.email || 'Project Owner'}`
           );
           
           const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
@@ -506,7 +506,7 @@ const AuthorManagement = () => {
           `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
           `If you have any questions, please contact us by replying to this email.\n\n` +
           `Best regards,\n` +
-          `${currentUser?.name || currentUser?.email || 'Project Owner'}`
+          `${user?.name || user?.email || 'Project Owner'}`
         );
         
         const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Requests from './Requests';
 import ProjectsList from './ProjectsList';
@@ -8,7 +8,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 const AdminDashboard = () => {
-  const { currentUser, userRole } = useAuth();
+  const { user, userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('requests');
   const [pendingRequestsExist, setPendingRequestsExist] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -38,10 +38,10 @@ const AdminDashboard = () => {
       }
     };
 
-    if (currentUser && userRole === 'admin') {
+    if (user && userRole === 'admin') {
       checkForPendingRequests();
     }
-  }, [currentUser, userRole, navigate, location]);
+  }, [user, userRole, navigate, location]);
 
   // Set active tab based on URL hash or default based on pending requests
   useEffect(() => {
@@ -56,26 +56,20 @@ const AdminDashboard = () => {
     }
   }, [location, pendingRequestsExist, initialCheckDone]);
   
+  // @todo handle this in the routes?
   if (userRole !== 'admin') {
     return <Navigate to="/dashboard" />;
   }
-
-  const handleChangePassword = () => {
-    navigate('/change-password');
-  };
 
   return (
     <div className="container">
       <div className="admin-dashboard">
         <div className="admin-header">
           <div className="admin-user-info">
-            <span>Logged in as: {currentUser?.email || "Unknown User"}</span>
-            <button 
-              onClick={handleChangePassword}
-              className="secondary-btn change-password-btn"
-            >
+            <span>Logged in as: {user?.email || "Unknown User"}</span>
+            <Link className="secondary-btn change-password-btn" to="/change-password">
               Change password
-            </button>
+            </Link>
           </div>
         </div>
 

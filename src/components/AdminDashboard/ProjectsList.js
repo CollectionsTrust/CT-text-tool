@@ -16,10 +16,9 @@ import './AdminDashboard.css';
 const ITEMS_PER_PAGE = 25;
 
 const ProjectsList = () => {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -32,9 +31,8 @@ const ProjectsList = () => {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!currentUser) return;
+      if (!user) return;
       try {
-        setLoading(true);
         setError('');
         let projectsData = [];
 
@@ -75,13 +73,11 @@ const ProjectsList = () => {
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load projects.');
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [currentUser]);
+  }, [user]);
 
   useEffect(() => {
     const query = searchQuery.toLowerCase().trim();

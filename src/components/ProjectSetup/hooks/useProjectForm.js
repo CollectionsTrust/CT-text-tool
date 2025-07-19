@@ -1,7 +1,5 @@
-// File: src/components/ProjectSetup/hooks/useProjectForm.js
-
 import { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 
 export const useProjectForm = (projectId) => {
@@ -20,12 +18,11 @@ export const useProjectForm = (projectId) => {
     creditLine: '',
     textAudience: '',
     rightsReferenceNumber: '',
-    // Text settings fields
     hasHierarchicalText: false,
     tracksTextStatus: false,
     wantsTextTags: false,
-    doNotSaveAuthorNames: false, // New field for issue #7
-    textStatuses: ['Draft', 'Approved'], // Default statuses
+    doNotSaveAuthorNames: false,
+    textStatuses: ['Draft', 'Approved'],
     textTags: []
   });
 
@@ -93,10 +90,6 @@ export const useProjectForm = (projectId) => {
         if (requestSnap.exists()) {
           const requestData = requestSnap.data();
           
-          // Debug: Log all fields in the requestData to find the organization field
-          console.log("Project Request document fields:", Object.keys(requestData));
-          console.log("Entire Project Request data:", requestData);
-          
           // Try to find any field that might contain organization information
           // Check all these possible field names
           const organizationValue = 
@@ -111,9 +104,7 @@ export const useProjectForm = (projectId) => {
             requestData.organizer ||
             requestData.organiser ||
             '';
-            
-          console.log("Found organization value:", organizationValue);
-          
+                      
           setFormData((prev) => {
             // Only update if we are not overwriting existing values
             const updatedFormData = {...prev};
@@ -144,7 +135,6 @@ export const useProjectForm = (projectId) => {
       }
     };
     
-    // Fix for issue #5: Modified to also include the project owner
     const loadAssignedAuthors = async () => {
       try {
         // Find all users who have this project in their projectRoles
@@ -152,7 +142,6 @@ export const useProjectForm = (projectId) => {
         const userSnapshot = await getDocs(usersRef);
         
         const authors = [];
-        let ownerFound = false;
         
         userSnapshot.forEach(userDoc => {
           const userData = userDoc.data();
@@ -168,7 +157,6 @@ export const useProjectForm = (projectId) => {
                 email: userData.email,
                 role: 'owner'
               });
-              ownerFound = true;
             } 
             // Add project authors
             else if (projectRoles[projectId] === 'author') {
@@ -183,7 +171,6 @@ export const useProjectForm = (projectId) => {
         });
         
         setAssignedAuthors(authors);
-        console.log("Loaded authors:", authors);
       } catch (err) {
         console.error('Error loading assigned authors:', err);
       }

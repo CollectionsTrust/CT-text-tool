@@ -8,9 +8,7 @@ const DisplayOptions = ({
   setShowCollection,
   setShowTitle,
   selectedRecords,
-  filteredData,
   handleHeaderCheckboxChange,
-  isEditMode
 }) => {
   const { showSelectedOnly, setShowSelectedOnly } = useContext(ObjectsDataContext);
   const selectedCount = selectedRecords.size;

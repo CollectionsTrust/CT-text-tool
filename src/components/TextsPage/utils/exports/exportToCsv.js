@@ -1,6 +1,4 @@
-// File: exportToCsv.js (Fixed with Object URL Prefixing and HTML Preservation)
-
-import { cleanHtml, formatDate, downloadFile, toSentenceCase, formatObjectUrl } from './exportUtils';
+import { cleanHtml, formatDate, downloadFile, formatObjectUrl } from './exportUtils';
 
 export function exportToCsv(texts, projectInfo, projectSettings = {}) {
   // Determine if we should include authors based on project settings

@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import ProjectRequestForm from './ProjectRequestForm';
 import './LandingPage.css';
 import ctHeaderLogo from '../../assets/images/cttt-logo.png';
@@ -22,7 +20,7 @@ const LandingPage = () => {
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
   const [forgotPasswordError, setForgotPasswordError] = useState('');
 
-  const { login } = useAuth();
+  const { login, sendResetPasswordEmail } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -58,28 +56,9 @@ const LandingPage = () => {
         return;
       }
 
-      // Check if user exists in projectUsers collection
-      const projectUsersRef = collection(db, 'projectUsers');
-      const userQuery = query(projectUsersRef, where('email', '==', forgotPasswordEmail));
-      const userSnapshot = await getDocs(userQuery);
+      await sendResetPasswordEmail(forgotPasswordEmail)
 
-      if (userSnapshot.empty) {
-        setForgotPasswordError('No account found with this email address.');
-        return;
-      }
-
-      const userData = userSnapshot.docs[0].data();
-
-      // Create password reset request
-      await addDoc(collection(db, 'passwordResetRequests'), {
-        email: forgotPasswordEmail,
-        name: userData.name || 'Unknown',
-        organization: userData.organization || 'Unknown',
-        status: 'pending',
-        createdAt: Timestamp.now()
-      });
-
-      setForgotPasswordMessage('Password reset request submitted. An administrator will review your request and contact you shortly.');
+      setForgotPasswordMessage('Password reset request submitted. You will receive and email to reset your password.');
       setForgotPasswordEmail('');
 
       // Auto-close the form after 3 seconds
@@ -87,9 +66,7 @@ const LandingPage = () => {
         setShowForgotPassword(false);
         setForgotPasswordMessage('');
       }, 3000);
-
     } catch (err) {
-      console.error('Error submitting password reset request:', err);
       setForgotPasswordError('Failed to submit request. Please try again.');
     } finally {
       setForgotPasswordLoading(false);

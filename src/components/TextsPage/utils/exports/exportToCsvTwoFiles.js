@@ -1,6 +1,4 @@
-// File: exportToCsvTwoFiles.js - Export project metadata and texts as separate CSV files
-
-import { cleanHtml, formatDate, downloadFile, toSentenceCase, formatObjectUrl } from './exportUtils';
+import { cleanHtml, formatDate, downloadFile, formatObjectUrl } from './exportUtils';
 
 export function exportToCsvTwoFiles(texts, projectInfo, projectSettings = {}) {
   // Determine if we should include authors based on project settings

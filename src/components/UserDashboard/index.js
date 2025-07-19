@@ -14,7 +14,7 @@ import MainHeader from '../navigation/MainHeader';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
-  const { currentUser, userRole, loading: authLoading } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,24 +35,23 @@ const UserDashboard = () => {
   }, [location]);
 
   useEffect(() => {    
-    if (!currentUser || authLoading) return;
+    if (!user || authLoading) return;
     
     const fetchProjects = async () => {
       try {
         setLoading(true);
         setError('');
-        console.log("Fetching projects for user:", currentUser?.email);
 
         // Step 1: Find the user document in Firestore
         const usersRef = collection(db, 'projectUsers');
-        const userQuery = query(usersRef, where('email', '==', currentUser.email));
+        const userQuery = query(usersRef, where('email', '==', user.email));
         const userSnapshot = await getDocs(userQuery);
         
         let projectsData = [];
         
         // Step 2: Get projects where user is the owner (always check this first)
         const projectsRef = collection(db, 'projects');
-        const ownerQuery = query(projectsRef, where('owner', '==', currentUser.email));
+        const ownerQuery = query(projectsRef, where('owner', '==', user.email));
         const ownerSnapshot = await getDocs(ownerQuery);
         
         ownerSnapshot.docs.forEach(doc => {
@@ -63,24 +62,18 @@ const UserDashboard = () => {
             authorCount: doc.data().authors?.length || 0
           });
         });
-        
-        console.log("Found", ownerSnapshot.size, "projects where user is owner");
-        
+                
         // Step 3: Check user's projectRoles for additional projects
         if (!userSnapshot.empty) {
           const userData = userSnapshot.docs[0].data();
           const projectRoles = userData.projectRoles || {};
-          
-          console.log("User document found with projectRoles:", projectRoles);
-          
+                    
           // Get project IDs where user has roles, excluding those already fetched as owner
           const projectIds = Object.keys(projectRoles).filter(projectId => 
             !projectsData.some(project => project.id === projectId)
           );
           
-          if (projectIds.length > 0) {
-            console.log("Found additional project roles:", projectIds.length);
-            
+          if (projectIds.length > 0) {            
             // Fetch projects in batches (Firestore limit is 10 for 'in' queries)
             const batchSize = 10;
             
@@ -119,7 +112,6 @@ const UserDashboard = () => {
           return new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0);
         });
         
-        console.log("Final projects loaded:", projectsData.length);
         setProjects(projectsData);
       } catch (err) {
         console.error('Error loading projects:', err);
@@ -130,7 +122,7 @@ const UserDashboard = () => {
     };
 
     fetchProjects();
-  }, [currentUser, userRole, authLoading]);
+  }, [user, userRole, authLoading]);
 
   const handleChangePassword = () => {
     navigate('/change-password');
@@ -143,7 +135,7 @@ const UserDashboard = () => {
         <div className="user-dashboard">
           <div className="user-header">
             <div className="user-info">
-              <span>Logged in as: {currentUser?.email}</span>
+              <span>Logged in as: {user?.email}</span>
               <button 
                 onClick={handleChangePassword}
                 className="secondary-btn change-password-btn"
@@ -189,7 +181,7 @@ const UserDashboard = () => {
                     error={error}
                     successMessage={successMessage}
                     setSuccessMessage={setSuccessMessage}
-                    currentUser={currentUser}
+                    user={user}
                   />
                 )}
                 {activeTab === 'authors' && (userRole === 'admin' || userRole === 'owner') && (

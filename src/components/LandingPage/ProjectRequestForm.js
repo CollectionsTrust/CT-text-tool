@@ -238,7 +238,7 @@ const ProjectRequestForm = () => {
               {termsLoading && (
                 <div className="terms-loading">
                   <div className="loading-spinner"></div>
-                  <p>Loading terms and conditions...</p>
+                  <p className="sr-only">Loading terms and conditions...</p>
                 </div>
               )}
               

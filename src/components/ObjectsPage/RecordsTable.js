@@ -5,9 +5,7 @@ const RecordsTable = ({
   showCollection,
   showTitle,
   selectedRecords,
-  handleHeaderCheckboxChange,
-  handleRecordSelection,
-  handleViewRecord
+  handleRecordSelection
 }) => {
   return (
     <div className="table-wrapper">
@@ -19,7 +17,7 @@ const RecordsTable = ({
             {showTitle && <th>Title</th>}
             <th>Object name</th>
             <th>Brief description</th>
-            <th style={{ width: '140px' }}>Actions</th> {/* Set a fixed width to ensure room for buttons */}
+            <th style={{ width: '140px' }}>Actions</th>{/* Set a fixed width to ensure room for buttons */}
           </tr>
         </thead>
         <tbody>
@@ -59,9 +57,9 @@ const RecordsTable = ({
                     >
                       View
                     </button>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedRecords.has(uid)} 
+                    <input
+                      type="checkbox"
+                      checked={selectedRecords.has(uid)}
                       onChange={() => handleRecordSelection(record)}
                     />
                   </div>

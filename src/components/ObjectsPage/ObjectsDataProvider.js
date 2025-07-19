@@ -21,7 +21,7 @@ export const ObjectsDataProvider = ({ children }) => {
   const [showTitle, setShowTitle] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState(new Set());
-  
+
   // Add a counter to force re-renders when needed
   const [updateCounter, setUpdateCounter] = useState(0);
 
@@ -30,35 +30,36 @@ export const ObjectsDataProvider = ({ children }) => {
 
   const handleRecordSelection = (record) => {
     const objectUid = record["@admin"]?.uid;
+
     if (!objectUid) return;
-    
+
     // Create new Set instead of modifying existing one
     const currentSelection = new Set(selectedRecords);
-    
+
     if (currentSelection.has(objectUid)) {
       currentSelection.delete(objectUid);
     } else {
       currentSelection.add(objectUid);
-    }
+    }    
     
     // Set the new Set and force update
     setSelectedRecords(currentSelection);
-    setUpdateCounter(prev => prev + 1);
+    // setUpdateCounter(prev => prev + 1);
   };
 
   const handleHeaderCheckboxChange = () => {
     // For the current page of records, toggle their selection state
-    const visibleRecords = showSelectedOnly 
+    const visibleRecords = showSelectedOnly
       ? allRecords.filter(record => selectedRecords.has(record["@admin"]?.uid))
       : filteredData;
-    
+
     // Check if all visible records are selected
-    const allSelected = visibleRecords.every(record => 
+    const allSelected = visibleRecords.every(record =>
       selectedRecords.has(record["@admin"]?.uid)
     );
-    
+
     const newSelection = new Set(selectedRecords);
-    
+
     if (allSelected) {
       // Deselect all visible records
       visibleRecords.forEach(record => {
@@ -72,7 +73,7 @@ export const ObjectsDataProvider = ({ children }) => {
         if (uid) newSelection.add(uid);
       });
     }
-    
+
     setSelectedRecords(newSelection);
     setUpdateCounter(prev => prev + 1);
   };
@@ -171,20 +172,20 @@ export const ObjectsDataProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {    
-    const loadData = async () => {      
+  useEffect(() => {
+    const loadData = async () => {
       setLoading(true);
       setError('');
       setLoadingProgress({ loaded: 0 });
 
       try {
         const token = localStorage.getItem(`mdsApiToken_${projectId}`)
-                
+
         // If there is no token in the localStorage then wait until the project is
         // loaded so we can get the token from there
         if (!token && !project) {
           return;
-        } 
+        }
 
         // @TODO when auth is set up, we can change this message for authors to say
         // that the project owner needs to complete the project setup.
@@ -204,7 +205,7 @@ export const ObjectsDataProvider = ({ children }) => {
           setAllRecords(data);
           return;
         }
-        
+
         const { records, truncated } = await fetchAllMdsRecords(token || project.mdsApiToken);
 
         setAllRecords(records);
@@ -227,7 +228,7 @@ export const ObjectsDataProvider = ({ children }) => {
     let result = searchRecords(allRecords, searchQuery);
 
     if (showSelectedOnly && selectedRecords.size > 0) {
-      result = result.filter(record => 
+      result = result.filter(record =>
         selectedRecords.has(record["@admin"]?.uid)
       );
     }

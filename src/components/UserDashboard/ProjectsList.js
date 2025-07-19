@@ -5,7 +5,7 @@ import { db } from '../../firebase/config';
 
 const ITEMS_PER_PAGE = 25;
 
-const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccessMessage, currentUser }) => {
+const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccessMessage, user }) => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);

@@ -32,7 +32,7 @@ const ProjectLayout = () => (
   </>
 );
 
-function App() {
+const App = () => {
   return (
     <AuthProvider>
       <Router>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import MainHeader from '../navigation/MainHeader';
+import { validatePassword } from '../../utils/passwordUtils'
 
 const PasswordChange = ({ onComplete = null }) => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -15,13 +16,6 @@ const PasswordChange = ({ onComplete = null }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { changePassword } = useAuth();
-
-  // Password validation
-  const validatePassword = (password) => {
-    // At least 8 characters, containing at least one number, one uppercase letter and one lowercase letter
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    return passwordRegex.test(password);
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -42,6 +36,12 @@ const PasswordChange = ({ onComplete = null }) => {
 
     if (!validatePassword(newPassword)) {
       return setError('Password must be at least 8 characters and include uppercase and lowercase letters');
+    }
+
+    const passwordValidity = validatePassword(newPassword)
+  
+    if (!passwordValidity.isValid) {
+      return setError(passwordValidity.message);
     }
 
     setLoading(true);

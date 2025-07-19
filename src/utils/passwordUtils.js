@@ -1,5 +1,3 @@
-// src/utils/passwordUtils.js - PBKDF2 implementation using Web Crypto API
-
 /**
  * Hash a password using PBKDF2 with Web Crypto API
  * @param {string} password - The password to hash
@@ -180,41 +178,15 @@ export const generateTempPassword = () => {
 };
 
 /**
- * Check if a password is temporary
- * @param {object} passwordSettings - The password settings object
- * @returns {boolean} Whether the password is temporary
- */
-export const isTemporaryPassword = (passwordSettings) => {
-  return typeof passwordSettings === 'object' && passwordSettings.isTemporary === true;
-};
-
-/**
- * Check if a temporary password has expired (7 days)
- * @param {object} passwordSettings - The password settings object
- * @returns {boolean} Whether the temporary password has expired
- */
-export const isTemporaryPasswordExpired = (passwordSettings) => {
-  if (!passwordSettings || !passwordSettings.isTemporary || !passwordSettings.createdAt) {
-    return false;
-  }
-  
-  const createdAt = new Date(passwordSettings.createdAt);
-  const expiresAt = new Date(createdAt.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days
-  const now = new Date();
-  
-  return now > expiresAt;
-};
-
-/**
- * Validate password strength
+ * Validate password
  * @param {string} password - The password to validate
  * @returns {object} - Validation result with isValid and message
  */
-export const validatePasswordStrength = (password) => {
+export const validatePassword = (password) => {
   const minLength = 8;
   const hasNumber = /\d/.test(password);
-  const hasLetter = /[a-zA-Z]/.test(password);
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasLowerCaseLetter = /[a-z]/.test(password);
+  const hasUpperCaseLetter = /[A-Z]/.test(password);
   
   if (password.length < minLength) {
     return {
@@ -222,11 +194,18 @@ export const validatePasswordStrength = (password) => {
       message: `Password must be at least ${minLength} characters long`
     };
   }
-  
-  if (!hasLetter) {
+
+  if (!hasUpperCaseLetter) {
     return {
       isValid: false,
-      message: 'Password must contain at least one letter'
+      message: 'Password must contain at least one upper case letter'
+    };
+  }
+  
+  if (!hasLowerCaseLetter) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one lower case letter'
     };
   }
   

@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import './ProjectSetup.css';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjectForm } from './hooks/useProjectForm';
 import ProjectMetaFields from './ProjectMetaFields';
 import LanguageSelector from './LanguageSelector';
 import RichTextEditor from './RichTextEditor';
 import TextSettings from './TextSettings';
+import { useTexts } from '../../hooks/useTexts'
 
 const ProjectSetup = () => {
-  const { projectId } = useParams();
   const navigate = useNavigate();
+  const { projectId } = useParams();
+  const { texts } = useTexts(projectId);
   const {
     formData,
     handleFieldChange,
@@ -27,15 +29,15 @@ const ProjectSetup = () => {
 
   // Initialize license options with Creative Commons options
   const [licenceOptions, setLicenceOptions] = useState([
-    'CC BY 4.0', 
-    'CC BY-SA 4.0', 
-    'CC BY-NC 4.0', 
-    'CC BY-NC-SA 4.0', 
+    'CC BY 4.0',
+    'CC BY-SA 4.0',
+    'CC BY-NC 4.0',
+    'CC BY-NC-SA 4.0',
     'CC BY-ND 4.0',
     'CC BY-NC-ND 4.0',
     'CC0 1.0'
   ]);
-  
+
   const [newLicence, setNewLicence] = useState('');
   const [savingForm, setSavingForm] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -44,7 +46,7 @@ const ProjectSetup = () => {
     if (e) {
       e.preventDefault();
     }
-    
+
     // Validate required fields
     const requiredFields = [
       'projectReferenceNumber',
@@ -57,34 +59,34 @@ const ProjectSetup = () => {
       'copyrightLicensor',
       'usageLicence'
     ];
-    
+
     const missingFields = requiredFields.filter(field => !formData[field]);
-    
+
     if (missingFields.length > 0) {
       setSaveError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
-    
+
     if (selectedLanguages.length === 0) {
       setSaveError('Please select at least one language');
       return;
     }
-    
+
     if (!token) {
       setSaveError('MDS API token is required');
       return;
     }
-    
+
     setSavingForm(true);
     setSaveError(null);
-    
+
     try {
       const result = await saveProjectToFirestore();
-      
+
       if (result.success) {
         // Display success message
         setSaveSuccess(true);
-        
+
         // Wait 1.5 seconds to display success message, then navigate
         setTimeout(() => {
           navigate(`/projects/${projectId}/objects`);
@@ -99,35 +101,35 @@ const ProjectSetup = () => {
       setSavingForm(false);
     }
   };
-  
+
   // Add functions for language handling
   const handleAddLanguage = (language) => {
     if (!selectedLanguages.includes(language)) {
       setSelectedLanguages([...selectedLanguages, language]);
     }
   };
-  
+
   const handleRemoveLanguage = (language) => {
     setSelectedLanguages(selectedLanguages.filter(l => l !== language));
   };
-  
+
   // Handle adding a new license
   const handleAddLicence = () => {
     if (newLicence && !licenceOptions.includes(newLicence)) {
       const updatedOptions = [...licenceOptions, newLicence];
       setLicenceOptions(updatedOptions);
-      
+
       // Auto-select the new license
       handleFieldChange('usageLicence', newLicence);
       setNewLicence('');
-      
+
       // Store updated options in localStorage for persistence
       localStorage.setItem('licenceOptions', JSON.stringify(updatedOptions));
     }
   };
 
   if (loading) {
-    return <div className="loading-spinner">Loading project data...</div>;
+    return <div className="loading-spinner"><span className="sr-only">Loading project data...</span></div>;
   }
 
   return (
@@ -136,25 +138,25 @@ const ProjectSetup = () => {
         {/* Fix 4: Add header with duplicate save button */}
         <div className="project-setup-header">
           <h1 className="section-title">Project setup</h1>
-          <button 
-            onClick={handleSubmit} 
+          <button
+            onClick={handleSubmit}
             className="header-save-button"
             disabled={savingForm}
           >
             {savingForm ? 'Saving...' : 'Save project setup'}
           </button>
         </div>
-        
+
         {saveError && <div className="error-message">{saveError}</div>}
         {saveSuccess && <div className="success-message">Project saved successfully!</div>}
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit} className="project-setup-form">
-          <ProjectMetaFields 
-            formData={formData} 
-            handleFieldChange={handleFieldChange} 
+          <ProjectMetaFields
+            formData={formData}
+            handleFieldChange={handleFieldChange}
           />
-          
+
           {/* Project note */}
           <div className="form-group">
             <label htmlFor="projectNote">
@@ -167,20 +169,20 @@ const ProjectSetup = () => {
               onChange={(content) => handleFieldChange('projectNote', content)}
             />
           </div>
-          
+
           {/* Languages */}
           <LanguageSelector
             selectedLanguages={selectedLanguages}
             onAddLanguage={handleAddLanguage}
             onRemoveLanguage={handleRemoveLanguage}
           />
-          
+
           {/* Text Settings - New Component */}
           <TextSettings
             formData={formData}
             handleFieldChange={handleFieldChange}
           />
-          
+
           {/* Fix 6: Authors - display only names, not emails */}
           <div className="form-group">
             <label htmlFor="authors">
@@ -204,7 +206,7 @@ const ProjectSetup = () => {
               )}
             </div>
           </div>
-          
+
           {/* Rights information fields on same line */}
           <div className="form-row">
             {/* Copyright licensor */}
@@ -224,7 +226,7 @@ const ProjectSetup = () => {
                 required
               />
             </div>
-            
+
             {/* Usage licence */}
             <div className="form-group half-width">
               <label htmlFor="usageLicence">
@@ -266,7 +268,7 @@ const ProjectSetup = () => {
               )}
             </div>
           </div>
-          
+
           {/* Optional fields - arranged in pairs */}
           <div className="form-row">
             {/* Project type */}
@@ -284,7 +286,7 @@ const ProjectSetup = () => {
                 className="text-input"
               />
             </div>
-            
+
             {/* Project venue */}
             <div className="form-group half-width">
               <label htmlFor="projectVenue">
@@ -301,7 +303,7 @@ const ProjectSetup = () => {
               />
             </div>
           </div>
-          
+
           {/* Credit line */}
           <div className="form-group">
             <label htmlFor="creditLine">
@@ -317,7 +319,7 @@ const ProjectSetup = () => {
               className="text-input"
             />
           </div>
-          
+
           <div className="form-row">
             {/* Text audience */}
             <div className="form-group half-width">
@@ -334,7 +336,7 @@ const ProjectSetup = () => {
                 className="text-input"
               />
             </div>
-            
+
             {/* Rights in/out reference number */}
             <div className="form-group half-width">
               <label htmlFor="rightsReferenceNumber">
@@ -351,7 +353,7 @@ const ProjectSetup = () => {
               />
             </div>
           </div>
-          
+
           {/* MDS API token */}
           <div className="form-group">
             <label htmlFor="token">
@@ -359,6 +361,9 @@ const ProjectSetup = () => {
               <span className="required-indicator">*</span>
               <span className="tooltip-icon" title="The API token needed to access the Museum Data Service. This is required to fetch object records.">ⓘ</span>
             </label>
+            {texts.length > 0 &&
+              <p className='mds-not-editable'>MDS tokens can't be edited when there are texts already linked to the project.<br /><Link to={`/projects/${projectId}/texts`}>Delete texts here</Link> first if you wish to change the token.</p>
+            }
             <textarea
               id="token"
               className="token-input"
@@ -367,14 +372,15 @@ const ProjectSetup = () => {
               placeholder="Paste your MDS API token here..."
               rows={6}
               required
+              disabled={texts.length > 0}
             />
             <p className="token-help">Your token should look similar to: 9AyjhGNQQFkSCT5QtkaPdQ7-Cz7onxXq231/T8F-QRk1xVnplfxcvDRgm081xpDxKINpIz0zW-vnLXs...</p>
           </div>
-          
+
           {/* Updated: using the same styling as the top button */}
           <div className="form-buttons">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="header-save-button"
               disabled={savingForm}
             >

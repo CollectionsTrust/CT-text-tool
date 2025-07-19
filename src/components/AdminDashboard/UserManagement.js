@@ -11,6 +11,8 @@ import {
 import { db } from '../../firebase/config';
 import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 import './AdminDashboard.css';
+import { useAuth } from '../../context/AuthContext';
+
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -34,6 +36,8 @@ const UserManagement = () => {
   const [selectedRole, setSelectedRole] = useState('author');
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
   const [ownershipConflict, setOwnershipConflict] = useState(null);
+  const { sendResetPasswordEmail } = useAuth();
+  
 
   useEffect(() => {
     fetchUsers();
@@ -118,56 +122,20 @@ const UserManagement = () => {
     }
   };
 
-  const handlePasswordReset = async (userId) => {
+  const handlePasswordReset = async (userEmail) => {
     try {
-      setProcessingPasswordReset(userId);
-      setError('');
-      setSuccess('');
+      // SEND AN EMAIL TO THE USER ASKING THEM TO RESET PASSWORD!
+      await sendResetPasswordEmail(userEmail)
 
-      const user = users.find(u => u.id === userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
+      // NEED TO TEST THIS
+      // Need to add the text explaining it will send an email so the user can reset
 
-      // Generate a new temporary password
-      const tempPassword = generateTempPassword();
-      const hashedPassword = await hashPassword(tempPassword);
-
-      // Update the user's password in Firestore
-      const userRef = doc(db, 'projectUsers', userId);
-      await updateDoc(userRef, {
-        passwordHash: hashedPassword,
-        passwordSettings: {
-          isTemporary: true,
-          lastChanged: null,
-          createdAt: new Date().toISOString()
-        },
-        // Remove old password field if it exists
-        password: null
-      });
-
-      // Generate mailto link with pre-populated content
-      const emailSubject = encodeURIComponent('Your CT Text Tool password has been reset');
-      const emailBody = encodeURIComponent(
-        `Hello ${user.name || user.email},\n\n` +
-        `Your password for the CT Text Tool has been reset by an administrator.\n\n` +
-        `Your new temporary password is: ${tempPassword}\n\n` +
-        `Important: You will be required to change this password when you next log in. Please do this within the next 7 days, as the temporary password will expire after a week and you will have to request a new one.\n\n` +
-		`You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
-        `If you have any questions, please contact us.\n\n` +
-        `Thank you,\n` +
-        `Collections Trust Team`
-      );
-      
-      const mailtoLink = `mailto:${user.email}?subject=${emailSubject}&body=${emailBody}`;
-      
-      // Open the mailto link in a new window/tab
-      window.open(mailtoLink, '_blank');
-
-      setSuccess(`Password reset for ${user.name || user.email}. A draft email has been opened in your email client.`);
+      // TO GIVE ADMIN USER FEEBACK THAT THE LINK HAS BEEN SENT. The text below might not be seen by users.
+      // could scroll to message as a minimum.
+      setSuccess(`An email has been sent to ${userEmail} so they can reset their password`);
     } catch (err) {
-      console.error('Error resetting password:', err);
-      setError(`Failed to reset password: ${err.message}`);
+      console.error('Error sending password reset email:', err);
+      setError(`Error sending password reset email: ${err.message}`);
     } finally {
       setProcessingPasswordReset(null);
     }
@@ -503,6 +471,7 @@ const UserManagement = () => {
             `Collections Trust Team`
           );
         } else {
+          // @TODO also need to change email here to not send password! send link to create password?
           emailSubject = encodeURIComponent(`You have been added to a new CT Text Tool project`);
           emailBody = encodeURIComponent(
             `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +
@@ -649,11 +618,11 @@ const UserManagement = () => {
                   </td>
                   <td>
                     <button
-                      onClick={() => handlePasswordReset(user.id)}
+                      onClick={() => handlePasswordReset(user.email)}
                       className="secondary-btn reset-btn"
                       disabled={processingPasswordReset === user.id}
                     >
-                      {processingPasswordReset === user.id ? 'Resetting...' : 'Reset'}
+                      {processingPasswordReset === user.id ? 'Sending email...' : 'Reset'}
                     </button>
                   </td>
                   <td>

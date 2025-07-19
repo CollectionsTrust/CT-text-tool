@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useProject } from '../../hooks/useProject'
 import './MainHeader.css';
@@ -6,9 +6,12 @@ import './MainHeader.css';
 const MainHeader = () => {
   const { user, userRole, logout } = useAuth();
   const navigate = useNavigate();
-  const { projectId } = useParams();
   const location = useLocation();
+  const { projectId } = useParams();
   const { project } = useProject(projectId)
+  const [searchParams] = useSearchParams();
+  const editTextId = searchParams.get('editTextId');
+  const pathParts = location.pathname.split('/')
 
   const handleLogout = async () => {
     try {
@@ -52,24 +55,21 @@ const MainHeader = () => {
     e.preventDefault();
 
     // Check for unsaved changes
-    if (window.textFormIsDirty) {
-      const confirm = window.confirm('You have unsaved changes. Are you sure you want to reset the form?');
-      if (!confirm) return;
-      window.textFormIsDirty = false;
+    // if (window.textFormIsDirty) {
+    //   const confirm = window.confirm('You have unsaved changes. Are you sure you want to reset the form?');
+    //   if (!confirm) return;
+    //   window.textFormIsDirty = false;
+    // }
+
+    const isTextsPage = pathParts[pathParts.length - 1] === 'texts';
+
+    if (editTextId || isTextsPage) {
+      navigate(`/projects/${projectId}/objects`)
+      navigate(0)
+      return
     }
 
-    // If already on objects page, just reset the form
-    if (location.pathname.includes('/objects')) {
-      console.log('Resetting form from same page');
-      window.RESET_TEXT_FORM = Date.now();
-      window.dispatchEvent(new Event('resetTextForm'));
-    }
-    // Otherwise navigate and set the reset flag
-    else {
-      console.log('Navigating to objects page and resetting');
-      window.RESET_TEXT_FORM = Date.now();
-      navigate(`/projects/${projectId}/objects`);
-    }
+    navigate(0)
   };
 
   return (
@@ -88,36 +88,6 @@ const MainHeader = () => {
         </div>
 
         <div className="header-actions">
-          {location.pathname.includes('/projects/') && (
-            <>
-              {(userRole === 'admin' || user?.email === project?.owner) && (
-                <Link
-                  to={`/projects/${projectId}?edit=true`}
-                  className="nav-button"
-                  onClick={handleNavigation(`/projects/${projectId}?edit=true`)}
-                >
-                  Project setup
-                </Link>
-              )}
-
-              {/* Create texts button as a button element */}
-              <button
-                className="nav-button"
-                onClick={handleCreateTexts}
-              >
-                Create texts
-              </button>
-
-              <Link
-                to={`/projects/${projectId}/texts`}
-                className="nav-button"
-                onClick={handleNavigation(`/projects/${projectId}/texts`)}
-              >
-                Edit texts
-              </Link>
-            </>
-          )}
-
           {/* Help icon - just a white circle with question mark */}
           <Link
             to={{
@@ -130,6 +100,32 @@ const MainHeader = () => {
             <span className="help-icon">?</span>
             <span className="sr-only">Help</span>
           </Link>
+
+          {location.pathname.includes('/projects/') && (
+            <>
+              {(userRole === 'admin' || user?.email === project?.owner) && (
+                <Link
+                  to={`/projects/${projectId}?edit=true`}
+                  className="nav-button"
+                  onClick={handleNavigation(`/projects/${projectId}?edit=true`)}
+                >
+                  Project setup
+                </Link>
+              )}
+
+              <Link className="nav-button" onClick={handleCreateTexts}>
+                Create texts
+              </Link>
+
+              <Link
+                to={`/projects/${projectId}/texts`}
+                className="nav-button"
+                onClick={handleNavigation(`/projects/${projectId}/texts`)}
+              >
+                Edit texts
+              </Link>
+            </>
+          )}
 
           {(userRole === 'admin' || userRole === 'owner' || userRole === 'author') && (
             <Link

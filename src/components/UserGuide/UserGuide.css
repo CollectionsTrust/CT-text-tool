@@ -37,7 +37,7 @@
   flex-shrink: 0;
 }
 
-.user-guide-title {
+.user-guide-modal .user-guide-title {
   color: var(--color-primary);
   margin: 0;
   font-size: 1.5rem;
@@ -278,25 +278,25 @@
   }
 }
 
-h1 {
+.user-guide-modal h1 {
   color: #2c3e50;
   border-bottom: 3px solid #3498db;
   padding-bottom: 10px;
 }
 
-h2 {
+.user-guide-modal h2 {
   color: #34495e;
   border-bottom: 2px solid #ecf0f1;
   padding-bottom: 8px;
   margin-top: 40px;
 }
 
-h3 {
+.user-guide-modal h3 {
   color: #2c3e50;
   margin-top: 30px;
 }
 
-h4 {
+.user-guide-modal h4 {
   color: #34495e;
   margin-top: 25px;
 }
@@ -361,16 +361,16 @@ code {
   border-radius: 4px;
 }
 
-ul,
-ol {
+.user-guide-modal ul,
+.user-guide-modal ol {
   padding-left: 25px;
 }
 
-li {
+.user-guide-modal .user-guide-modalli {
   margin: 8px 0;
 }
 
-hr {
+.user-guide-modal hr {
   margin: 40px 0;
   border: none;
   border-top: 1px solid #ecf0f1;

@@ -430,6 +430,16 @@
   font-size: 0.9rem;
 }
 
+.form-group .mds-not-editable {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.form-group .mds-not-editable a{
+  color: #e74c3c;
+  font-weight: 600;
+}
+
 /* Project setup header with duplicate save button */
 .project-setup-header {
   display: flex;
