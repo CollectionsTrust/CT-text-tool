@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs, deleteField } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 
 export const useProjectForm = (projectId) => {
@@ -27,6 +27,7 @@ export const useProjectForm = (projectId) => {
   });
 
   const [assignedAuthors, setAssignedAuthors] = useState([]);
+  const [originalAuthors, setOriginalAuthors] = useState([]);
   const [selectedLanguages, setSelectedLanguages] = useState(['English']); // Default to English
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
@@ -34,26 +35,17 @@ export const useProjectForm = (projectId) => {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    const loadLocalData = () => {
-      const storedData = localStorage.getItem(`projectData_${projectId}`);
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        setFormData((prev) => ({ ...prev, ...parsed }));
-        setSelectedLanguages(parsed.languages || ['English']);
-        setToken(parsed.mdsApiToken || '');
-      }
-    };
-
     const loadProjectData = async () => {
       try {
         setLoading(true);
-        
+
         // Load project data from Firestore
         const projectRef = doc(db, 'projects', projectId);
         const projectSnap = await getDoc(projectRef);
-        
+
         if (projectSnap.exists()) {
           const projectData = projectSnap.data();
+
           setFormData((prev) => ({
             ...prev,
             projectReferenceNumber: projectData.projectReferenceNumber || '',
@@ -76,27 +68,29 @@ export const useProjectForm = (projectId) => {
             wantsTextTags: projectData.wantsTextTags || false,
             doNotSaveAuthorNames: projectData.doNotSaveAuthorNames || false, // Load new field
             textStatuses: projectData.textStatuses || ['Draft', 'Approved'],
-            textTags: projectData.textTags || []
+            textTags: projectData.textTags || [],
+            // authors: projectData.authors || [] Authors are on the ProjectAuthors table
+            // @TODO Can we reamove authors from the project tables in Firestore?
           }));
-          
+
           setSelectedLanguages(projectData.languages || ['English']);
           setToken(projectData.mdsApiToken || '');
         }
-        
+
         // Try to load initial data from projectRequests if available
         const requestRef = doc(db, 'projectRequests', projectId);
         const requestSnap = await getDoc(requestRef);
-        
+
         if (requestSnap.exists()) {
           const requestData = requestSnap.data();
-          
+
           // Try to find any field that might contain organization information
           // Check all these possible field names
-          const organizationValue = 
-            requestData.organization || 
-            requestData.Organisation || 
-            requestData.organisation || 
-            requestData.Organization || 
+          const organizationValue =
+            requestData.organization ||
+            requestData.Organisation ||
+            requestData.organisation ||
+            requestData.Organization ||
             requestData.org ||
             requestData.projectOrg ||
             requestData.projectOrganisation ||
@@ -104,27 +98,27 @@ export const useProjectForm = (projectId) => {
             requestData.organizer ||
             requestData.organiser ||
             '';
-                      
+
           setFormData((prev) => {
             // Only update if we are not overwriting existing values
-            const updatedFormData = {...prev};
-            
+            const updatedFormData = { ...prev };
+
             if (!prev.projectTitle && requestData.projectTitle) {
               updatedFormData.projectTitle = requestData.projectTitle;
             }
-            
+
             if (!prev.projectOrganiser && organizationValue) {
               updatedFormData.projectOrganiser = organizationValue;
             }
-            
+
             if (!prev.projectNote && requestData.projectDescription) {
               updatedFormData.projectNote = requestData.projectDescription;
             }
-            
+
             return updatedFormData;
           });
         }
-        
+
         // Load assigned authors for this project
         await loadAssignedAuthors();
       } catch (err) {
@@ -134,19 +128,19 @@ export const useProjectForm = (projectId) => {
         setLoading(false);
       }
     };
-    
+
     const loadAssignedAuthors = async () => {
       try {
         // Find all users who have this project in their projectRoles
         const usersRef = collection(db, 'projectUsers');
         const userSnapshot = await getDocs(usersRef);
-        
+
         const authors = [];
-        
+
         userSnapshot.forEach(userDoc => {
           const userData = userDoc.data();
           const projectRoles = userData.projectRoles || {};
-          
+
           // Check if user is assigned to this project
           if (projectRoles[projectId]) {
             // Add project owner with special marking
@@ -155,30 +149,59 @@ export const useProjectForm = (projectId) => {
                 id: userDoc.id,
                 name: userData.name || userData.email,
                 email: userData.email,
+                allProjectRoles: projectRoles,
                 role: 'owner'
               });
-            } 
+            }
             // Add project authors
             else if (projectRoles[projectId] === 'author') {
               authors.push({
                 id: userDoc.id,
                 name: userData.name || userData.email,
                 email: userData.email,
+                allProjectRoles: projectRoles,
                 role: 'author'
               });
             }
           }
         });
-        
+
         setAssignedAuthors(authors);
+        setOriginalAuthors(authors)
       } catch (err) {
         console.error('Error loading assigned authors:', err);
       }
     };
 
-    loadLocalData();
     loadProjectData();
   }, [projectId]);
+
+  const saveAssignedAuthors = async (projectId, originalAuthors, assignedAuthors) => {
+    originalAuthors.forEach((author) => {
+      if (assignedAuthors.find(a => a.id === author.id)) return;
+
+      const userRef = doc(db, 'projectUsers', author.id);
+      const fieldToDelete = `projectRoles.${projectId}`;
+
+      updateDoc(userRef, {
+        [fieldToDelete]: deleteField()
+      })
+    })
+
+    assignedAuthors.forEach((author) => {
+      if (originalAuthors.find(a => a.id === author.id)) return;
+
+      const userRef = doc(db, 'projectUsers', author.id);
+      const fieldToAdd = `projectRoles.${projectId}`;
+
+      updateDoc(userRef, {
+        [fieldToAdd]: 'author'
+      })
+    })
+
+    assignedAuthors.forEach((author) => {
+    })
+  }
 
   const handleFieldChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -222,17 +245,18 @@ export const useProjectForm = (projectId) => {
       };
 
       await updateDoc(projectRef, updatePayload);
-      
+      await saveAssignedAuthors(projectId, originalAuthors, assignedAuthors)
+
       // Save to combined project data in localStorage
-      localStorage.setItem(`projectData_${projectId}`, JSON.stringify({
-        ...formData,
-        languages: selectedLanguages,
-        mdsApiToken: token
-      }));
-      
-      // ADDED: Save the MDS API token with the specific key format
-      localStorage.setItem(`mdsApiToken_${projectId}`, token);
-      
+      // localStorage.setItem(`projectData_${projectId}`, JSON.stringify({
+      //   ...formData,
+      //   languages: selectedLanguages,
+      //   mdsApiToken: token
+      // }));
+
+      // // ADDED: Save the MDS API token with the specific key format
+      // localStorage.setItem(`mdsApiToken_${projectId}`, token);
+
       setSaveSuccess(true);
       return { success: true };
     } catch (err) {
@@ -248,6 +272,7 @@ export const useProjectForm = (projectId) => {
     assignedAuthors,
     selectedLanguages,
     setSelectedLanguages,
+    setAssignedAuthors,
     token,
     setToken,
     saveProjectToFirestore,

@@ -166,36 +166,6 @@
   margin-top: 0.5rem;
 }
 
-/* Authors display styling */
-.authors-display {
-  margin-top: 0.5rem;
-  background-color: #f5f8ff;
-  border-radius: 4px;
-  padding: 12px;
-}
-
-.authors-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.author-item {
-  padding: 8px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  font-weight: 500;
-}
-
-.author-item:last-child {
-  border-bottom: none;
-}
-
-.no-authors-message {
-  color: #6b7280;
-  font-style: italic;
-  margin: 0;
-}
-
 /* Language selection */
 .language-selection {
   margin-top: 0.5rem;
@@ -259,6 +229,20 @@
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.selected-item-disabled {
+  background-color: grey;
+  color: white;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: inline-flex;
+  border-radius: 2rem;
+  padding: 0.25rem 0.75rem;
 }
 
 .remove-item-btn {
@@ -430,12 +414,16 @@
   font-size: 0.9rem;
 }
 
+.form-group a {
+  color: #666;
+}
+
 .form-group .mds-not-editable {
   color: #e74c3c;
   font-weight: 600;
 }
 
-.form-group .mds-not-editable a{
+.form-group .mds-not-editable a {
   color: #e74c3c;
   font-weight: 600;
 }

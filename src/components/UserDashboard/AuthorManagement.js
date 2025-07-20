@@ -63,7 +63,7 @@ const AuthorManagement = () => {
       const projectsRef = collection(db, 'projects');
       const q = query(projectsRef, where('owner', '==', user.email));
       const snapshot = await getDocs(q);
-      
+
       const ownedProjects = snapshot.docs
         .map(doc => ({
           id: doc.id,
@@ -72,7 +72,7 @@ const AuthorManagement = () => {
         }))
         .filter(project => project.status === 'active') // Only show active projects
         .sort((a, b) => a.title.localeCompare(b.title)); // Sort alphabetically
-      
+
       setUserProjects(ownedProjects);
     } catch (err) {
       console.error('Error fetching owned projects:', err);
@@ -85,38 +85,43 @@ const AuthorManagement = () => {
 
     try {
       setLoading(true);
-      
+
       // First get all projects owned by current user
       const projectsRef = collection(db, 'projects');
       const projectsQuery = query(projectsRef, where('owner', '==', user.email));
       const projectsSnapshot = await getDocs(projectsQuery);
-      
+
       const ownedProjectIds = projectsSnapshot.docs.map(doc => doc.id);
       if (ownedProjectIds.length === 0) {
         setAuthors([]);
         setLoading(false);
         return;
       }
-      
+
       // Get all users
       const usersRef = collection(db, 'projectUsers');
       const usersSnapshot = await getDocs(usersRef);
-      
+
       // Find users who are authors of the current user's projects
       const authorsData = [];
-      
+
       for (const userDoc of usersSnapshot.docs) {
         const userData = userDoc.data();
         const userProjects = userData.projectRoles || {};
-        
+
         // Check if this user is an author on any of the owned projects
         const authorProjects = [];
         let isAuthorOnAnyProject = false;
-        
+
+        if (user.uid === userData.addedByUserUID) {
+          // If added by a owner but not assigned to a project
+          isAuthorOnAnyProject = true;
+        }
+
         for (const projectId of ownedProjectIds) {
           if (userProjects[projectId] === 'author') {
             isAuthorOnAnyProject = true;
-            
+
             // Find project details
             const projectDoc = projectsSnapshot.docs.find(doc => doc.id === projectId);
             if (projectDoc) {
@@ -127,7 +132,7 @@ const AuthorManagement = () => {
             }
           }
         }
-        
+
         // If user is an author on at least one of owner's projects, add them to the list
         if (isAuthorOnAnyProject) {
           authorsData.push({
@@ -140,7 +145,7 @@ const AuthorManagement = () => {
           });
         }
       }
-      
+
       setAuthors(authorsData);
       setFilteredAuthors(authorsData);
     } catch (err) {
@@ -163,12 +168,12 @@ const AuthorManagement = () => {
         (author.name && author.name.toLowerCase().includes(query)) ||
         (author.email && author.email.toLowerCase().includes(query)) ||
         (author.organization && author.organization.toLowerCase().includes(query)) ||
-        (author.authorProjects && author.authorProjects.some(project => 
+        (author.authorProjects && author.authorProjects.some(project =>
           project.title.toLowerCase().includes(query)
         ))
       );
     });
-    
+
     setFilteredAuthors(filtered);
   };
 
@@ -179,33 +184,33 @@ const AuthorManagement = () => {
         setError("Author not found");
         return;
       }
-      
+
       // Get the author's current data
       const authorRef = doc(db, 'projectUsers', authorId);
       const authorDoc = await getDoc(authorRef);
-      
+
       if (!authorDoc.exists()) {
         setError("Author document not found in Firestore");
         return;
       }
-      
+
       const authorData = authorDoc.data();
       const projectRoles = authorData.projectRoles || {};
-      
+
       // Remove author role from all projects owned by current user
       const updatedProjectRoles = { ...projectRoles };
-      
+
       // Get all projects owned by current user
       const ownedProjectIds = userProjects.map(p => p.id);
-      
+
       // Remove these projects from the user's projectRoles
       for (const projectId of ownedProjectIds) {
         delete updatedProjectRoles[projectId];
       }
-      
+
       // If the user has no remaining project roles, delete the user
       const hasRemainingProjects = Object.keys(updatedProjectRoles).length > 0;
-      
+
       if (hasRemainingProjects) {
         // Update the user document
         await updateDoc(authorRef, {
@@ -264,51 +269,51 @@ const AuthorManagement = () => {
         setError("Author not found");
         return;
       }
-      
+
       // Get the author's current data
       const authorRef = doc(db, 'projectUsers', authorId);
       const authorDoc = await getDoc(authorRef);
-      
+
       if (!authorDoc.exists()) {
         setError("Author document not found in Firestore");
         return;
       }
-      
+
       const authorData = authorDoc.data();
       const projectRoles = authorData.projectRoles || {};
-      
+
       // Create updated projectRoles object
       const updatedProjectRoles = { ...projectRoles };
-      
+
       // Get all projects owned by current user
       const ownedProjectIds = userProjects.map(p => p.id);
-      
+
       // First, remove all owned projects from roles
       for (const projectId of ownedProjectIds) {
         delete updatedProjectRoles[projectId];
       }
-      
+
       // Then add the selected projects back as 'author'
       for (const projectId of editAuthorProjects) {
         updatedProjectRoles[projectId] = 'author';
       }
-      
+
       // Update the user document
       await updateDoc(authorRef, {
         name: editAuthorName,
         organization: editAuthorOrg,
         projectRoles: updatedProjectRoles
       });
-      
+
       // Generate mailto link for project changes
       const originalProjects = author.authorProjects.map(p => p.id).sort();
       const newProjects = editAuthorProjects.sort();
       const hasChanges = JSON.stringify(originalProjects) !== JSON.stringify(newProjects);
-      
+
       if (hasChanges) {
         const addedProjects = editAuthorProjects.filter(id => !originalProjects.includes(id));
         const removedProjects = originalProjects.filter(id => !editAuthorProjects.includes(id));
-        
+
         let changeDescription = '';
         if (addedProjects.length > 0) {
           const addedProjectNames = addedProjects.map(id => {
@@ -317,7 +322,7 @@ const AuthorManagement = () => {
           });
           changeDescription += `Added to: ${addedProjectNames.join(', ')}`;
         }
-        
+
         if (removedProjects.length > 0) {
           const removedProjectNames = removedProjects.map(id => {
             const project = author.authorProjects.find(p => p.id === id);
@@ -326,7 +331,7 @@ const AuthorManagement = () => {
           if (changeDescription) changeDescription += '\n';
           changeDescription += `Removed from: ${removedProjectNames.join(', ')}`;
         }
-        
+
         const emailSubject = encodeURIComponent('Your project access has been updated in the CT Text Tool');
         const emailBody = encodeURIComponent(
           `Hello ${editAuthorName || author.email},\n\n` +
@@ -337,11 +342,11 @@ const AuthorManagement = () => {
           `Best regards,\n` +
           `${user?.name || user?.email || 'Project Owner'}`
         );
-        
+
         const mailtoLink = `mailto:${author.email}?subject=${emailSubject}&body=${emailBody}`;
         window.open(mailtoLink, '_blank');
       }
-      
+
       // Update local state
       const updatedAuthorProjects = [];
       for (const projectId of editAuthorProjects) {
@@ -353,7 +358,7 @@ const AuthorManagement = () => {
           });
         }
       }
-      
+
       setAuthors(prev => prev.map(a => {
         if (a.id === authorId) {
           return {
@@ -366,7 +371,7 @@ const AuthorManagement = () => {
         }
         return a;
       }));
-      
+
       setFilteredAuthors(prev => prev.map(a => {
         if (a.id === authorId) {
           return {
@@ -379,7 +384,7 @@ const AuthorManagement = () => {
         }
         return a;
       }));
-      
+
       const emailMessage = hasChanges ? ' A draft email has been opened in your email client.' : '';
       setSuccess(`Author updated successfully.${emailMessage}`);
       setEditingAuthor(null);
@@ -408,20 +413,20 @@ const AuthorManagement = () => {
       const usersRef = collection(db, 'projectUsers');
       const existingUserQuery = query(usersRef, where('email', '==', newUserEmail));
       const existingUserSnapshot = await getDocs(existingUserQuery);
-      
+
       if (!existingUserSnapshot.empty) {
         // User exists, update their projectRoles
         const existingUser = existingUserSnapshot.docs[0];
         const existingUserData = existingUser.data();
-        
+
         // Get current project roles
         const currentProjectRoles = existingUserData.projectRoles || {};
-        
+
         // Add new projects with 'author' role
         const updatedProjectRoles = { ...currentProjectRoles };
         let newProjectsAdded = false;
         const addedProjectNames = [];
-        
+
         for (const projectId of selectedProjects) {
           if (!updatedProjectRoles[projectId]) {
             updatedProjectRoles[projectId] = 'author';
@@ -432,7 +437,7 @@ const AuthorManagement = () => {
             }
           }
         }
-        
+
         if (newProjectsAdded) {
           await updateDoc(doc(db, 'projectUsers', existingUser.id), {
             projectRoles: updatedProjectRoles,
@@ -440,7 +445,7 @@ const AuthorManagement = () => {
             name: existingUserData.name || newUserName || 'No name provided',
             organization: existingUserData.organization || newUserOrg || 'No organization provided'
           });
-          
+
           // Generate mailto link for existing user
           const emailSubject = encodeURIComponent('You have been added to new CT Text Tool projects');
           const emailBody = encodeURIComponent(
@@ -453,19 +458,20 @@ const AuthorManagement = () => {
             `Best regards,\n` +
             `${user?.name || user?.email || 'Project Owner'}`
           );
-          
+
           const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
           window.open(mailtoLink, '_blank');
-          
+
           setSuccess(`Existing user ${existingUserData.name || newUserEmail} updated with new projects. A draft email has been opened in your email client.`);
         } else {
           setSuccess(`User ${existingUserData.name || newUserEmail} already has these projects assigned`);
         }
       } else {
         // Create new user with temporary password
+        // @TODO remove these and all values in store
         const tempPassword = generateTempPassword();
         const hashedPassword = await hashPassword(tempPassword);
-        
+
         // Initialize projectRoles object with selected projects as 'author'
         const projectRoles = {};
         const selectedProjectNames = [];
@@ -475,8 +481,8 @@ const AuthorManagement = () => {
           if (project) {
             selectedProjectNames.push(project.title);
           }
-        }
-        
+        }        
+
         await addDoc(collection(db, 'projectUsers'), {
           email: newUserEmail,
           name: newUserName || 'No name provided',
@@ -489,9 +495,10 @@ const AuthorManagement = () => {
             isTemporary: true,
             lastChanged: null,
             createdAt: new Date().toISOString()
-          }
+          },
+          addedByUserUID: user.uid // Added so we can list users add but not assigned
         });
-        
+
         // Generate mailto link for new user
         const emailSubject = encodeURIComponent(`Welcome to the CT Text Tool${selectedProjectNames.length === 1 ? ` - "${selectedProjectNames[0]}"` : ''}`);
         const emailBody = encodeURIComponent(
@@ -508,16 +515,16 @@ const AuthorManagement = () => {
           `Best regards,\n` +
           `${user?.name || user?.email || 'Project Owner'}`
         );
-        
+
         const mailtoLink = `mailto:${newUserEmail}?subject=${emailSubject}&body=${emailBody}`;
         window.open(mailtoLink, '_blank');
-        
+
         setSuccess('New author added successfully. A draft email has been opened in your email client.');
       }
-      
+
       // Reset form
       clearUserForm();
-      
+
       // Refresh author list
       fetchAuthors();
       setTimeout(() => setSuccess(''), 3000);
@@ -540,7 +547,7 @@ const AuthorManagement = () => {
 
   const getSelectedProjectsText = () => {
     if (selectedProjects.length === 0) return 'Select project';
-    
+
     return selectedProjects.map(projectId => {
       const project = userProjects.find(p => p.id === projectId);
       return project ? project.title : '';
@@ -549,7 +556,7 @@ const AuthorManagement = () => {
 
   const getEditSelectedProjectsText = () => {
     if (editAuthorProjects.length === 0) return 'Select project';
-    
+
     return editAuthorProjects.map(projectId => {
       const project = userProjects.find(p => p.id === projectId);
       return project ? project.title : '';
@@ -591,11 +598,11 @@ const AuthorManagement = () => {
             className="user-form-input"
             required
           />
-          
+
           {/* Custom dropdown */}
           <div className="custom-select-container" style={{ position: 'relative' }}>
-            <div 
-              className="custom-select-input" 
+            <div
+              className="custom-select-input"
               onClick={() => setShowDropdown(!showDropdown)}
               style={{
                 border: '1px solid #ccc',
@@ -613,9 +620,9 @@ const AuthorManagement = () => {
               <span>{getSelectedProjectsText()}</span>
               <span style={{ marginLeft: '8px' }}>▼</span>
             </div>
-            
+
             {showDropdown && (
-              <div 
+              <div
                 className="custom-select-dropdown"
                 style={{
                   position: 'absolute',
@@ -651,11 +658,11 @@ const AuthorManagement = () => {
               </div>
             )}
           </div>
-          
+
           <button type="submit" className="primary-btn">Add author</button>
           {showDuplicateUserError && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="secondary-btn reset-btn"
               onClick={clearUserForm}
             >
@@ -666,7 +673,7 @@ const AuthorManagement = () => {
         <div className="form-help-text">
           Click multiple projects to select more than one
         </div>
-        
+
         {/* Display selected projects as pills */}
         {selectedProjects.length > 0 && (
           <div className="selected-items-container">
@@ -702,8 +709,8 @@ const AuthorManagement = () => {
 
       {filteredAuthors.length === 0 ? (
         <div className="no-content-message">
-          {authors.length === 0 
-            ? "You haven't added any authors yet" 
+          {authors.length === 0
+            ? "You haven't added any authors yet"
             : "No authors match your search"
           }
         </div>
@@ -751,8 +758,8 @@ const AuthorManagement = () => {
                   <td>
                     {editingAuthor === author.id ? (
                       <div className="custom-select-container" style={{ position: 'relative' }}>
-                        <div 
-                          className="custom-select-input" 
+                        <div
+                          className="custom-select-input"
                           onClick={() => setShowEditDropdown(!showEditDropdown)}
                           style={{
                             border: '1px solid #ccc',
@@ -770,9 +777,9 @@ const AuthorManagement = () => {
                           <span>{getEditSelectedProjectsText()}</span>
                           <span style={{ marginLeft: '8px' }}>▼</span>
                         </div>
-                        
+
                         {showEditDropdown && (
-                          <div 
+                          <div
                             className="custom-select-dropdown"
                             style={{
                               position: 'absolute',
@@ -811,7 +818,7 @@ const AuthorManagement = () => {
                     ) : (
                       `${author.projectCount} project${author.projectCount !== 1 ? 's' : ''}`
                     )}
-                    
+
                     {/* Display selected projects as pills when editing */}
                     {editingAuthor === author.id && editAuthorProjects.length > 0 && (
                       <div className="selected-items-container">

@@ -7,6 +7,7 @@ import LanguageSelector from './LanguageSelector';
 import RichTextEditor from './RichTextEditor';
 import TextSettings from './TextSettings';
 import { useTexts } from '../../hooks/useTexts'
+import AuthorsSelector from './AuthorsSelector';
 
 const ProjectSetup = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const ProjectSetup = () => {
     formData,
     handleFieldChange,
     assignedAuthors,
+    setAssignedAuthors,
     selectedLanguages,
     setSelectedLanguages,
     token,
@@ -26,7 +28,6 @@ const ProjectSetup = () => {
     saveSuccess,
     setSaveSuccess
   } = useProjectForm(projectId);
-
   // Initialize license options with Creative Commons options
   const [licenceOptions, setLicenceOptions] = useState([
     'CC BY 4.0',
@@ -113,6 +114,13 @@ const ProjectSetup = () => {
     setSelectedLanguages(selectedLanguages.filter(l => l !== language));
   };
 
+  const onAddAuthor = (addedAuthor) => {
+    setAssignedAuthors((prev) => [...prev, addedAuthor])
+  }
+  const onRemoveAuthor = (removedAuthorId) => {
+    setAssignedAuthors((prev) => prev.filter((a) => a.id !== removedAuthorId))
+  }
+
   // Handle adding a new license
   const handleAddLicence = () => {
     if (newLicence && !licenceOptions.includes(newLicence)) {
@@ -185,26 +193,16 @@ const ProjectSetup = () => {
 
           {/* Fix 6: Authors - display only names, not emails */}
           <div className="form-group">
-            <label htmlFor="authors">
-              Authors
+            <label htmlFor="authors">Authors
               <span className="required-indicator">*</span>
               <span className="tooltip-icon" title="The authors who created the texts associated with this project.">ⓘ</span>
             </label>
-            <div className="authors-display">
-              {assignedAuthors.length > 0 ? (
-                <ul className="authors-list">
-                  {assignedAuthors.map((author) => (
-                    <li key={author.id} className="author-item">
-                      {author.name} {author.role === 'owner' ? '(Owner)' : ''}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="no-authors-message">
-                  No authors are assigned to this project. Authors can be assigned from the user dashboard.
-                </p>
-              )}
-            </div>
+            <p>Add new authors to the app via the <Link to="/dashboard#authors">Manage authors page</Link>.</p>
+            <AuthorsSelector
+              projectAuthors={formData['authors']}
+              selectedAuthors={assignedAuthors}
+              onAddAuthor={onAddAuthor}
+              onRemoveAuthor={onRemoveAuthor} />
           </div>
 
           {/* Rights information fields on same line */}
