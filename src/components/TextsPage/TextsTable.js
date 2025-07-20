@@ -423,7 +423,7 @@ const TextsTable = ({
   }, [texts, viewMode]);
 
   // Function to organize texts in a hierarchical structure
-  const organizeTextsHierarchically = () => {
+  const organizeTextsHierarchically = () => {    
     // Create a map of text reference numbers to text objects
     const textMap = {};
     texts.forEach(text => {

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { collection, doc, getDocs, query, where, serverTimestamp, getDoc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, getDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useForm, FormProvider } from "react-hook-form";
 
@@ -14,6 +14,7 @@ import SplitLayout from '../common/AccessibleLayout/SplitLayout';
 import TextForm from '../common/TextForm/index';
 import './ObjectsPage.css';
 import { useText } from '../../hooks/useText'
+import { useTexts } from '../../hooks/useTexts';
 
 const ObjectsPageContent = () => {
   const { projectId } = useParams();
@@ -52,6 +53,7 @@ const ObjectsPageContent = () => {
 
   const editTextId = searchParams.get('editTextId');
   const { text } = useText(editTextId);
+  const { texts } = useTexts(projectId);
 
   const methods = useForm({
     defaultValues: {
@@ -71,6 +73,24 @@ const ObjectsPageContent = () => {
 
   // Reset the form when `text` and projectConfig is loaded
   useEffect(() => {
+    if (!texts) {
+      return
+    }
+
+    let textReferenceNumber = ''
+
+    if (text?.textReferenceNumber) {
+      textReferenceNumber = text?.textReferenceNumber
+    } else if (texts.length === 0) {
+      textReferenceNumber = 'TXT00001'
+    } else {
+      const highestTextReferenceNumber = texts.sort((textA, textB) => {
+        return textA.textReferenceNumber - textB.textReferenceNumber
+      })[0].textReferenceNumber
+      const nextNumber = parseInt(highestTextReferenceNumber.replace('TXT', '')) + 1;
+      textReferenceNumber = `TXT${String(nextNumber).padStart(5, '0')}`;
+    }
+    
     methods.reset({
       text: text?.text,
       textTag: text?.textTag,
@@ -81,7 +101,7 @@ const ObjectsPageContent = () => {
       parentText: text?.parentText || '',
       linkedObjects: Array.from(text?.selectedRecords || []) || [],
       projectId: projectId,
-      textReferenceNumber: `TXT${String(projectConfig?.textCount + 1).padStart(5, '0')}` || '',
+      textReferenceNumber: textReferenceNumber,
       projectReferenceNumber: projectConfig?.projectReferenceNumber || "",
     });
   }, [text, projectConfig]);
@@ -120,11 +140,6 @@ const ObjectsPageContent = () => {
         const projectRef = doc(db, 'projects', projectId);
         const projectSnap = await getDoc(projectRef);
 
-        // Get project texts
-        const textsRef = collection(db, 'texts');
-        const q = query(textsRef, where('projectId', '==', projectId));
-        const textsSnap = await getDocs(q);
-
         if (projectSnap.exists()) {
           const projectData = projectSnap.data();
 
@@ -138,7 +153,6 @@ const ObjectsPageContent = () => {
             languages: projectData.languages || ['English'],
             textNumberPrefix: projectData.textNumberPrefix || 'TXT',
             projectReferenceNumber: projectData.projectReferenceNumber || "",
-            textCount: textsSnap.size
           });
         }
       } catch (error) {
