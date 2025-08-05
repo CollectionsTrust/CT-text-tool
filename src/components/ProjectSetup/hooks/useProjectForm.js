@@ -42,7 +42,7 @@ export const useProjectForm = (projectId) => {
         // Load project data from Firestore
         const projectRef = doc(db, 'projects', projectId);
         const projectSnap = await getDoc(projectRef);
-
+        
         if (projectSnap.exists()) {
           const projectData = projectSnap.data();
 
@@ -70,7 +70,7 @@ export const useProjectForm = (projectId) => {
             textStatuses: projectData.textStatuses || ['Draft', 'Approved'],
             textTags: projectData.textTags || [],
             // authors: projectData.authors || [] Authors are on the ProjectAuthors table
-            // @TODO Can we reamove authors from the project tables in Firestore?
+            // @TODO Can we remove authors from the project tables in Firestore?
           }));
 
           setSelectedLanguages(projectData.languages || ['English']);
@@ -121,7 +121,7 @@ export const useProjectForm = (projectId) => {
 
         // Load assigned authors for this project
         await loadAssignedAuthors();
-      } catch (err) {
+      } catch (err) {        
         console.error('Error fetching project data:', err);
         setError('Failed to load project data');
       } finally {

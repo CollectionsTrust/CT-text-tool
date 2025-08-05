@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Navigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Requests from './Requests';
 import ProjectsList from './ProjectsList';
@@ -8,7 +8,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 const AdminDashboard = () => {
-  const { user, userRole } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('requests');
   const [pendingRequestsExist, setPendingRequestsExist] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -38,10 +38,8 @@ const AdminDashboard = () => {
       }
     };
 
-    if (user && userRole === 'admin') {
-      checkForPendingRequests();
-    }
-  }, [user, userRole, navigate, location]);
+    checkForPendingRequests();
+  }, [user, navigate, location]);
 
   // Set active tab based on URL hash or default based on pending requests
   useEffect(() => {
@@ -55,11 +53,6 @@ const AdminDashboard = () => {
       setActiveTab(pendingRequestsExist ? 'requests' : 'projects');
     }
   }, [location, pendingRequestsExist, initialCheckDone]);
-  
-  // @todo handle this in the routes?
-  if (userRole !== 'admin') {
-    return <Navigate to="/dashboard" />;
-  }
 
   return (
     <div className="container">

@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-} from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
 import ProjectsList from './ProjectsList';
@@ -14,7 +9,7 @@ import MainHeader from '../navigation/MainHeader';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
-  const { user, userRole, loading: authLoading } = useAuth();
+  const { user, userRoles, loading: authLoading } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +17,7 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const navigate = useNavigate();
   const location = useLocation();
+  const userIsOwnerOfAProject = Object.values(userRoles?.projectRoles).includes('owner')  
 
   // Set active tab based on URL hash
   useEffect(() => {
@@ -34,76 +30,84 @@ const UserDashboard = () => {
     }
   }, [location]);
 
-  useEffect(() => {    
+  useEffect(() => {
     if (!user || authLoading) return;
-    
+
     const fetchProjects = async () => {
       try {
         setLoading(true);
         setError('');
 
+        // @TEST IF USER HAS NO PROJECTS!
+        // @TEST THAT THE QUERY FOR PROJECTS DOESN'T TRUNCATE AT 10
+        // @TEST PAGE LOOKS THE SAME AS PREVIOUSLY
+        // @TEST AUTHORS COUNT WORKS
+
         // Step 1: Find the user document in Firestore
-        const usersRef = collection(db, 'projectUsers');
-        const userQuery = query(usersRef, where('email', '==', user.email));
-        const userSnapshot = await getDocs(userQuery);
-        
-        let projectsData = [];
-        
+        const userDocRef = doc(db, 'projectUsers', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.exists() ? userDocSnap.data() : null
+        const projectRoles = userData.projectRoles || {};
+        const userOwns = Object.fromEntries(
+          Object.entries(projectRoles).filter(([key, value]) => value === 'owner')
+        );
+        const userProjectIds = Object.keys(userOwns)        
+
         // Step 2: Get projects where user is the owner (always check this first)
-        const projectsRef = collection(db, 'projects');
-        const ownerQuery = query(projectsRef, where('owner', '==', user.email));
-        const ownerSnapshot = await getDocs(ownerQuery);
-        
-        ownerSnapshot.docs.forEach(doc => {
-          projectsData.push({
-            id: doc.id,
-            ...doc.data(),
-            userRole: 'Owner',
-            authorCount: doc.data().authors?.length || 0
-          });
-        });
-                
+        const docs = await Promise.all(
+          userProjectIds.map(id => getDoc(doc(db, 'projects', id)))
+        );
+        const projectsData = docs
+          .filter(docSnap => docSnap.exists())
+          .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+
+        // console.log(results)
+
+        // projectsSnap.docs.forEach(doc => {
+        //   projectsData.push({
+        //     id: doc.id,
+        //     ...doc.data(),
+        //     userRole: 'Owner',
+        //     authorCount: doc.data().authors?.length || 0 <- NEEDEDEDEDEDED?
+        //   });
+        // });
+
         // Step 3: Check user's projectRoles for additional projects
-        if (!userSnapshot.empty) {
-          const userData = userSnapshot.docs[0].data();
-          const projectRoles = userData.projectRoles || {};
-                    
-          // Get project IDs where user has roles, excluding those already fetched as owner
-          const projectIds = Object.keys(projectRoles).filter(projectId => 
-            !projectsData.some(project => project.id === projectId)
-          );
-          
-          if (projectIds.length > 0) {            
-            // Fetch projects in batches (Firestore limit is 10 for 'in' queries)
-            const batchSize = 10;
-            
-            for (let i = 0; i < projectIds.length; i += batchSize) {
-              const batch = projectIds.slice(i, i + batchSize);
-              
-              const batchQuery = query(projectsRef, where('__name__', 'in', batch));
-              const batchSnapshot = await getDocs(batchQuery);
-              
-              batchSnapshot.docs.forEach(doc => {
-                const projectId = doc.id;
-                const projectData = doc.data();
-                const userRole = projectRoles[projectId];
-                
-                // Only add the project if it's not already in our list
-                if (!projectsData.some(p => p.id === projectId)) {
-                  projectsData.push({
-                    id: projectId,
-                    ...projectData,
-                    userRole: userRole.charAt(0).toUpperCase() + userRole.slice(1), // Capitalize role
-                    authorCount: projectData.authors?.length || 0
-                  });
-                }
-              });
-            }
-          }
-        } else {
-          console.log("No user document found in Firestore!");
-        }
-        
+        // if (userDocSnap.exists()) {           
+        //   // Get project IDs where user has roles, excluding those already fetched as owner
+        //   const projectIds = Object.keys(projectRoles).filter(projectId => 
+        //     !projectsData.some(project => project.id === projectId)
+        //   );
+
+        // if (projectIds.length > 0) {            
+        //   // Fetch projects in batches (Firestore limit is 10 for 'in' queries)
+        //   const batchSize = 10;
+
+        //   for (let i = 0; i < projectIds.length; i += batchSize) {
+        //     const batch = projectIds.slice(i, i + batchSize);
+
+        //     const batchQuery = query(projectsRef, where('__name__', 'in', batch));
+        //     const batchSnapshot = await getDocs(batchQuery);
+
+        //     batchSnapshot.docs.forEach(doc => {
+        //       const projectId = doc.id;
+        //       const projectData = doc.data();
+        //       const userRole = projectRoles[projectId];
+
+        //       // Only add the project if it's not already in our list
+        //       if (!projectsData.some(p => p.id === projectId)) {
+        //         projectsData.push({
+        //           id: projectId,
+        //           ...projectData,
+        //           userRole: userRole.charAt(0).toUpperCase() + userRole.slice(1), // Capitalize role
+        //           authorCount: projectData.authors?.length || 0
+        //         });
+        //       }
+        //     });
+        // }
+        // }
+
+
         // Step 4: Sort projects: active first, then by creation date
         // NOTE: We still sort with archived status even though we don't show archived projects in the UI
         projectsData.sort((a, b) => {
@@ -111,7 +115,7 @@ const UserDashboard = () => {
           if (statusCompare !== 0) return statusCompare;
           return new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0);
         });
-        
+
         setProjects(projectsData);
       } catch (err) {
         console.error('Error loading projects:', err);
@@ -122,7 +126,7 @@ const UserDashboard = () => {
     };
 
     fetchProjects();
-  }, [user, userRole, authLoading]);
+  }, [user, userRoles, authLoading]);
 
   const handleChangePassword = () => {
     navigate('/change-password');
@@ -136,7 +140,7 @@ const UserDashboard = () => {
           <div className="user-header">
             <div className="user-info">
               <span>Logged in as: {user?.email}</span>
-              <button 
+              <button
                 onClick={handleChangePassword}
                 className="secondary-btn change-password-btn"
               >
@@ -147,8 +151,8 @@ const UserDashboard = () => {
 
           {/* Tab navigation */}
           <div className="user-nav-tabs">
-            <a 
-              href="/dashboard#projects" 
+            <a
+              href="/dashboard#projects"
               className={`user-nav-tab ${activeTab === 'projects' ? 'active' : ''}`}
               onClick={(e) => {
                 if (activeTab === 'projects') e.preventDefault();
@@ -156,9 +160,9 @@ const UserDashboard = () => {
             >
               Manage projects
             </a>
-            {(userRole === 'admin' || userRole === 'owner') && (
-              <a 
-                href="/dashboard#authors" 
+            {(userRoles.appRole === 'admin' || userIsOwnerOfAProject) && (
+              <a
+                href="/dashboard#authors"
                 className={`user-nav-tab ${activeTab === 'authors' ? 'active' : ''}`}
                 onClick={(e) => {
                   if (activeTab === 'authors') e.preventDefault();
@@ -175,16 +179,15 @@ const UserDashboard = () => {
             ) : (
               <>
                 {activeTab === 'projects' && (
-                  <ProjectsList 
+                  <ProjectsList
                     projects={projects}
                     setProjects={setProjects}
                     error={error}
                     successMessage={successMessage}
                     setSuccessMessage={setSuccessMessage}
-                    user={user}
                   />
                 )}
-                {activeTab === 'authors' && (userRole === 'admin' || userRole === 'owner') && (
+                {activeTab === 'authors' && (userRoles.appRole === 'admin' || userIsOwnerOfAProject) && (
                   <AuthorManagement />
                 )}
               </>

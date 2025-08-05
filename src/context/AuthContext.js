@@ -20,21 +20,36 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState();
-  const [userRole, setUserRole] = useState();
+  const [userRoles, setUserRoles] = useState();
   const [loading, setLoading] = useState(true);
 
   const auth = getAuth();
 
-  const getUserRoleFromFirestore = async (user) => {
-    const userDocRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(userDocRef);
+  const getUserRolesFromFirestore = async (user) => {
+    // A user can be a whole site 'admin' or have multiple roles for different projects
+    const projectUserDocRef = doc(db, "projectUsers", user.uid);
+    const projectUserDocSnap = await getDoc(projectUserDocRef);
 
-    if (docSnap.exists()) {
-      return docSnap.data().role;
+    const usersDocRef = doc(db, "users", user.uid);
+    const usersDocSnap = await getDoc(usersDocRef);       
+
+    let appRole = null    
+
+    if (usersDocSnap.exists()) {
+      // admin user
+      appRole = usersDocSnap.data().role
+    } else if (projectUserDocSnap.exists()) {
+      appRole = 'nonAdminUser'
     }
 
-    console.warn("No user document found for UID");
-    return null;
+    if (!usersDocSnap.exists() && !projectUserDocSnap.exists()) {
+      return null
+    }    
+
+    return {
+      appRole,
+      projectRoles: projectUserDocSnap.data()?.projectRoles || {}
+    }
   };
 
   const login = async (email, password) => {
@@ -45,16 +60,16 @@ export const AuthProvider = ({ children }) => {
         password
       );
       const user = userCredential.user;
-      const role = await getUserRoleFromFirestore(user);
+      const roles = await getUserRolesFromFirestore(user);
 
-      if (role) {
+      if (roles) {
         setUser(user);
-        setUserRole(role);
+        setUserRoles(roles);
 
         return {
           success: true,
           user,
-          role,
+          roles,
         };
       }
 
@@ -86,8 +101,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const setPasswordForEmailLinkUser = async (newPassword) => {
+    const user = auth.currentUser;
+
+    if (!user) throw new Error("No user is currently signed in.");
+    return updatePassword(user, newPassword);
+  };
+
   const changePassword = async (currentPassword, newPassword) => {
-    const user = auth.user;
+    const user = auth.currentUser;
     const credential = EmailAuthProvider.credential(
       user.email,
       currentPassword
@@ -116,20 +138,20 @@ export const AuthProvider = ({ children }) => {
     signOut(auth);
   };
 
-  useEffect(() => {
+  useEffect(() => {    
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
-        setUserRole(null);
+        setUserRoles(null);
         setLoading(false);
         return;
       }
 
-      getUserRoleFromFirestore(firebaseUser)
-        .then((role) => {
-          if (role) {
+      getUserRolesFromFirestore(firebaseUser)
+        .then((roles) => {
+          if (roles) {
             setUser(firebaseUser);
-            setUserRole(role);
+            setUserRoles(roles);
           } else {
             console.warn("No user document found for UID:", firebaseUser.uid);
           }
@@ -149,10 +171,11 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        userRole,
+        userRoles,
         login,
         logout,
         changePassword,
+        setPasswordForEmailLinkUser,
         sendResetPasswordEmail,
         loading,
       }}

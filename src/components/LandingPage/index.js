@@ -31,7 +31,7 @@ const LandingPage = () => {
     const result = await login(email, password);
 
     if (result.success) {
-      if (result.userRole === 'admin') {
+      if (result.roles.appRole === 'admin') {
         navigate('/admin');
       } else {
         navigate('/dashboard');

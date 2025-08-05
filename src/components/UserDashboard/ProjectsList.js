@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useAuth } from '../../context/AuthContext';
 
 const ITEMS_PER_PAGE = 25;
 
-const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccessMessage, user }) => {
+const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccessMessage }) => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmArchive, setConfirmArchive] = useState(null);
-  const [confirmActivate, setConfirmActivate] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const navigate = useNavigate();
+  const { userRoles } = useAuth();
+  const navigate = useNavigate();  
 
   useEffect(() => {
     // Only perform search if we have projects
@@ -20,9 +21,9 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
       setFilteredProjects([]);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase().trim();
-    
+
     // If search query is empty, just filter by archived status
     if (!query) {
       // NOTE: We're hiding archived projects by default regardless of showArchived state
@@ -32,24 +33,24 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
       setCurrentPage(1);
       return;
     }
-    
+
     // Parse search terms, supporting AND/OR operators
     const terms = query.split(/\s+(AND|OR)?\s*/i).filter(Boolean);
 
     const filterFn = (project) => {
       // We'll separate text fields to enable more precise searching
-      
+
       // Title and description (primary search fields)
       const primaryText = [
         String(project.title || ''),
         String(project.description || '')
       ].join(' ').toLowerCase();
-      
+
       // Secondary fields (only searched if needed)
       const secondaryText = [
         String(project.reference || '')
       ].join(' ').toLowerCase();
-      
+
       // Implementation of simple search logic with AND/OR operators
       let match = true;
       let lastOp = 'AND';
@@ -61,12 +62,12 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
         } else {
           // First check primary fields (title and description)
           let contains = primaryText.includes(term);
-          
+
           // If not found in primary fields and term length > 3, check secondary fields
           if (!contains && term.length > 3) {
             contains = secondaryText.includes(term);
           }
-          
+
           // Apply logic based on operator
           if (lastOp === 'AND') match = match && contains;
           else if (lastOp === 'OR') match = match || contains;
@@ -112,7 +113,11 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
   };
 
   const navigateToProject = (project) => {
-    if (project.setupComplete || project.userRole === 'Author') {
+    const isAuthor = userRoles.projectRoles[project.id] === 'Author'
+
+    console.log(userRoles);
+
+    if (project.setupComplete || isAuthor) {
       navigate(`/projects/${project.id}/objects`);
     } else {
       navigate(`/projects/${project.id}`);
@@ -136,22 +141,6 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
     }
   };
 
-  const activateProject = async (id) => {
-    try {
-      await updateDoc(doc(db, 'projects', id), { status: 'active' });
-      setSuccessMessage('Project activated successfully.');
-      // Update the local state
-      const updatedProjects = projects.map(p => {
-        if (p.id === id) return { ...p, status: 'active' };
-        return p;
-      });
-      setProjects(updatedProjects);
-      setConfirmActivate(null);
-    } catch (error) {
-      console.error('Error activating project:', error);
-    }
-  };
-  
   const deleteProject = async (id) => {
     try {
       await deleteDoc(doc(db, 'projects', id));
@@ -221,17 +210,8 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
                 </td>
                 <td className="actions-cell">
                   <button className="primary-btn" onClick={() => navigateToProject(project)}>Open</button>
-                  {project.userRole === 'Owner' && (
-                    <>
-                      {/* Archive/Activate buttons removed temporarily 
-                      {project.status === 'archived' ? (
-                        <button className="secondary-btn" onClick={() => setConfirmActivate(project.id)}>Activate</button>
-                      ) : (
-                        <button className="secondary-btn" onClick={() => setConfirmArchive(project.id)}>Archive</button>
-                      )}
-                      */}
-                      <button className="delete-btn" onClick={() => setConfirmDelete(project.id)}>Delete</button>
-                    </>
+                  {userRoles.projectRoles[project.id] === 'owner' && (
+                    <button className="delete-btn" onClick={() => setConfirmDelete(project.id)}>Delete</button>
                   )}
                 </td>
               </tr>
@@ -263,18 +243,6 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
             <div className="dialog-buttons">
               <button className="secondary-btn" onClick={() => setConfirmArchive(null)}>Cancel</button>
               <button className="primary-btn" onClick={() => archiveProject(confirmArchive)}>Archive</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {confirmActivate && (
-        <div className="confirm-dialog-backdrop">
-          <div className="confirm-dialog">
-            <h3>Activate Project</h3>
-            <p>Are you sure you want to activate this project?</p>
-            <div className="dialog-buttons">
-              <button className="secondary-btn" onClick={() => setConfirmActivate(null)}>Cancel</button>
-              <button className="primary-btn" onClick={() => activateProject(confirmActivate)}>Activate</button>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useParams, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 /**
@@ -9,31 +9,22 @@ import { useAuth } from '../../context/AuthContext';
  * @returns {JSX.Element}
  */
 const ProtectedRoute = ({ allowedRoles }) => {
-  const { user, userRole, loading } = useAuth();
-  const { projectId } = useParams();
+  const { user, userRoles, loading } = useAuth();
   const location = useLocation();
-
+  
   if (loading) {
     return null
   }
 
   // Check if user has permission to access this route based on their role
-  const hasPermission = allowedRoles.includes(userRole);
+  const hasPermission = allowedRoles.includes(userRoles?.appRole);
     
   if (!user || !hasPermission) {
     return <Navigate to="/" replace />;
   }
   
-  // Special case for project setup page - authors can't access it
-  const isProjectSetupPage = location.pathname === `/projects/${projectId}`;
-
-  if (isProjectSetupPage && userRole === 'author') {
-    // Redirect authors to objects page for this project
-    return <Navigate to={`/projects/${projectId}/objects`} replace />;
-  }
-  
   // Redirect admins to admin dashboard if they try to access user dashboard
-  if (location.pathname === '/dashboard' && userRole === 'admin') {
+  if (location.pathname === '/dashboard' && userRoles.appRole === 'admin') {
     return <Navigate to="/admin" replace />;
   }
   

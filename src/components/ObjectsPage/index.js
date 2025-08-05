@@ -18,7 +18,7 @@ import { useTexts } from '../../hooks/useTexts';
 
 const ObjectsPageContent = () => {
   const { projectId } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();  
 
   const {
     filteredData,
@@ -53,7 +53,7 @@ const ObjectsPageContent = () => {
 
   const editTextId = searchParams.get('editTextId');
   const { text } = useText(editTextId);
-  const { texts } = useTexts(projectId);
+  const { texts } = useTexts(projectId);  
 
   const methods = useForm({
     defaultValues: {

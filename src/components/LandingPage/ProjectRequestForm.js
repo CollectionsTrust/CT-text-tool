@@ -113,6 +113,7 @@ const ProjectRequestForm = () => {
       setErrorMessage('Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
+      window.localStorage.setItem('emailForSignIn', formData.email);
     }
   };
 

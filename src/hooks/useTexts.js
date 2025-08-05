@@ -43,7 +43,7 @@ export const useTexts = (projectId) => {
         })
         
         setTexts(textsData)
-      } catch (err) {
+      } catch (err) {        
         setError('Document does not exist.');
         setTexts(null);
       } finally {

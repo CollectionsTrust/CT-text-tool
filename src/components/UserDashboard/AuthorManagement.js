@@ -36,7 +36,8 @@ const AuthorManagement = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEditDropdown, setShowEditDropdown] = useState(false);
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
-  const { user } = useAuth();
+  const { user, userRoles } = useAuth();
+
 
   // Fetch authors and owner's projects on component mount
   useEffect(() => {
@@ -50,7 +51,7 @@ const AuthorManagement = () => {
   }, [searchQuery, authors]);
 
   // Auto-select the only project if there's just one
-  useEffect(() => {
+  useEffect(() => {    
     if (userProjects.length === 1) {
       setSelectedProjects([userProjects[0].id]);
     }
@@ -60,18 +61,27 @@ const AuthorManagement = () => {
     if (!user) return;
 
     try {
-      const projectsRef = collection(db, 'projects');
-      const q = query(projectsRef, where('owner', '==', user.email));
-      const snapshot = await getDocs(q);
+      const ownedProjectIds = Object.keys(userRoles?.projectRoles)
+        .filter(key => userRoles?.projectRoles[key] === 'owner');      
 
-      const ownedProjects = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          title: doc.data().title || 'Untitled Project',
-          status: doc.data().status || 'active'
-        }))
-        .filter(project => project.status === 'active') // Only show active projects
-        .sort((a, b) => a.title.localeCompare(b.title)); // Sort alphabetically
+      const ownedProjects = await Promise.all(
+        ownedProjectIds.map(async (projectId) => {
+          const projectDocRef = doc(db, 'projects', projectId);
+          const projectSnap = await getDoc(projectDocRef);
+          const docData = projectSnap.data()
+
+          if (projectSnap.exists()) {
+            return {
+              id: projectId,
+              title: docData.title || 'Untitled Project',
+              ...docData
+            }
+          }
+
+          return null
+        })
+          .sort((a, b) => a.title.localeCompare(b.title)) // Sort alphabetically
+      );      
 
       setUserProjects(ownedProjects);
     } catch (err) {
@@ -86,12 +96,9 @@ const AuthorManagement = () => {
     try {
       setLoading(true);
 
-      // First get all projects owned by current user
-      const projectsRef = collection(db, 'projects');
-      const projectsQuery = query(projectsRef, where('owner', '==', user.email));
-      const projectsSnapshot = await getDocs(projectsQuery);
+      const ownedProjectIds = Object.keys(userRoles?.projectRoles)
+        .filter(key => userRoles?.projectRoles[key] === 'owner');
 
-      const ownedProjectIds = projectsSnapshot.docs.map(doc => doc.id);
       if (ownedProjectIds.length === 0) {
         setAuthors([]);
         setLoading(false);
@@ -107,34 +114,27 @@ const AuthorManagement = () => {
 
       for (const userDoc of usersSnapshot.docs) {
         const userData = userDoc.data();
-        const userProjects = userData.projectRoles || {};
 
-        // Check if this user is an author on any of the owned projects
-        const authorProjects = [];
-        let isAuthorOnAnyProject = false;
+        // The ids of the projects the user is an author on and is owned by this user
+        const authorProjectIds = Object.keys(userData.projectRoles)
+          .filter(key => userData.projectRoles[key] === 'author')
+          .filter(key => ownedProjectIds.includes(key))
+          // .map(id => ({ id }));
 
-        if (user.uid === userData.addedByUserUID) {
-          // If added by a owner but not assigned to a project
-          isAuthorOnAnyProject = true;
-        }
+        // console.log('authorProjectIds: ', authorProjectIds);
+        
+        const projectPromises = authorProjectIds.map(id =>
+          getDoc(doc(db, "projects", id))
+        );
 
-        for (const projectId of ownedProjectIds) {
-          if (userProjects[projectId] === 'author') {
-            isAuthorOnAnyProject = true;
+        const snapshots = await Promise.all(projectPromises);
 
-            // Find project details
-            const projectDoc = projectsSnapshot.docs.find(doc => doc.id === projectId);
-            if (projectDoc) {
-              authorProjects.push({
-                id: projectId,
-                title: projectDoc.data().title || 'Untitled Project'
-              });
-            }
-          }
-        }
+        const authorProjects = snapshots
+          .filter(doc => doc.exists())
+          .map(doc => ({ id: doc.id, title: doc.data().title || 'Untitled Project', ...doc.data() }));
 
         // If user is an author on at least one of owner's projects, add them to the list
-        if (isAuthorOnAnyProject) {
+        if (authorProjectIds.length > 0) {
           authorsData.push({
             id: userDoc.id,
             email: userData.email,
@@ -144,8 +144,9 @@ const AuthorManagement = () => {
             projectCount: authorProjects.length
           });
         }
-      }
 
+      }
+      
       setAuthors(authorsData);
       setFilteredAuthors(authorsData);
     } catch (err) {
@@ -481,7 +482,7 @@ const AuthorManagement = () => {
           if (project) {
             selectedProjectNames.push(project.title);
           }
-        }        
+        }
 
         await addDoc(collection(db, 'projectUsers'), {
           email: newUserEmail,
@@ -546,7 +547,7 @@ const AuthorManagement = () => {
   };
 
   const getSelectedProjectsText = () => {
-    if (selectedProjects.length === 0) return 'Select project';
+    if (selectedProjects.length === 0) return 'Select project';    
 
     return selectedProjects.map(projectId => {
       const project = userProjects.find(p => p.id === projectId);

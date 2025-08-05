@@ -426,6 +426,10 @@ label {
   resize: vertical;
 }
 
+.auth-form-container { 
+  max-width: 600px;
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   .auth-form-container {

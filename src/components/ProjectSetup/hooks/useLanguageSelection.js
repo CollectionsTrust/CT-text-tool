@@ -1,5 +1,3 @@
-// File: src/components/ProjectSetup/hooks/useLanguageSelection.js
-
 import { useState, useEffect } from 'react';
 
 // List of ISO languages

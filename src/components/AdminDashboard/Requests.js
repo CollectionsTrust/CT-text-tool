@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { Link } from 'react-router-dom';
 import {
   collection,
@@ -11,10 +10,10 @@ import {
   addDoc,
   serverTimestamp
 } from 'firebase/firestore';
+import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
 import './AdminDashboard.css';
-import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 
 
 const Requests = () => {
@@ -24,7 +23,7 @@ const Requests = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [processingRequestId, setProcessingRequestId] = useState(null);
   const { user } = useAuth();
-  const auth = getAuth();  
+  const auth = getAuth();
 
   const fetchRequests = async () => {
     try {
@@ -98,12 +97,8 @@ const Requests = () => {
       let projectUserRef;
       let projectUserId;
 
-      // Create new user with temporary password
-      const tempPassword = generateTempPassword();
-      const hashedPassword = await hashPassword(tempPassword);
-
       if (userSnapshot.empty) {
-        // User doesn't exist, create a new projectUser with hashed password
+        // User doesn't exist, create a new projectUser
         projectUserRef = await addDoc(collection(db, 'projectUsers'), {
           email: request.email,
           name: request.name,
@@ -112,12 +107,6 @@ const Requests = () => {
           createdAt: serverTimestamp(),
           status: 'approved',
           approvedBy: user.email,
-          passwordHash: hashedPassword,
-          passwordSettings: {
-            isTemporary: true,
-            lastChanged: null,
-            createdAt: new Date().toISOString()
-          },
           projectRoles: {
             [projectRef.id]: 'owner'
           }
@@ -148,19 +137,14 @@ const Requests = () => {
         projectId: projectRef.id,
         projectUserId: projectUserId,
         approvedBy: user.email, // @TODO add back
-        tempPassword: tempPassword
       });
 
-      // @TODO change the email to send out an email to the set password page?
-      // @TODO this is also sending a new password to users who already have an account
+      // @TODO this is being sent to users who already have an account
       // Generate a mailto link with pre-populated content for the admin to send
       const emailSubject = encodeURIComponent(`Your CT Text Tool project "${request.projectTitle || 'Project Request'}" has been approved`);
       const emailBody = encodeURIComponent(
         `Hello ${request.name},\n\n` +
-        `Your project request for "${request.projectTitle || 'the CT Text Tool'}" has been approved. You can now log in to the CT Text Tool with the following credentials:\n\n` +
-        `Email: ${request.email}\n` +
-        `Temporary Password: ${tempPassword}\n\n` +
-        `Important: You will be required to change your password when you first log in.\n\n` +
+        `Your project request for "${request.projectTitle || 'the CT Text Tool'}" has been approved. You will be sent a sign in email to complete signup to the app.\n\n` +
         `Your project "${request.projectTitle || 'Project'}" is now set up and ready for you to begin working on.\n\n` +
         `For any questions, please contact us.\n\n` +
         `Thank you,\n` +
@@ -170,25 +154,22 @@ const Requests = () => {
       const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
       window.open(mailtoLink, '_blank');
 
-      setSuccessMessage(`Project request for ${request.name} has been approved. A draft email has been opened in your email client.`);
-      setProjectRequests(prev => prev.filter(r => r.id !== requestId));
-
-      // I've added this but it won't work until firebase auth is turned on.
-      createUserWithEmailAndPassword(auth, request.email, tempPassword)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log('USER SIGNED UP!')
-          console.log('USER: ', user)
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.log(errorCode, errorMessage)
+      sendSignInLinkToEmail(auth, request.email, {
+        url: `${window.location.origin}/signup`,
+        handleCodeInApp: true,
+      })
+        .then(() => {
+          setSuccessMessage(`
+            Project request for ${request.name} has been approved.
+            A draft email has been opened in your email client.
+            An email has been sent by Firebase auth to ${request.email} so they can complete signup.
+          `);
         });
     } catch (err) {
       console.error('Error approving project request:', err);
       setError(`Failed to approve request: ${err.message}`);
     } finally {
+      setProjectRequests(prev => prev.filter(r => r.id !== requestId));
       setProcessingRequestId(null);
     }
   };
@@ -291,7 +272,7 @@ const Requests = () => {
             </tbody>
           </table>
         </div>
-      )}      
+      )}
     </div>
   );
 };

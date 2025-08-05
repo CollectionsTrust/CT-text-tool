@@ -4,7 +4,7 @@ import { useProject } from '../../hooks/useProject'
 import './MainHeader.css';
 
 const MainHeader = () => {
-  const { user, userRole, logout } = useAuth();
+  const { user, userRoles, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams();
@@ -103,7 +103,7 @@ const MainHeader = () => {
 
           {location.pathname.includes('/projects/') && (
             <>
-              {(userRole === 'admin' || user?.email === project?.owner) && (
+              {(userRoles.appRole === 'admin' || user?.email === project?.owner) && (
                 <Link
                   to={`/projects/${projectId}?edit=true`}
                   className="nav-button"
@@ -125,9 +125,9 @@ const MainHeader = () => {
                 Edit texts
               </Link>
             </>
-          )}
+          )}          
 
-          {(userRole === 'admin' || userRole === 'owner' || userRole === 'author') && (
+          {userRoles.appRole === 'nonAdminUser' && (
             <Link
               to="/dashboard"
               className="nav-button"

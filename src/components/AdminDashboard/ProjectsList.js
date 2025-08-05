@@ -36,7 +36,7 @@ const ProjectsList = () => {
         setError('');
         let projectsData = [];
 
-        const projectsRef = collection(db, 'projects');
+        const projectsRef = collection(db, 'projects');        
         const querySnapshot = await getDocs(projectsRef);
 
         const projectPromises = querySnapshot.docs.map(async (projectDoc) => {
@@ -141,7 +141,7 @@ const ProjectsList = () => {
     return words.slice(0, wordLimit).join(' ') + (words.length > wordLimit ? '...' : '');
   };
 
-  const navigateToProject = (id) => navigate(`/projects/${id}`);
+  const navigateToProject = (id) => navigate(`/projects/${id}/objects`);
 
   const archiveProject = async (id) => {
     await updateDoc(doc(db, 'projects', id), { status: 'archived' });
