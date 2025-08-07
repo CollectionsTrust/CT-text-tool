@@ -44,24 +44,23 @@ const UserDashboard = () => {
         // @TEST AUTHORS COUNT WORKS
 
         // Step 1: Find the user document in Firestore
-        const userDocRef = doc(db, 'projectUsers', user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        const userData = userDocSnap.exists() ? userDocSnap.data() : null
+        const userDocRef = doc(db, 'projectUsers', user.email);
+        const userDocSnap = await getDoc(userDocRef);        
+        const userData = userDocSnap.exists() ? userDocSnap.data() : null                
         const projectRoles = userData.projectRoles || {};
         const userOwns = Object.fromEntries(
           Object.entries(projectRoles).filter(([key, value]) => value === 'owner')
         );
-        const userProjectIds = Object.keys(userOwns)        
-
+        const userProjectIds = Object.keys(userOwns)           
+        
         // Step 2: Get projects where user is the owner (always check this first)
         const docs = await Promise.all(
           userProjectIds.map(id => getDoc(doc(db, 'projects', id)))
         );
+        
         const projectsData = docs
           .filter(docSnap => docSnap.exists())
           .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-
-        // console.log(results)
 
         // projectsSnap.docs.forEach(doc => {
         //   projectsData.push({

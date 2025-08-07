@@ -1,83 +1,16 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  getAuth,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
-} from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
+import { useState } from "react";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { useAuth } from "../../context/AuthContext";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const SignUp = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [isEmailDisabled, setIsEmailDisabled] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [userId, setUserId] = useState("");
-  const hasTriedSignInRef = useRef(false);
-  const navigate = useNavigate();
   const auth = getAuth();
-  const { setPasswordForEmailLinkUser } = useAuth();
-
-  useEffect(() => {
-    const url = window.location.href;
-
-    if (hasTriedSignInRef.current) {
-      return;
-    }
-
-    if (isSignInWithEmailLink(auth, url)) {
-      hasTriedSignInRef.current = true; // Prevent second run
-
-      // User opened the link on a different device. To prevent session fixation
-      // attacks, ask the user to provide the associated email again.
-      // This is the Firebase suggested approach
-      const email = window.localStorage.getItem("emailForSignIn") || window.prompt("Please provide your email for confirmation");
-
-      setEmail(email);
-      setIsEmailDisabled(true);
-
-      signInWithEmailLink(auth, email, url)
-        .then((result) => {
-          // console.log('User signed in:', result.user);
-          setUserId(result.user.uid);
-          window.localStorage.removeItem("emailForSignIn");
-        })
-        .catch((error) => {
-          console.error("Sign in error:", error);
-          setError("Error signing in: " + error.message);
-        });
-    } else {
-      setError("Invalid or expired sign-in link.");
-    }
-  }, [email]);
-
-  const changeDocId = async (oldId) => {
-    const oldDocRef = doc(db, "projectUsers", oldId);
-    const newDocRef = doc(db, "projectUsers", userId);
-
-    const docSnapshot = await getDoc(oldDocRef);
-
-    if (!docSnapshot.exists()) return;
-
-    // Copy data to new doc
-    await setDoc(newDocRef, docSnapshot.data());
-
-    // Delete old doc
-    await deleteDoc(oldDocRef);
-  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -85,24 +18,19 @@ const SignUp = () => {
     setError("");
 
     try {
-      const projectUsersRef = collection(db, "projectUsers");
-      const q = query(projectUsersRef, where("email", "==", email));
-      const querySnapshot = await getDocs(q);
+      const emailDocId = email.toLowerCase();
+      const userDocRef = doc(db, "projectUsers", emailDocId);
+      const userDocSnap = await getDoc(userDocRef);
+      const userData = userDocSnap.exists() ? userDocSnap.data() : null;
 
-      if (querySnapshot.empty) {
-        throw new Error(
-          "You are not approved to register. Please request access."
-        );
+      if (!userData || userData.status !== 'approved') {
+        throw new Error("You are not approved to register. Please request access.");
       }
 
-      const doc = querySnapshot.docs[0];
-      const projectUserId = doc.id;
-
-      await setPasswordForEmailLinkUser(password);
-      await changeDocId(projectUserId);
+      await createUserWithEmailAndPassword(auth, email, password);
 
       // Use to flush out the state so the user reloaded in the authContext
-      window.location.href = "/dashboard";
+      window.location.href = "/dashboard"; // @todo use navigate again instead?
     } catch (err) {
       setError(err.message);
     } finally {
@@ -110,14 +38,13 @@ const SignUp = () => {
     }
   };
 
+
   return (
     <div className="container">
       <div className="auth-form-container">
         <form onSubmit={handleRegister} className="auth-form">
           <h2>Complete signup</h2>
-
           {error && <div className="error-message">{error}</div>}
-
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <div className="password-input-container">
@@ -125,13 +52,12 @@ const SignUp = () => {
                 type="text"
                 id="email"
                 value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="text-input"
-                disabled={isEmailDisabled}
               />
             </div>
           </div>
-
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <div className="password-input-container">
@@ -153,8 +79,7 @@ const SignUp = () => {
               </button>
             </div>
             <small className="form-help-text">
-              Must be at least 8 characters and include uppercase and lowercase
-              letters
+              Must be at least 8 characters and include uppercase and lowercase letters
             </small>
           </div>
           <button

@@ -10,7 +10,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
-import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 import './AdminDashboard.css';
 import { useAuth } from '../../context/AuthContext';
 
@@ -39,7 +38,6 @@ const UserManagement = () => {
   const [ownershipConflict, setOwnershipConflict] = useState(null);
   const { sendResetPasswordEmail } = useAuth();
   const auth = getAuth();
-
 
   useEffect(() => {
     fetchUsers();
@@ -129,11 +127,12 @@ const UserManagement = () => {
       // SEND AN EMAIL TO THE USER ASKING THEM TO RESET PASSWORD!
       await sendResetPasswordEmail(userEmail)
 
-      // NEED TO TEST THIS
+      // @TODO NEED TO TEST THIS
       // Need to add the text explaining it will send an email so the user can reset
 
-      // TO GIVE ADMIN USER FEEBACK THAT THE LINK HAS BEEN SENT. The text below might not be seen by users.
+      // TO GIVE ADMIN USER FEEDBACK THAT THE LINK HAS BEEN SENT. The text below might not be seen by users.
       // could scroll to message as a minimum.
+
       setSuccess(`An email has been sent to ${userEmail} so they can reset their password`);
     } catch (err) {
       console.error('Error sending password reset email:', err);
@@ -144,7 +143,8 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = async (userId) => {
-    // @todo will this actually delete users or just the project users?
+    // This will delete the projectUser but not the user from Firebase, this still needs to
+    // be done on the firebase app. In the future the Admin SDK would be needed to do this.
     try {
       const userRef = doc(db, 'projectUsers', userId);
       await deleteDoc(userRef);
@@ -455,36 +455,25 @@ const UserManagement = () => {
         let emailSubject, emailBody;
 
         if (isNewUser) {
-          // Generate temporary password for new users
-          const tempPassword = generateTempPassword();
-          const hashedPassword = await hashPassword(tempPassword);
-
-          // Update user with password
-          await updateDoc(userRef, {
-            passwordHash: hashedPassword,
-            passwordSettings: {
-              isTemporary: true,
-              lastChanged: null,
-              createdAt: new Date().toISOString()
-            }
-          });
+          // @TODO dont think this is working. Email is being sent but user is not landing on the signup page
+          sendSignInLinkToEmail(auth, editingUserRoles.email, {
+            url: `${window.location.origin}/signup}`,
+            handleCodeInApp: true,
+          })
+          .catch((error) => {
+            setError(`Error sending signup email to user. ${error}`);
+          })
 
           emailSubject = encodeURIComponent(`Welcome to the CT Text Tool - "${projectTitle}"`);
           emailBody = encodeURIComponent(
             `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +
             `You have been invited to join the CT Text Tool project "${projectTitle}" as ${role === 'owner' ? 'a project owner' : 'an author'}.\n\n` +
             `${role === 'owner' ? 'As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project.' : 'As an author, you can view objects and create/edit texts for this project.'}\n\n` +
-            `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
-            `Your login credentials are:\n` +
-            `Email: ${editingUserRoles.email}\n` +
-            `Temporary Password: ${tempPassword}\n\n` +
-            `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
-            `If you have any questions, please contact us by replying to this email.\n\n` +
+            `Visit ${window.location.origin}/signup to create your account. \n\n` +
             `Thank you,\n` +
             `Collections Trust Team`
           );
         } else {
-          // @TODO also need to change email here to not send password! send link to create password?
           emailSubject = encodeURIComponent(`You have been added to a new CT Text Tool project`);
           emailBody = encodeURIComponent(
             `Hello ${editingUserRoles.name || editingUserRoles.email},\n\n` +

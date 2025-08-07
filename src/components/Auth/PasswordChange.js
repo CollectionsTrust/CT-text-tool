@@ -34,10 +34,6 @@ const PasswordChange = ({ onComplete = null }) => {
       return setError('New passwords do not match');
     }
 
-    if (!validatePassword(newPassword)) {
-      return setError('Password must be at least 8 characters and include uppercase and lowercase letters');
-    }
-
     const passwordValidity = validatePassword(newPassword)
   
     if (!passwordValidity.isValid) {

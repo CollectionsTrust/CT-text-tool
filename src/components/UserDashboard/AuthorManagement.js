@@ -4,15 +4,13 @@ import {
   doc,
   getDocs,
   updateDoc,
-  deleteDoc,
-  addDoc,
+  setDoc,
   query,
   where,
   getDoc,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { generateTempPassword, hashPassword } from '../../utils/passwordUtils';
 import { useAuth } from '../../context/AuthContext';
 import './UserDashboard.css';
 
@@ -38,7 +36,6 @@ const AuthorManagement = () => {
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
   const { user, userRoles } = useAuth();
 
-
   // Fetch authors and owner's projects on component mount
   useEffect(() => {
     fetchOwnedProjects();
@@ -51,7 +48,7 @@ const AuthorManagement = () => {
   }, [searchQuery, authors]);
 
   // Auto-select the only project if there's just one
-  useEffect(() => {    
+  useEffect(() => {
     if (userProjects.length === 1) {
       setSelectedProjects([userProjects[0].id]);
     }
@@ -62,7 +59,7 @@ const AuthorManagement = () => {
 
     try {
       const ownedProjectIds = Object.keys(userRoles?.projectRoles)
-        .filter(key => userRoles?.projectRoles[key] === 'owner');      
+        .filter(key => userRoles?.projectRoles[key] === 'owner');
 
       const ownedProjects = await Promise.all(
         ownedProjectIds.map(async (projectId) => {
@@ -81,7 +78,7 @@ const AuthorManagement = () => {
           return null
         })
           .sort((a, b) => a.title.localeCompare(b.title)) // Sort alphabetically
-      );      
+      );
 
       setUserProjects(ownedProjects);
     } catch (err) {
@@ -119,10 +116,7 @@ const AuthorManagement = () => {
         const authorProjectIds = Object.keys(userData.projectRoles)
           .filter(key => userData.projectRoles[key] === 'author')
           .filter(key => ownedProjectIds.includes(key))
-          // .map(id => ({ id }));
 
-        // console.log('authorProjectIds: ', authorProjectIds);
-        
         const projectPromises = authorProjectIds.map(id =>
           getDoc(doc(db, "projects", id))
         );
@@ -146,7 +140,7 @@ const AuthorManagement = () => {
         }
 
       }
-      
+
       setAuthors(authorsData);
       setFilteredAuthors(authorsData);
     } catch (err) {
@@ -181,6 +175,7 @@ const AuthorManagement = () => {
   const handleDeleteAuthor = async (authorId) => {
     try {
       const author = authors.find(a => a.id === authorId);
+
       if (!author) {
         setError("Author not found");
         return;
@@ -198,41 +193,28 @@ const AuthorManagement = () => {
       const authorData = authorDoc.data();
       const projectRoles = authorData.projectRoles || {};
 
-      // Remove author role from all projects owned by current user
-      const updatedProjectRoles = { ...projectRoles };
-
       // Get all projects owned by current user
       const ownedProjectIds = userProjects.map(p => p.id);
 
       // Remove these projects from the user's projectRoles
       for (const projectId of ownedProjectIds) {
-        delete updatedProjectRoles[projectId];
+        projectRoles[projectId] = null
       }
 
-      // If the user has no remaining project roles, delete the user
-      const hasRemainingProjects = Object.keys(updatedProjectRoles).length > 0;
-
-      if (hasRemainingProjects) {
-        // Update the user document
-        await updateDoc(authorRef, {
-          projectRoles: updatedProjectRoles
-        });
-        setSuccess(`Author removed from your projects`);
-      } else {
-        // Delete the entire user document
-        await deleteDoc(authorRef);
-        setSuccess('Author deleted successfully');
-      }
+      // Update the user document. This doesn't remove user from the app entirely just their
+      // permissions as an author on the project.
+      await updateDoc(authorRef, { projectRoles });
+      setSuccess(`Author removed from your projects`);
 
       // Update local state
       setAuthors(prev => prev.filter(a => a.id !== authorId));
       setFilteredAuthors(prev => prev.filter(a => a.id !== authorId));
       setConfirmDelete(null);
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
       console.error('Error deleting author:', err);
       setError('Failed to delete author.');
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -389,11 +371,11 @@ const AuthorManagement = () => {
       const emailMessage = hasChanges ? ' A draft email has been opened in your email client.' : '';
       setSuccess(`Author updated successfully.${emailMessage}`);
       setEditingAuthor(null);
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
       console.error('Error updating author:', err);
       setError('Failed to update author.');
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -468,11 +450,7 @@ const AuthorManagement = () => {
           setSuccess(`User ${existingUserData.name || newUserEmail} already has these projects assigned`);
         }
       } else {
-        // Create new user with temporary password
-        // @TODO remove these and all values in store
-        const tempPassword = generateTempPassword();
-        const hashedPassword = await hashPassword(tempPassword);
-
+        // Create new user
         // Initialize projectRoles object with selected projects as 'author'
         const projectRoles = {};
         const selectedProjectNames = [];
@@ -484,19 +462,12 @@ const AuthorManagement = () => {
           }
         }
 
-        await addDoc(collection(db, 'projectUsers'), {
-          email: newUserEmail,
+        await setDoc(doc(db, 'projectUsers', newUserEmail.toLowerCase()), {
+          email: newUserEmail.toLowerCase(),
           name: newUserName || 'No name provided',
           organization: newUserOrg || 'No organization provided',
-          role: 'author',  // Overall role
           createdAt: serverTimestamp(),
           projectRoles: projectRoles,
-          passwordHash: hashedPassword,
-          passwordSettings: {
-            isTemporary: true,
-            lastChanged: null,
-            createdAt: new Date().toISOString()
-          },
           addedByUserUID: user.uid // Added so we can list users add but not assigned
         });
 
@@ -507,11 +478,7 @@ const AuthorManagement = () => {
           `You have been invited to join the CT Text Tool project${selectedProjectNames.length > 1 ? 's' : ''} as an author:\n\n` +
           `${selectedProjectNames.join('\n')}\n\n` +
           `As an author, you can view objects and create/edit texts for ${selectedProjectNames.length > 1 ? 'these projects' : 'this project'}.\n\n` +
-          `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
-          `Your login credentials are:\n` +
-          `Email: ${newUserEmail}\n` +
-          `Temporary Password: ${tempPassword}\n\n` +
-          `Important: You will be required to change your password when you first log in. Please do this within the next 7 days, as the temporary password will expire after a week.\n\n` +
+          `Visit ${window.location.origin}/signup to create your account. \n\n` +
           `If you have any questions, please contact us by replying to this email.\n\n` +
           `Best regards,\n` +
           `${user?.name || user?.email || 'Project Owner'}`
@@ -528,11 +495,11 @@ const AuthorManagement = () => {
 
       // Refresh author list
       fetchAuthors();
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
       console.error('Error adding author:', err);
       setError('Failed to add author.');
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -547,7 +514,7 @@ const AuthorManagement = () => {
   };
 
   const getSelectedProjectsText = () => {
-    if (selectedProjects.length === 0) return 'Select project';    
+    if (selectedProjects.length === 0) return 'Select project';
 
     return selectedProjects.map(projectId => {
       const project = userProjects.find(p => p.id === projectId);

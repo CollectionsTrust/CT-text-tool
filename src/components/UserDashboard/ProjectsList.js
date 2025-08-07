@@ -115,8 +115,6 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
   const navigateToProject = (project) => {
     const isAuthor = userRoles.projectRoles[project.id] === 'Author'
 
-    console.log(userRoles);
-
     if (project.setupComplete || isAuthor) {
       navigate(`/projects/${project.id}/objects`);
     } else {

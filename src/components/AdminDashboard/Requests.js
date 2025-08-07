@@ -8,9 +8,9 @@ import {
   doc,
   updateDoc,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  setDoc
 } from 'firebase/firestore';
-import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
 import './AdminDashboard.css';
@@ -23,7 +23,6 @@ const Requests = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [processingRequestId, setProcessingRequestId] = useState(null);
   const { user } = useAuth();
-  const auth = getAuth();
 
   const fetchRequests = async () => {
     try {
@@ -91,19 +90,19 @@ const Requests = () => {
 
       // Check if user already exists in Firestore
       const usersRef = collection(db, 'projectUsers');
-      const userQuery = query(usersRef, where('email', '==', request.email));
+      const userQuery = query(usersRef, where('email', '==', request.email.toLowerCase()));
       const userSnapshot = await getDocs(userQuery);
 
       let projectUserRef;
       let projectUserId;
 
       if (userSnapshot.empty) {
-        // User doesn't exist, create a new projectUser
-        projectUserRef = await addDoc(collection(db, 'projectUsers'), {
-          email: request.email,
+        const emailDocId = request.email.toLowerCase();
+        projectUserRef = doc(db, 'projectUsers', emailDocId);
+
+        await setDoc(projectUserRef, {
           name: request.name,
           organization: request.organization,
-          role: 'owner',
           createdAt: serverTimestamp(),
           status: 'approved',
           approvedBy: user.email,
@@ -136,7 +135,7 @@ const Requests = () => {
         processedAt: serverTimestamp(),
         projectId: projectRef.id,
         projectUserId: projectUserId,
-        approvedBy: user.email, // @TODO add back
+        approvedBy: user.email,
       });
 
       // @TODO this is being sent to users who already have an account
@@ -144,8 +143,9 @@ const Requests = () => {
       const emailSubject = encodeURIComponent(`Your CT Text Tool project "${request.projectTitle || 'Project Request'}" has been approved`);
       const emailBody = encodeURIComponent(
         `Hello ${request.name},\n\n` +
-        `Your project request for "${request.projectTitle || 'the CT Text Tool'}" has been approved. You will be sent a sign in email to complete signup to the app.\n\n` +
+        `Your project request for "${request.projectTitle || 'the CT Text Tool'}" has been approved.\n\n` +
         `Your project "${request.projectTitle || 'Project'}" is now set up and ready for you to begin working on.\n\n` +
+        `Visit ${window.location.origin}/signup to create your account. \n\n` +
         `For any questions, please contact us.\n\n` +
         `Thank you,\n` +
         `Collections Trust Team`
@@ -153,18 +153,6 @@ const Requests = () => {
 
       const mailtoLink = `mailto:${request.email}?subject=${emailSubject}&body=${emailBody}`;
       window.open(mailtoLink, '_blank');
-
-      sendSignInLinkToEmail(auth, request.email, {
-        url: `${window.location.origin}/signup`,
-        handleCodeInApp: true,
-      })
-        .then(() => {
-          setSuccessMessage(`
-            Project request for ${request.name} has been approved.
-            A draft email has been opened in your email client.
-            An email has been sent by Firebase auth to ${request.email} so they can complete signup.
-          `);
-        });
     } catch (err) {
       console.error('Error approving project request:', err);
       setError(`Failed to approve request: ${err.message}`);

@@ -27,10 +27,9 @@ export const AuthProvider = ({ children }) => {
 
   const getUserRolesFromFirestore = async (user) => {
     // A user can be a whole site 'admin' or have multiple roles for different projects
-    const projectUserDocRef = doc(db, "projectUsers", user.uid);
+    const projectUserDocRef = doc(db, "projectUsers", user.email);
     const projectUserDocSnap = await getDoc(projectUserDocRef);
-
-    const usersDocRef = doc(db, "users", user.uid);
+    const usersDocRef = doc(db, "userRoles", user.uid);
     const usersDocSnap = await getDoc(usersDocRef);       
 
     let appRole = null    
@@ -127,7 +126,6 @@ export const AuthProvider = ({ children }) => {
   const sendResetPasswordEmail = async (email) => {
     try {
       await sendPasswordResetEmail(auth, email);
-      console.log("Password reset email sent!");
     } catch (error) {
       console.error("Error sending password reset email:", error);
       throw error;
