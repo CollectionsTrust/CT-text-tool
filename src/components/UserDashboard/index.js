@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
 import ProjectsList from './ProjectsList';
@@ -17,7 +17,7 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const navigate = useNavigate();
   const location = useLocation();
-  const userIsOwnerOfAProject = Object.values(userRoles?.projectRoles).includes('owner')  
+  const userIsOwnerOfAProject = Object.values(userRoles?.projectRoles).includes('owner')
 
   // Set active tab based on URL hash
   useEffect(() => {
@@ -38,76 +38,45 @@ const UserDashboard = () => {
         setLoading(true);
         setError('');
 
-        // @TEST IF USER HAS NO PROJECTS!
-        // @TEST THAT THE QUERY FOR PROJECTS DOESN'T TRUNCATE AT 10
-        // @TEST PAGE LOOKS THE SAME AS PREVIOUSLY
-        // @TEST AUTHORS COUNT WORKS
-
         // Step 1: Find the user document in Firestore
         const userDocRef = doc(db, 'projectUsers', user.email);
-        const userDocSnap = await getDoc(userDocRef);        
-        const userData = userDocSnap.exists() ? userDocSnap.data() : null                
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.exists() ? userDocSnap.data() : null
         const projectRoles = userData.projectRoles || {};
         const userOwns = Object.fromEntries(
           Object.entries(projectRoles).filter(([key, value]) => value === 'owner')
         );
-        const userProjectIds = Object.keys(userOwns)           
-        
+        const userProjectIds = Object.keys(userOwns)
+
         // Step 2: Get projects where user is the owner (always check this first)
         const docs = await Promise.all(
           userProjectIds.map(id => getDoc(doc(db, 'projects', id)))
         );
-        
-        const projectsData = docs
-          .filter(docSnap => docSnap.exists())
-          .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
 
-        // projectsSnap.docs.forEach(doc => {
-        //   projectsData.push({
-        //     id: doc.id,
-        //     ...doc.data(),
-        //     userRole: 'Owner',
-        //     authorCount: doc.data().authors?.length || 0 <- NEEDEDEDEDEDED?
-        //   });
-        // });
+        const projectsData = await Promise.all(
+          docs
+            .filter(docSnap => docSnap.exists())
+            .map(async (docSnap) => {
+              const proj = { 
+                id: docSnap.id,
+                ...docSnap.data(),
+                userRole: 'Owner',
+              };
 
-        // Step 3: Check user's projectRoles for additional projects
-        // if (userDocSnap.exists()) {           
-        //   // Get project IDs where user has roles, excluding those already fetched as owner
-        //   const projectIds = Object.keys(projectRoles).filter(projectId => 
-        //     !projectsData.some(project => project.id === projectId)
-        //   );
+              const q = query(
+                collection(db, "projectUsers"),
+                where(`projectRoles.${proj.id}`, "==", "author")
+              );
+              const snapshot = await getDocs(q);
 
-        // if (projectIds.length > 0) {            
-        //   // Fetch projects in batches (Firestore limit is 10 for 'in' queries)
-        //   const batchSize = 10;
+              return {
+                ...proj,
+                authorCount: snapshot.size // number of matching docs
+              };
+            })
+        );
 
-        //   for (let i = 0; i < projectIds.length; i += batchSize) {
-        //     const batch = projectIds.slice(i, i + batchSize);
-
-        //     const batchQuery = query(projectsRef, where('__name__', 'in', batch));
-        //     const batchSnapshot = await getDocs(batchQuery);
-
-        //     batchSnapshot.docs.forEach(doc => {
-        //       const projectId = doc.id;
-        //       const projectData = doc.data();
-        //       const userRole = projectRoles[projectId];
-
-        //       // Only add the project if it's not already in our list
-        //       if (!projectsData.some(p => p.id === projectId)) {
-        //         projectsData.push({
-        //           id: projectId,
-        //           ...projectData,
-        //           userRole: userRole.charAt(0).toUpperCase() + userRole.slice(1), // Capitalize role
-        //           authorCount: projectData.authors?.length || 0
-        //         });
-        //       }
-        //     });
-        // }
-        // }
-
-
-        // Step 4: Sort projects: active first, then by creation date
+        // Step 3: Sort projects: active first, then by creation date
         // NOTE: We still sort with archived status even though we don't show archived projects in the UI
         projectsData.sort((a, b) => {
           const statusCompare = (a.status === 'archived') - (b.status === 'archived');

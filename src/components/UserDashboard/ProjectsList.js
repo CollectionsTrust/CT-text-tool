@@ -13,7 +13,7 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
   const [confirmArchive, setConfirmArchive] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const { userRoles } = useAuth();
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Only perform search if we have projects
@@ -106,6 +106,9 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  // project.userRole
+  // project.authorCount
 
   const truncateWords = (text, wordLimit) => {
     const words = text?.split(' ') || [];
