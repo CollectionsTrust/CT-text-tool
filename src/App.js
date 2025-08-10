@@ -12,6 +12,7 @@ import MainHeader from './components/navigation/MainHeader';
 // Public pages
 import LandingPage from './components/LandingPage';
 import UserGuide from './components/UserGuide';
+import TermsPage from './components/TermsPage';
 
 // Dashboard pages
 import UserDashboard from './components/UserDashboard';
@@ -41,6 +42,7 @@ const App = () => {
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/user-guide" element={<UserGuide />} />
+          <Route path="/terms-and-conditions" element={<TermsPage />} />
           <Route path="/signup" element={<SignUp />} />
           
           {/* Protected routes that require user to be logged in */}

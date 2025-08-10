@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { Link } from 'react-router-dom';
 
 const ProjectRequestForm = () => {
   const [formData, setFormData] = useState({
@@ -14,10 +15,6 @@ const ProjectRequestForm = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [termsContent, setTermsContent] = useState('');
-  const [termsLoading, setTermsLoading] = useState(false);
-  const [termsError, setTermsError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,58 +23,6 @@ const ProjectRequestForm = () => {
 
   const handleTermsCheckbox = (e) => {
     setAcceptTerms(e.target.checked);
-  };
-
-  const handleShowTerms = (e) => {
-    e.preventDefault();
-    setShowTerms(true);
-    setTermsLoading(true);
-    setTermsError(null);
-
-    fetch('/terms-and-conditions.html')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to load terms and conditions');
-        }
-        return response.text();
-      })
-      .then(html => {
-        setTermsContent(html);
-        setTermsLoading(false);
-      })
-      .catch(error => {
-        console.error('Error loading terms and conditions:', error);
-        setTermsError(error.message);
-        setTermsLoading(false);
-      });
-  };
-
-  const handleCloseTerms = () => {
-    setShowTerms(false);
-    setTermsContent('');
-    setTermsError(null);
-  };
-
-  // Handle escape key to close terms popup
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === 'Escape' && showTerms) {
-        handleCloseTerms();
-      }
-    };
-
-    if (showTerms) {
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showTerms]);
-
-  // Handle click outside popup to close
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      handleCloseTerms();
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -200,13 +145,12 @@ const ProjectRequestForm = () => {
             />
             <label htmlFor="acceptTerms" className="checkbox-label">
               I accept the{' '}
-              <button
-                type="button"
+              <Link
+                to="/terms-and-conditions"
                 className="terms-link"
-                onClick={handleShowTerms}
               >
                 CT Text Tool terms and conditions
-              </button>
+              </Link>
             </label>
           </div>
         </div>
@@ -217,50 +161,6 @@ const ProjectRequestForm = () => {
           {submitting ? 'Submitting...' : 'Submit request'}
         </button>
       </form>
-
-      {/* Terms and Conditions Popup */}
-      {showTerms && (
-        <div className="terms-overlay" onClick={handleBackdropClick}>
-          <div className="terms-modal">
-            {/* Header with close button */}
-            <div className="terms-header">
-              <h2 className="terms-title">CT Text Tool Terms and Conditions</h2>
-              <button
-                onClick={handleCloseTerms}
-                className="terms-close-btn"
-                aria-label="Close terms and conditions"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Content area */}
-            <div className="terms-content-wrapper">
-              {termsLoading && (
-                <div className="terms-loading">
-                  <div className="loading-spinner"></div>
-                  <p className="sr-only">Loading terms and conditions...</p>
-                </div>
-              )}
-              
-              {termsError && (
-                <div className="terms-error">
-                  <div className="error-message">
-                    <p>Error loading terms and conditions: {termsError}</p>
-                  </div>
-                </div>
-              )}
-              
-              {!termsLoading && !termsError && (
-                <div 
-                  className="terms-content"
-                  dangerouslySetInnerHTML={{ __html: termsContent }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };
