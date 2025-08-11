@@ -107,16 +107,13 @@ const ProjectsList = ({ projects, setProjects, error, successMessage, setSuccess
     currentPage * ITEMS_PER_PAGE
   );
 
-  // project.userRole
-  // project.authorCount
-
   const truncateWords = (text, wordLimit) => {
     const words = text?.split(' ') || [];
     return words.slice(0, wordLimit).join(' ') + (words.length > wordLimit ? '...' : '');
   };
 
   const navigateToProject = (project) => {
-    const isAuthor = userRoles.projectRoles[project.id] === 'Author'
+    const isAuthor = userRoles.projectRoles[project.id] === 'author'
 
     if (project.setupComplete || isAuthor) {
       navigate(`/projects/${project.id}/objects`);

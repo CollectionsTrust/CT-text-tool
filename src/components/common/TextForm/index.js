@@ -4,8 +4,6 @@ import ParentTextSelector from './ParentTextSelector';
 import './TextForm.css';
 import { Controller, useFormContext } from 'react-hook-form';
 
-// add the if dirty checks back
-
 const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) => {
   const { projectId } = useParams();
 

@@ -301,6 +301,8 @@ const TextForm = ({
     }
   };
 
+  // @TODO add some of the textFormIsDirty logic back where possible then delete this file
+
   // if (window.textFormIsDirty) {
   //     const confirm = window.confirm('You have unsaved changes. Are you sure you want to create a new text?');
   //     if (!confirm) return;

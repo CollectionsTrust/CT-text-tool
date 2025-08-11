@@ -371,16 +371,6 @@ const TextsPage = () => {
             <p>{error}</p>
           </div>
         )}
-
-        {!loading && !error && filteredTexts.length === 0 && (
-          <div className="no-texts-message">
-            {searchQuery ? (
-              <p>No texts found matching your search criteria.</p>
-            ) : (
-              <p>No texts have been created yet.</p>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

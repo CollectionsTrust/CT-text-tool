@@ -23,6 +23,9 @@ const SignUp = () => {
       const userDocSnap = await getDoc(userDocRef);
       const userData = userDocSnap.exists() ? userDocSnap.data() : null;
 
+      console.log('userData: ', userData);
+      
+
       if (!userData || userData.status !== 'approved') {
         throw new Error("You are not approved to register. Please request access.");
       }

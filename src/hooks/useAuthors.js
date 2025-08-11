@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import {
   collection,
+  getDoc,
   getDocs,
   query,
-  where
+  where,
+  doc,
+  documentId
 } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 
@@ -24,12 +27,14 @@ const useAuthors = () => {
       try {
         setLoading(true);
 
-        // First get all projects owned by current user
-        const projectsRef = collection(db, 'projects');
-        const projectsQuery = query(projectsRef, where('owner', '==', user.email));
-        const projectsSnapshot = await getDocs(projectsQuery);
+        const userDocRef = doc(db, 'projectUsers', user.email);        
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.exists() ? userDocSnap.data() : null
+        const userProjectRoles = userData?.projectRoles        
 
-        const ownedProjectIds = projectsSnapshot.docs.map(doc => doc.id);
+        // First get all projects owned by current user    
+        const ownedProjectIds = Object.keys(userProjectRoles)
+          .filter(key => userProjectRoles?.[key] === 'owner');
 
         if (ownedProjectIds.length === 0) {
           setAuthors([]);
@@ -39,12 +44,17 @@ const useAuthors = () => {
 
         // Get all users
         const usersRef = collection(db, 'projectUsers');
-        const usersSnapshot = await getDocs(usersRef);
+        const usersSnapshot = await getDocs(usersRef);        
+
+        // First get all projects owned by current user
+        const projectsRef = collection(db, 'projects');
+        const q = query(projectsRef, where(documentId(), 'in', ownedProjectIds));
+        const projectsSnapshot = await getDocs(q);
 
         // Find users who are authors of the current user's projects
         const authorsData = [];
 
-        for (const userDoc of usersSnapshot.docs) {
+        for (const userDoc of usersSnapshot.docs) {          
           const userData = userDoc.data();
           const userProjects = userData.projectRoles || {};
 
@@ -54,9 +64,9 @@ const useAuthors = () => {
 
           if (user.uid === userData.addedByUserUID) {
             isAuthorOnAnyProject = true;
-          }
+          }          
 
-          for (const projectId of ownedProjectIds) {
+          for (const projectId of ownedProjectIds) {            
             if (userProjects[projectId] === 'author') {
               isAuthorOnAnyProject = true;
 
@@ -69,7 +79,7 @@ const useAuthors = () => {
                 });
               }
             }
-          }
+          }          
 
           // If user is an author on at least one of owner's projects, add them to the list
           if (isAuthorOnAnyProject) {

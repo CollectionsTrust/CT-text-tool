@@ -39,12 +39,13 @@ const UserDashboard = () => {
         setError('');
 
         // Step 1: Find the user document in Firestore
-        const userDocRef = doc(db, 'projectUsers', user.email);
+        const userDocRef = doc(db, 'projectUsers', user.email);        
         const userDocSnap = await getDoc(userDocRef);
         const userData = userDocSnap.exists() ? userDocSnap.data() : null
+
         const projectRoles = userData.projectRoles || {};
         const userOwns = Object.fromEntries(
-          Object.entries(projectRoles).filter(([key, value]) => value === 'owner')
+          Object.entries(projectRoles).filter(([key, value]) => value === 'owner' || value === 'author')
         );
         const userProjectIds = Object.keys(userOwns)
 

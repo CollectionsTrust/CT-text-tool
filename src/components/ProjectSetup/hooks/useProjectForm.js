@@ -69,8 +69,6 @@ export const useProjectForm = (projectId) => {
             doNotSaveAuthorNames: projectData.doNotSaveAuthorNames || false, // Load new field
             textStatuses: projectData.textStatuses || ['Draft', 'Approved'],
             textTags: projectData.textTags || [],
-            // authors: projectData.authors || [] Authors are on the ProjectAuthors table
-            // @TODO Can we remove authors from the project tables in Firestore?
           }));
 
           setSelectedLanguages(projectData.languages || ['English']);
@@ -177,14 +175,14 @@ export const useProjectForm = (projectId) => {
   }, [projectId]);
 
   const saveAssignedAuthors = async (projectId, originalAuthors, assignedAuthors) => {
-    originalAuthors.forEach((author) => {
+    originalAuthors.forEach((author) => {      
       if (assignedAuthors.find(a => a.id === author.id)) return;
 
       const userRef = doc(db, 'projectUsers', author.id);
       const fieldToDelete = `projectRoles.${projectId}`;
 
       updateDoc(userRef, {
-        [fieldToDelete]: deleteField()
+        [fieldToDelete]: null
       })
     })
 
@@ -198,9 +196,6 @@ export const useProjectForm = (projectId) => {
         [fieldToAdd]: 'author'
       })
     })
-
-    assignedAuthors.forEach((author) => {
-    })
   }
 
   const handleFieldChange = (field, value) => {
@@ -212,9 +207,6 @@ export const useProjectForm = (projectId) => {
     try {
       const projectRef = doc(db, 'projects', projectId);
 
-      // Extract author names for saving
-      const authorNames = assignedAuthors.map(author => author.name);
-
       const updatePayload = {
         projectReferenceNumber: formData.projectReferenceNumber,
         textNumberPrefix: formData.textNumberPrefix,
@@ -223,7 +215,6 @@ export const useProjectForm = (projectId) => {
         projectStartDate: formData.projectStartDate,
         projectEndDate: formData.projectEndDate,
         description: formData.projectNote, // Maps to description in Firestore
-        authors: authorNames, // Use the author names from assignedAuthors
         languages: selectedLanguages,
         copyrightLicensor: formData.copyrightLicensor,
         usageLicence: formData.usageLicence,
@@ -244,18 +235,8 @@ export const useProjectForm = (projectId) => {
         setupComplete: true // Mark setup as complete
       };
 
-      await updateDoc(projectRef, updatePayload);
-      await saveAssignedAuthors(projectId, originalAuthors, assignedAuthors)
-
-      // Save to combined project data in localStorage
-      // localStorage.setItem(`projectData_${projectId}`, JSON.stringify({
-      //   ...formData,
-      //   languages: selectedLanguages,
-      //   mdsApiToken: token
-      // }));
-
-      // // ADDED: Save the MDS API token with the specific key format
-      // localStorage.setItem(`mdsApiToken_${projectId}`, token);
+      await updateDoc(projectRef, updatePayload);      
+      await saveAssignedAuthors(projectId, originalAuthors, assignedAuthors)      
 
       setSaveSuccess(true);
       return { success: true };

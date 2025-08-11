@@ -1210,7 +1210,7 @@ const TextsTable = ({
               <tr className="empty-table-row">
                 <td colSpan="6">
                   <div className="empty-table-message">
-                    <p>No texts yet available.</p>
+                    <p>No texts available.</p>
                   </div>
                 </td>
               </tr>

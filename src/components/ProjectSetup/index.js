@@ -359,7 +359,7 @@ const ProjectSetup = () => {
               <span className="required-indicator">*</span>
               <span className="tooltip-icon" title="The API token needed to access the Museum Data Service. This is required to fetch object records.">ⓘ</span>
             </label>
-            {texts.length > 0 &&
+            {texts?.length > 0 &&
               <p className='mds-not-editable'>MDS tokens can't be edited when there are texts already linked to the project.<br /><Link to={`/projects/${projectId}/texts`}>Delete texts here</Link> first if you wish to change the token.</p>
             }
             <textarea
@@ -370,7 +370,7 @@ const ProjectSetup = () => {
               placeholder="Paste your MDS API token here..."
               rows={6}
               required
-              disabled={texts.length > 0}
+              disabled={texts?.length > 0}
             />
             <p className="token-help">Your token should look similar to: 9AyjhGNQQFkSCT5QtkaPdQ7-Cz7onxXq231/T8F-QRk1xVnplfxcvDRgm081xpDxKINpIz0zW-vnLXs...</p>
           </div>

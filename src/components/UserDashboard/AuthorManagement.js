@@ -463,11 +463,11 @@ const AuthorManagement = () => {
         }
 
         await setDoc(doc(db, 'projectUsers', newUserEmail.toLowerCase()), {
-          email: newUserEmail.toLowerCase(),
           name: newUserName || 'No name provided',
           organization: newUserOrg || 'No organization provided',
           createdAt: serverTimestamp(),
           projectRoles: projectRoles,
+          status: 'approved',
           addedByUserUID: user.uid // Added so we can list users add but not assigned
         });
 

@@ -93,7 +93,7 @@ const ObjectsPageContent = () => {
     
     methods.reset({
       text: text?.text,
-      textTag: text?.textTag,
+      textTag: text?.textTag || '',
       textAuthors: text?.textAuthors || [],
       textLanguages: text?.textLanguages || [],
       textStatus: text?.textStatus || '',
@@ -106,7 +106,7 @@ const ObjectsPageContent = () => {
     });
   }, [text, projectConfig]);
 
-  const submitForm = async (data) => {
+  const submitForm = async (data) => {    
     const payload = {
       ...data,
       linkedObjects: Array.from(selectedRecords),
@@ -117,12 +117,13 @@ const ObjectsPageContent = () => {
     setSaveError(null);
 
     try {
-      if (editTextId) {
+      if (editTextId) {        
         await updateDoc(doc(db, 'texts', editTextId), payload);
 
         setSaveMessage('Text updated successfully!');
       } else {
         payload.createdAt = serverTimestamp();
+        
         await addDoc(collection(db, 'texts'), payload);
 
         setSaveMessage('Text saved successfully!');
