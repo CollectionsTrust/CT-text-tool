@@ -22,10 +22,7 @@ const SignUp = () => {
       const userDocRef = doc(db, "projectUsers", emailDocId);
       const userDocSnap = await getDoc(userDocRef);
       const userData = userDocSnap.exists() ? userDocSnap.data() : null;
-
-      console.log('userData: ', userData);
       
-
       if (!userData || userData.status !== 'approved') {
         throw new Error("You are not approved to register. Please request access.");
       }
@@ -33,7 +30,7 @@ const SignUp = () => {
       await createUserWithEmailAndPassword(auth, email, password);
 
       // Use to flush out the state so the user reloaded in the authContext
-      window.location.href = "/dashboard"; // @todo use navigate again instead?
+      window.location.href = "/dashboard";
     } catch (err) {
       setError(err.message);
     } finally {

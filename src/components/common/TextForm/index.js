@@ -1,11 +1,19 @@
-import { useParams } from 'react-router-dom';
-import QuillEditor from '../QuillEditor/QuillEditor';
-import ParentTextSelector from './ParentTextSelector';
-import './TextForm.css';
-import { Controller, useFormContext } from 'react-hook-form';
+import { useParams } from "react-router-dom";
+import QuillEditor from "../QuillEditor/QuillEditor";
+import ParentTextSelector from "./ParentTextSelector";
+import "./TextForm.css";
+import { Controller, useFormContext } from "react-hook-form";
+import useProjectOwners from "../../../hooks/useProjectOwners";
 
-const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) => {
+const TextForm = ({
+  projectConfig,
+  text,
+  submitForm,
+  saveError,
+  saveMessage,
+}) => {
   const { projectId } = useParams();
+  const { owners } = useProjectOwners(projectId);
 
   const {
     register,
@@ -15,10 +23,10 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
     setValue,
     watch,
     formState: { errors, isSubmitting },
-    reset
+    reset,
   } = useFormContext();
 
-  if (!projectConfig) return
+  if (!projectConfig || !owners) return;
 
   const handleOptionSelect = (e, field) => {
     const selectedValue = e.target.value;
@@ -26,31 +34,44 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
 
     const updatedValues = [...getValues(field), selectedValue];
     setValue(field, updatedValues, { shouldValidate: true });
-    e.target.value = ''; // Reset select
-  }
+    e.target.value = ""; // Reset select
+  };
 
   const handleOptionDeselect = (field, valToRemove) => {
     const updatedAuthors = getValues(field).filter(
       (val) => val !== valToRemove
     );
     setValue(field, updatedAuthors);
-  }
+  };
 
   const handleCancel = () => {
     // If in edit mode, redirect to texts page
     if (text) {
       window.location.href = `/projects/${projectId}/texts`;
-      return
+      return;
     }
-    reset()
-  }
+    reset();
+  };
+
+  // @TODO add some of the textFormIsDirty logic back where possible then delete this file
+  // Handler for "New" button in edit mode
+  // const handleNew = () => {
+  //   if (window.textFormIsDirty) {
+  //     const confirm = window.confirm('You have unsaved changes. Are you sure you want to create a new text?');
+  //     if (!confirm) return;
+  //   }
 
   return (
-    <form onSubmit={handleSubmit(submitForm)} className='text-form'>
+    <form onSubmit={handleSubmit(submitForm)} className="text-form">
       <div className="text-form-header">
         <h2>
-          {text ? 'Edit text' : 'Create new text'}
-          {text?.textReferenceNumber && <span className="text-reference"> - {text?.textReferenceNumber}</span>}
+          {text ? "Edit text" : "Create new text"}
+          {text?.textReferenceNumber && (
+            <span className="text-reference">
+              {" "}
+              - {text?.textReferenceNumber}
+            </span>
+          )}
         </h2>
       </div>
       <div className="form-group">
@@ -62,7 +83,7 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
           render={({ field }) => (
             <QuillEditor
               theme="snow"
-              value={field.value || ''}
+              value={field.value || ""}
               onChange={field.onChange}
             />
           )}
@@ -88,14 +109,20 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
       )}
       <div className="form-group">
         <label>Note</label>
-        <input {...register('textNote')} />
+        <input {...register("textNote")} />
       </div>
       <div className="form-group">
         <label>Authors</label>
-        <select onChange={(e) => handleOptionSelect(e, 'textAuthors')} className="form-select" defaultValue="">
+        <select
+          onChange={(e) => handleOptionSelect(e, "textAuthors")}
+          className="form-select"
+          defaultValue=""
+        >
           <option value="">Select author</option>
-          {projectConfig.authors
-            .filter((projectAuthor) => !watch('textAuthors').includes(projectAuthor))
+          {[`${owners[0].name} (owner)`, ...projectConfig.authors]
+            .filter(
+              (projectAuthor) => !watch("textAuthors").includes(projectAuthor)
+            )
             .map((author) => (
               <option key={author} value={author}>
                 {author}
@@ -103,18 +130,20 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
             ))}
         </select>
 
-        <input type="hidden" {...register('textAuthors', { required: true })} />
-        {errors.textAuthors && <span className="error-message">Authors is required</span>}
+        <input type="hidden" {...register("textAuthors", { required: true })} />
+        {errors.textAuthors && (
+          <span className="error-message">Authors is required</span>
+        )}
 
-        {watch('textAuthors').length > 0 && (
+        {watch("textAuthors").length > 0 && (
           <div className="selected-items-container">
             <ul className="selected-items-list">
-              {watch('textAuthors').map((author) => (
+              {watch("textAuthors").map((author) => (
                 <li key={author} className="selected-item">
                   <span>{author}</span>
                   <button
                     type="button"
-                    onClick={() => handleOptionDeselect('textAuthors', author)}
+                    onClick={() => handleOptionDeselect("textAuthors", author)}
                     className="remove-item-btn"
                   >
                     ×
@@ -127,10 +156,14 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
       </div>
       <div className="form-group">
         <label>Languages</label>
-        <select onChange={(e) => handleOptionSelect(e, 'textLanguages')} className="form-select" defaultValue="">
+        <select
+          onChange={(e) => handleOptionSelect(e, "textLanguages")}
+          className="form-select"
+          defaultValue=""
+        >
           <option value="">Select language</option>
           {projectConfig.languages
-            .filter((language) => !watch('textLanguages').includes(language))
+            .filter((language) => !watch("textLanguages").includes(language))
             .map((language) => (
               <option key={language} value={language}>
                 {language}
@@ -138,18 +171,25 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
             ))}
         </select>
 
-        <input type="hidden" {...register('textLanguages', { required: true })} />
-        {errors.textLanguages && <span className="error-message">Languages is required</span>}
+        <input
+          type="hidden"
+          {...register("textLanguages", { required: true })}
+        />
+        {errors.textLanguages && (
+          <span className="error-message">Languages is required</span>
+        )}
 
-        {watch('textLanguages').length > 0 && (
+        {watch("textLanguages").length > 0 && (
           <div className="selected-items-container">
             <ul className="selected-items-list">
-              {watch('textLanguages').map((language) => (
+              {watch("textLanguages").map((language) => (
                 <li key={language} className="selected-item">
                   <span>{language}</span>
                   <button
                     type="button"
-                    onClick={() => handleOptionDeselect('textLanguages', language)}
+                    onClick={() =>
+                      handleOptionDeselect("textLanguages", language)
+                    }
                     className="remove-item-btn"
                   >
                     ×
@@ -163,7 +203,11 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
       {projectConfig.wantsTextTags && (
         <div className="form-group">
           <label>Tag</label>
-          <select {...register('textTag', { required: true })} className="form-select" defaultValue="">
+          <select
+            {...register("textTag", { required: true })}
+            className="form-select"
+            defaultValue=""
+          >
             <option value="">Select a tag</option>
             {projectConfig.textTags.map((tag) => (
               <option key={tag} value={tag}>
@@ -171,13 +215,19 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
               </option>
             ))}
           </select>
-          {errors.textTag && <span className="error-message">Tag is required</span>}
+          {errors.textTag && (
+            <span className="error-message">Tag is required</span>
+          )}
         </div>
       )}
       {projectConfig.tracksTextStatus && (
         <div className="form-group">
           <label>Status</label>
-          <select {...register('textStatus', { required: true })} className="form-select" defaultValue="">
+          <select
+            {...register("textStatus", { required: true })}
+            className="form-select"
+            defaultValue=""
+          >
             <option value="">Select status</option>
             {projectConfig.textStatuses.map((status) => (
               <option key={status} value={status}>
@@ -185,19 +235,23 @@ const TextForm = ({ projectConfig, text, submitForm, saveError, saveMessage }) =
               </option>
             ))}
           </select>
-          {errors.textStatus && <span className="error-message">Status is required</span>}
+          {errors.textStatus && (
+            <span className="error-message">Status is required</span>
+          )}
         </div>
       )}
       <div className="form-actions">
         <button type="submit" className="primary-btn" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save'}
+          {isSubmitting ? "Saving..." : "Save"}
         </button>
-        <button type="button" className="secondary-btn" onClick={handleCancel}>Cancel</button>
+        <button type="button" className="secondary-btn" onClick={handleCancel}>
+          Cancel
+        </button>
       </div>
       {saveMessage && <span className="success-message">{saveMessage}</span>}
       {saveError && <span className="error-message">{saveError}</span>}
     </form>
   );
-}
+};
 
 export default TextForm;

@@ -68,7 +68,7 @@ A comprehensive React and Firebase web application for managing museum collectio
 - **Context providers** for global state and authentication
 - **Component composition** with reusable UI elements
 - **Provider pattern** for data management (ObjectsDataProvider)
-- **Custom hooks** for business logic abstraction (useProjectForm, useLanguageSelection)
+- **Custom hooks** for business logic abstraction (useProjectForm)
 
 ---
 
@@ -133,9 +133,7 @@ ct-text-tool/
 │   │   │   ├── TokenField.js         # MDS API token input
 │   │   │   ├── ProjectSetup.css
 │   │   │   └── hooks/
-│   │   │       ├── useProjectForm.js
-│   │   │       ├── useLanguageSelection.js
-│   │   │       └── useAuthorSelection.js
+│   │   │       └── useProjectForm.js
 │   │   │
 │   │   ├── ObjectsPage/             # MDS data browsing and text creation
 │   │   │   ├── index.js

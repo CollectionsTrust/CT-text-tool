@@ -1,23 +1,35 @@
-import useAuthors from '../../hooks/useAuthors';
+import useProjectAuthors from "../../hooks/useProjectAuthors";
 
-const AuthorsSelector = ({ selectedAuthors, onAddAuthor, onRemoveAuthor }) => {
-  const { authors } = useAuthors()
+const AuthorsSelector = ({
+  selectedAuthors,
+  onAddAuthor,
+  onRemoveAuthor,
+  projectID,
+}) => {
+  const { authors } = useProjectAuthors(projectID);
 
   if (!authors || !selectedAuthors) {
-    return
+    return;
   }
 
-  const selectedAuthorsIds = selectedAuthors.map(val => val.id)
+  const selectedAuthorsIds = selectedAuthors.map((val) => val.id);
 
   return (
     <div className="form-group">
-      <select id="authors" onChange={(e) => onAddAuthor(authors.find((a) => a.id === e.target.value))} className="form-select" defaultValue="">
+      <select
+        id="authors"
+        onChange={(e) =>
+          onAddAuthor(authors.find((a) => a.id === e.target.value))
+        }
+        className="form-select"
+        defaultValue=""
+      >
         <option value="">Select author</option>
         {authors
           .filter((author) => !selectedAuthorsIds.includes(author.id))
           .map((author) => (
             <option key={author.id} value={author.id}>
-              {author.name} - {author.email}
+              {author.name} - {author.id}
             </option>
           ))}
       </select>
@@ -25,9 +37,18 @@ const AuthorsSelector = ({ selectedAuthors, onAddAuthor, onRemoveAuthor }) => {
         <div className="selected-items-container">
           <ul className="selected-items-list">
             {selectedAuthors.map((author) => (
-              <li key={author.id} className={`${author.role === 'owner' ? 'selected-item-disabled' : 'selected-item'}`}>
-                <span>{author.name} {author.role === 'owner' && '(Owner)'}</span>
-                {author.role !== 'owner' && (
+              <li
+                key={author.id}
+                className={`${
+                  author.role === "owner"
+                    ? "selected-item-disabled"
+                    : "selected-item"
+                }`}
+              >
+                <span>
+                  {author.name} {author.role === "owner" && "(Owner)"}
+                </span>
+                {author.role !== "owner" && (
                   <button
                     type="button"
                     onClick={() => onRemoveAuthor(author.id)}
@@ -42,8 +63,7 @@ const AuthorsSelector = ({ selectedAuthors, onAddAuthor, onRemoveAuthor }) => {
         </div>
       )}
     </div>
-  )
-}
-
+  );
+};
 
 export default AuthorsSelector;
