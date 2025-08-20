@@ -72,7 +72,7 @@ const UserDashboard = () => {
               const proj = {
                 id: docSnap.id,
                 ...docSnap.data(),
-                userRole: "Owner",
+                userRole: projectRoles[docSnap.id],
               };
 
               const q = query(

@@ -8,11 +8,13 @@ import RichTextEditor from "./RichTextEditor";
 import TextSettings from "./TextSettings";
 import { useTexts } from "../../hooks/useTexts";
 import AuthorsSelector from "./AuthorsSelector";
+import { useAuth } from "../../context/AuthContext";
 
 const ProjectSetup = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const { texts } = useTexts(projectId);
+  const { userRoles } = useAuth();
   const {
     formData,
     handleFieldChange,
@@ -217,9 +219,16 @@ const ProjectSetup = () => {
             </label>
             <p>
               Add new authors to the app via the{" "}
-              <Link to="/dashboard#authors">Manage authors page</Link>.
+              {userRoles?.appRole === "admin" && (
+                <Link to="/admin#users">Manage users page</Link>
+              )}
+              {userRoles?.appRole !== "admin" && (
+                <Link to="/dashboard#authors">Manage authors page</Link>
+              )}
+              .
             </p>
             <AuthorsSelector
+              isAdmin={userRoles?.appRole === "admin"}
               projectID={projectId}
               projectAuthors={formData["authors"]}
               selectedAuthors={assignedAuthors}

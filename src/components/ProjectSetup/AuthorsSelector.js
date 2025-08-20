@@ -5,6 +5,7 @@ const AuthorsSelector = ({
   onAddAuthor,
   onRemoveAuthor,
   projectID,
+  isAdmin,
 }) => {
   const { authors } = useProjectAuthors(projectID);
 
@@ -23,6 +24,7 @@ const AuthorsSelector = ({
         }
         className="form-select"
         defaultValue=""
+        disabled={isAdmin}
       >
         <option value="">Select author</option>
         {authors

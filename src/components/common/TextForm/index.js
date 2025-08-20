@@ -53,14 +53,6 @@ const TextForm = ({
     reset();
   };
 
-  // @TODO add some of the textFormIsDirty logic back where possible then delete this file
-  // Handler for "New" button in edit mode
-  // const handleNew = () => {
-  //   if (window.textFormIsDirty) {
-  //     const confirm = window.confirm('You have unsaved changes. Are you sure you want to create a new text?');
-  //     if (!confirm) return;
-  //   }
-
   return (
     <form onSubmit={handleSubmit(submitForm)} className="text-form">
       <div className="text-form-header">
@@ -119,7 +111,7 @@ const TextForm = ({
           defaultValue=""
         >
           <option value="">Select author</option>
-          {[`${owners[0].name} (owner)`, ...projectConfig.authors]
+          {[`${owners[0]?.name} (owner)`, ...projectConfig.authors]
             .filter(
               (projectAuthor) => !watch("textAuthors").includes(projectAuthor)
             )
