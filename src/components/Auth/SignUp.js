@@ -2,7 +2,11 @@ import { useState } from "react";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+} from "firebase/auth";
 
 const SignUp = () => {
   const [password, setPassword] = useState("");
@@ -10,6 +14,7 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const auth = getAuth();
 
   const handleRegister = async (e) => {
@@ -22,15 +27,24 @@ const SignUp = () => {
       const userDocRef = doc(db, "projectUsers", emailDocId);
       const userDocSnap = await getDoc(userDocRef);
       const userData = userDocSnap.exists() ? userDocSnap.data() : null;
-      
-      if (!userData || userData.status !== 'approved') {
-        throw new Error("You are not approved to register. Please request access.");
+
+      if (!userData || userData.status !== "approved") {
+        throw new Error(
+          "You are not approved to register. Please request access."
+        );
       }
 
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      await sendEmailVerification(userCredential.user);
+      await signOut(auth);
 
-      // Use to flush out the state so the user reloaded in the authContext
-      window.location.href = "/dashboard";
+      setSuccessMessage(
+        "Signup complete! Check your email to verify before logging in."
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -38,13 +52,16 @@ const SignUp = () => {
     }
   };
 
-
   return (
     <div className="container">
       <div className="auth-form-container">
         <form onSubmit={handleRegister} className="auth-form">
           <h2>Complete signup</h2>
           {error && <div className="error-message">{error}</div>}
+          {successMessage && (
+            // @TODO test this
+            <div className="success-message">{successMessage}</div>
+          )}
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <div className="password-input-container">
@@ -79,7 +96,8 @@ const SignUp = () => {
               </button>
             </div>
             <small className="form-help-text">
-              Must be at least 8 characters and include uppercase and lowercase letters
+              Must be at least 8 characters and include uppercase and lowercase
+              letters
             </small>
           </div>
           <button
