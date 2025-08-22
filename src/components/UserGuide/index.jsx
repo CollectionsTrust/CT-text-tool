@@ -318,22 +318,6 @@ const UserGuide = () => {
               </li>
             </ol>
 
-            <div className="highlight">
-              <strong>First login:</strong>
-              <ul>
-                <li>
-                  New users receive temporary passwords that must be changed
-                </li>
-                <li>
-                  You'll be prompted to create a new password on first login
-                </li>
-                <li>
-                  Passwords must be at least 8 characters and include uppercase
-                  and lowercase letters
-                </li>
-              </ul>
-            </div>
-
             <div className="section-separator">
               <a href="#table-of-contents" className="back-to-contents">
                 Back to contents
@@ -418,41 +402,16 @@ const UserGuide = () => {
             </p>
 
             <h4>Initial passwords</h4>
-            <ul>
-              <li>
-                <strong>New users receive temporary passwords</strong> that
-                expire after 7 days
-              </li>
-              <li>
-                <strong>Temporary passwords must be changed</strong> on first
-                login
-              </li>
-              <li>
-                <strong>Password requirements</strong>: Minimum 8 characters
-                with at least one letter and one number
-              </li>
-            </ul>
+            <p>
+              Create password on the /signup page after your project is approved
+              by an admin user.
+            </p>
 
             <h4>Changing your password</h4>
-            <ol>
-              <li>
-                <strong>From any page</strong>: Click "Change password" in the
-                header user menu
-              </li>
-              <li>
-                <strong>Enter current password</strong>: Your existing password
-              </li>
-              <li>
-                <strong>Enter new password</strong>: Must meet security
-                requirements
-              </li>
-              <li>
-                <strong>Confirm new password</strong>: Re-type to verify
-              </li>
-              <li>
-                <strong>Click "Change password"</strong>
-              </li>
-            </ol>
+            <p>
+              From the /dashboard page you can reset your password by clicking
+              the change-password button.
+            </p>
 
             <div className="highlight">
               <strong>Password requirements:</strong>
@@ -466,44 +425,14 @@ const UserGuide = () => {
 
             <h4>Forgotten passwords</h4>
             <ol>
+              <li>On the login page click "Forgotten password?"</li>
               <li>
-                <strong>On the login page</strong>: Click "Forgotten password?"
-              </li>
-              <li>
-                <strong>Enter your email address</strong>
-              </li>
-              <li>
-                <strong>Click "Submit request"</strong>
-              </li>
-              <li>
-                <strong>Wait for admin approval</strong>: Password reset
-                requests require administrator approval
-              </li>
-              <li>
-                <strong>Check your email</strong>: Administrators will send new
-                temporary passwords via email
+                You will be sent an email from Firebase to reset your password.
               </li>
             </ol>
 
             <h4>Password security features</h4>
-            <ul>
-              <li>
-                <strong>Secure hashing</strong>: Passwords use PBKDF2 with
-                600,000 iterations
-              </li>
-              <li>
-                <strong>Temporary password expiration</strong>: Unused temporary
-                passwords expire after 7 days
-              </li>
-              <li>
-                <strong>Session management</strong>: Automatic logout after
-                periods of inactivity
-              </li>
-              <li>
-                <strong>Password change tracking</strong>: System tracks when
-                passwords were last changed
-              </li>
-            </ul>
+            <p>Passwords are handled by Firebase Authentication.</p>
 
             <div className="section-separator">
               <a href="#table-of-contents" className="back-to-contents">
@@ -2271,10 +2200,6 @@ const UserGuide = () => {
                 administrator
               </li>
               <li>
-                <strong>Temporary passwords</strong>: Must be changed within 7
-                days of creation
-              </li>
-              <li>
                 <strong>Browser issues</strong>: Try clearing cache or using
                 different browser
               </li>
@@ -2517,9 +2442,9 @@ const UserGuide = () => {
               </p>
 
               <p>
-                <strong>Document version</strong>: 2024.1
+                <strong>Document version</strong>: 2025.1
                 <br />
-                <strong>Last updated</strong>: March 2024
+                <strong>Last updated</strong>: August 2025
                 <br />
                 <strong>Contact</strong>: katie@collectionstrust.org.uk
               </p>
@@ -2529,6 +2454,6 @@ const UserGuide = () => {
       </div>
     </div>
   );
-}
+};
 
 export default UserGuide;
