@@ -10,7 +10,6 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 
-
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 
@@ -30,25 +29,25 @@ export const AuthProvider = ({ children }) => {
     const projectUserDocRef = doc(db, "projectUsers", user.email);
     const projectUserDocSnap = await getDoc(projectUserDocRef);
     const usersDocRef = doc(db, "userRoles", user.uid);
-    const usersDocSnap = await getDoc(usersDocRef);       
+    const usersDocSnap = await getDoc(usersDocRef);
 
-    let appRole = null    
+    let appRole = null;
 
     if (usersDocSnap.exists()) {
       // admin user
-      appRole = usersDocSnap.data().role
+      appRole = usersDocSnap.data().role;
     } else if (projectUserDocSnap.exists()) {
-      appRole = 'nonAdminUser'
+      appRole = "nonAdminUser";
     }
 
     if (!usersDocSnap.exists() && !projectUserDocSnap.exists()) {
-      return null
-    }    
+      return null;
+    }
 
     return {
       appRole,
-      projectRoles: projectUserDocSnap.data()?.projectRoles || {}
-    }
+      projectRoles: projectUserDocSnap.data()?.projectRoles || {},
+    };
   };
 
   const login = async (email, password) => {
@@ -58,6 +57,17 @@ export const AuthProvider = ({ children }) => {
         email,
         password
       );
+
+      if (!userCredential.user.emailVerified) {
+        await signOut(auth);
+
+        return {
+          success: false,
+          error: "auth/email-not-verified",
+          user: userCredential.user,
+        };
+      }
+
       const user = userCredential.user;
       const roles = await getUserRolesFromFirestore(user);
 
@@ -136,7 +146,7 @@ export const AuthProvider = ({ children }) => {
     signOut(auth);
   };
 
-  useEffect(() => {    
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);

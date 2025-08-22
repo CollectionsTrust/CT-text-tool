@@ -59,7 +59,6 @@ const SignUp = () => {
           <h2>Complete signup</h2>
           {error && <div className="error-message">{error}</div>}
           {successMessage && (
-            // @TODO test this
             <div className="success-message">{successMessage}</div>
           )}
           <div className="form-group">

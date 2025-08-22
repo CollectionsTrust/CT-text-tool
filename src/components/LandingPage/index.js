@@ -22,7 +22,6 @@ const LandingPage = () => {
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
   const [forgotPasswordError, setForgotPasswordError] = useState("");
   const { login, sendResetPasswordEmail } = useAuth();
-  const auth = getAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -32,12 +31,10 @@ const LandingPage = () => {
 
     const result = await login(email, password);
 
-    if (result.success && !result.user.emailVerified) {
-      await signOut(auth);
+    if (result.error === "auth/email-not-verified") {
       setLoginError(
         "You need to verify your email address before you can login. We have sent you a new verification email."
       );
-      setLoading(false);
 
       try {
         await sendEmailVerification(result.user);
@@ -45,6 +42,7 @@ const LandingPage = () => {
         console.error(`Verification email failed to send: ${error}`);
       }
 
+      setLoading(false);
       return;
     }
 
