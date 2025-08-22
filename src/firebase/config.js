@@ -1,6 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -9,7 +9,7 @@ const firebaseConfig = {
   projectId: "ct-text-tool-d627a",
   storageBucket: "ct-text-tool-d627a.firebasestorage.app",
   messagingSenderId: "313142970260",
-  appId: "1:313142970260:web:604170e1ce3eb883b53181"
+  appId: "1:313142970260:web:604170e1ce3eb883b53181",
 };
 
 // Initialize Firebase

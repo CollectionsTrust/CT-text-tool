@@ -1,4 +1,4 @@
-import './ObjectsPage.css';
+import "./ObjectsPage.css";
 
 const SearchBar = ({ searchQuery, handleSearchChange, handleClearSearch }) => {
   return (
@@ -11,10 +11,7 @@ const SearchBar = ({ searchQuery, handleSearchChange, handleClearSearch }) => {
         className="search-input wide"
       />
       {searchQuery && (
-        <button 
-          onClick={handleClearSearch}
-          className="clear-search-btn"
-        >
+        <button onClick={handleClearSearch} className="clear-search-btn">
           Clear
         </button>
       )}

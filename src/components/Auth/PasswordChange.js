@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import MainHeader from '../navigation/MainHeader';
-import { validatePassword } from '../../utils/passwordUtils'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import MainHeader from "../navigation/MainHeader";
+import { validatePassword } from "../../utils/passwordUtils";
 
 const PasswordChange = ({ onComplete = null }) => {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -19,23 +19,23 @@ const PasswordChange = ({ onComplete = null }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
+    setError("");
     setSuccess(false);
 
     if (!currentPassword) {
-      return setError('Please enter your current password');
+      return setError("Please enter your current password");
     }
 
     if (!newPassword) {
-      return setError('Please enter a new password');
+      return setError("Please enter a new password");
     }
 
     if (newPassword !== confirmPassword) {
-      return setError('New passwords do not match');
+      return setError("New passwords do not match");
     }
 
-    const passwordValidity = validatePassword(newPassword)
-  
+    const passwordValidity = validatePassword(newPassword);
+
     if (!passwordValidity.isValid) {
       return setError(passwordValidity.message);
     }
@@ -49,12 +49,12 @@ const PasswordChange = ({ onComplete = null }) => {
       setError(err.message || "Failed to change password.");
     } finally {
       // Clear form
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
       setLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -65,13 +65,17 @@ const PasswordChange = ({ onComplete = null }) => {
             <h2>Change password</h2>
 
             {error && <div className="error-message">{error}</div>}
-            {success && <div className="success-message">Password changed successfully!</div>}
+            {success && (
+              <div className="success-message">
+                Password changed successfully!
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="current-password">Current password</label>
               <div className="password-input-container">
                 <input
-                  type={showCurrentPassword ? 'text' : 'password'}
+                  type={showCurrentPassword ? "text" : "password"}
                   id="current-password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -83,9 +87,13 @@ const PasswordChange = ({ onComplete = null }) => {
                   type="button"
                   className="password-toggle-btn"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                  aria-label={
+                    showCurrentPassword
+                      ? "Hide current password"
+                      : "Show current password"
+                  }
                 >
-                  {showCurrentPassword ? 'Hide' : 'Show'}
+                  {showCurrentPassword ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
@@ -94,7 +102,7 @@ const PasswordChange = ({ onComplete = null }) => {
               <label htmlFor="new-password">New password</label>
               <div className="password-input-container">
                 <input
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showNewPassword ? "text" : "password"}
                   id="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -106,13 +114,16 @@ const PasswordChange = ({ onComplete = null }) => {
                   type="button"
                   className="password-toggle-btn"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                  aria-label={
+                    showNewPassword ? "Hide new password" : "Show new password"
+                  }
                 >
-                  {showNewPassword ? 'Hide' : 'Show'}
+                  {showNewPassword ? "Hide" : "Show"}
                 </button>
               </div>
               <small className="form-help-text">
-                Must be at least 8 characters and include uppercase and lowercase letters
+                Must be at least 8 characters and include uppercase and
+                lowercase letters
               </small>
             </div>
 
@@ -120,7 +131,7 @@ const PasswordChange = ({ onComplete = null }) => {
               <label htmlFor="confirm-password">Confirm new password</label>
               <div className="password-input-container">
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   id="confirm-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -132,9 +143,13 @@ const PasswordChange = ({ onComplete = null }) => {
                   type="button"
                   className="password-toggle-btn"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
                 >
-                  {showConfirmPassword ? 'Hide' : 'Show'}
+                  {showConfirmPassword ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
@@ -144,13 +159,13 @@ const PasswordChange = ({ onComplete = null }) => {
               className="submit-btn password-change-btn"
               disabled={loading}
             >
-              {loading ? 'Changing password...' : 'Change password'}
+              {loading ? "Changing password..." : "Change password"}
             </button>
 
             <button
               type="button"
               className="cancel-btn"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
             >
               Cancel
             </button>

@@ -1,6 +1,6 @@
-import { useContext } from 'react';
-import { ObjectsDataContext } from './ObjectsDataProvider';
-import './DisplayOptions.css';
+import { useContext } from "react";
+import { ObjectsDataContext } from "./ObjectsDataProvider";
+import "./DisplayOptions.css";
 
 const DisplayOptions = ({
   showCollection,
@@ -10,12 +10,13 @@ const DisplayOptions = ({
   selectedRecords,
   handleHeaderCheckboxChange,
 }) => {
-  const { showSelectedOnly, setShowSelectedOnly } = useContext(ObjectsDataContext);
+  const { showSelectedOnly, setShowSelectedOnly } =
+    useContext(ObjectsDataContext);
   const selectedCount = selectedRecords.size;
 
   // Handle clearing selection
   const handleClearSelection = () => {
-    const event = new CustomEvent('clearSelection');
+    const event = new CustomEvent("clearSelection");
     document.dispatchEvent(event);
   };
 
@@ -51,7 +52,7 @@ const DisplayOptions = ({
             />
             Show title
           </label>
-          
+
           <label>
             <input
               type="checkbox"
@@ -63,18 +64,17 @@ const DisplayOptions = ({
         </div>
 
         <div className="selection-controls">
-          <button 
-            className="select-all-btn"
-            onClick={handleToggleSelection}
-          >
-            {selectedCount > 0 ? 'Clear' : 'Select all'}
+          <button className="select-all-btn" onClick={handleToggleSelection}>
+            {selectedCount > 0 ? "Clear" : "Select all"}
           </button>
         </div>
       </div>
 
       <div className="selected-records-count">
         {selectedCount > 0 && (
-          <span>{selectedCount} record{selectedCount > 1 ? 's' : ''} selected</span>
+          <span>
+            {selectedCount} record{selectedCount > 1 ? "s" : ""} selected
+          </span>
         )}
       </div>
     </div>
@@ -82,4 +82,3 @@ const DisplayOptions = ({
 };
 
 export default DisplayOptions;
-

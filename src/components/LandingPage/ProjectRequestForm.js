@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { Link } from "react-router-dom";
 
 const ProjectRequestForm = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    organization: '',
-    projectTitle: '',
-    projectDescription: ''
+    name: "",
+    email: "",
+    organization: "",
+    projectTitle: "",
+    projectDescription: "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleTermsCheckbox = (e) => {
@@ -29,36 +29,38 @@ const ProjectRequestForm = () => {
     e.preventDefault();
 
     if (!acceptTerms) {
-      setErrorMessage('You must accept the terms and conditions to submit your request.');
+      setErrorMessage(
+        "You must accept the terms and conditions to submit your request."
+      );
       return;
     }
 
     setSubmitting(true);
-    setErrorMessage('');
-    setSuccessMessage('');
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
-      await addDoc(collection(db, 'projectRequests'), {
+      await addDoc(collection(db, "projectRequests"), {
         ...formData,
-        status: 'pending',
+        status: "pending",
         createdAt: Timestamp.now(),
-        acceptedTerms: true
+        acceptedTerms: true,
       });
-      setSuccessMessage('Your request has been submitted successfully.');
+      setSuccessMessage("Your request has been submitted successfully.");
       setFormData({
-        name: '',
-        email: '',
-        organization: '',
-        projectTitle: '',
-        projectDescription: ''
+        name: "",
+        email: "",
+        organization: "",
+        projectTitle: "",
+        projectDescription: "",
       });
       setAcceptTerms(false);
     } catch (error) {
-      console.error('Error submitting request:', error);
-      setErrorMessage('Something went wrong. Please try again.');
+      console.error("Error submitting request:", error);
+      setErrorMessage("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
-      window.localStorage.setItem('emailForSignIn', formData.email);
+      window.localStorage.setItem("emailForSignIn", formData.email);
     }
   };
 
@@ -144,21 +146,24 @@ const ProjectRequestForm = () => {
               className="checkbox-input"
             />
             <label htmlFor="acceptTerms" className="checkbox-label">
-              I accept the{' '}
-              <Link
-                to="/terms-and-conditions"
-                className="terms-link"
-              >
+              I accept the{" "}
+              <Link to="/terms-and-conditions" className="terms-link">
                 CT Text Tool terms and conditions
               </Link>
             </label>
           </div>
         </div>
 
-        {successMessage && <div className="success-message">{successMessage}</div>}
+        {successMessage && (
+          <div className="success-message">{successMessage}</div>
+        )}
 
-        <button type="submit" className="submit-btn" disabled={submitting || !acceptTerms}>
-          {submitting ? 'Submitting...' : 'Submit request'}
+        <button
+          type="submit"
+          className="submit-btn"
+          disabled={submitting || !acceptTerms}
+        >
+          {submitting ? "Submitting..." : "Submit request"}
         </button>
       </form>
     </>

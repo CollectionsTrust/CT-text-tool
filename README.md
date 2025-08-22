@@ -106,7 +106,7 @@ ct-text-tool/
 │   │   │
 │   │   ├── AdminDashboard/          # Administrative interface
 │   │   │   ├── index.js
-│   │   │   ├── Requests.js          # Project
+│   │   │   ├── Requests.js          # To approve or reject projects 
 │   │   │   ├── ProjectsList.js      # All projects management
 │   │   │   ├── UserManagement.js    # User accounts and roles
 │   │   │   └── AdminDashboard.css

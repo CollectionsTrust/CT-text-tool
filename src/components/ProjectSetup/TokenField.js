@@ -4,7 +4,12 @@ const TokenField = ({ token, setToken, error }) => {
       <label htmlFor="token">
         MDS API token:
         <span className="required-indicator">*</span>
-        <span className="tooltip-icon" title="The API token needed to access the Museum Data Service. This is required to fetch object records.">ⓘ</span>
+        <span
+          className="tooltip-icon"
+          title="The API token needed to access the Museum Data Service. This is required to fetch object records."
+        >
+          ⓘ
+        </span>
       </label>
       <textarea
         id="token"
@@ -15,7 +20,10 @@ const TokenField = ({ token, setToken, error }) => {
         rows={6}
         required
       />
-      <p className="token-help">Your token should look similar to: 9AyjhGNQQFkSCT5QtkaPdQ7-Cz7onxXq231/T8F-QRk1xVnplfxcvDRgm081xpDxKINpIz0zW-vnLXs...</p>
+      <p className="token-help">
+        Your token should look similar to:
+        9AyjhGNQQFkSCT5QtkaPdQ7-Cz7onxXq231/T8F-QRk1xVnplfxcvDRgm081xpDxKINpIz0zW-vnLXs...
+      </p>
       {error && <p className="error-message">{error}</p>}
     </div>
   );
