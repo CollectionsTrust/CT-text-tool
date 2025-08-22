@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getAuth, signOut, sendEmailVerification } from "firebase/auth";
+import { sendEmailVerification } from "firebase/auth";
 
 import ProjectRequestForm from "./ProjectRequestForm";
 import "./LandingPage.css";

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
   query,
@@ -8,11 +8,11 @@ import {
   doc,
   getDoc,
   serverTimestamp,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import TextsTable from './TextsTable';
-import './TextsPage.css';
+  writeBatch,
+} from "firebase/firestore";
+import { db } from "../../firebase/config";
+import TextsTable from "./TextsTable";
+import "./TextsPage.css";
 
 /**
  * Main TextsPage component
@@ -28,7 +28,7 @@ const TextsPage = () => {
   const [error, setError] = useState(null);
 
   // State for search/filter
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredTexts, setFilteredTexts] = useState([]);
 
   // State for table selections
@@ -41,7 +41,7 @@ const TextsPage = () => {
   useEffect(() => {
     const checkProjectStatus = async () => {
       try {
-        const projectRef = doc(db, 'projects', projectId);
+        const projectRef = doc(db, "projects", projectId);
         const projectSnap = await getDoc(projectRef);
 
         if (projectSnap.exists()) {
@@ -50,18 +50,19 @@ const TextsPage = () => {
 
           // Announce project status to screen readers if archived
           if (projectData.archived) {
-            const liveRegion = document.getElementById('a11y-live-region');
+            const liveRegion = document.getElementById("a11y-live-region");
             if (liveRegion) {
-              liveRegion.textContent = 'This project is archived. Texts cannot be modified.';
+              liveRegion.textContent =
+                "This project is archived. Texts cannot be modified.";
             }
           }
         } else {
           // Project doesn't exist
-          setError('Project not found.');
+          setError("Project not found.");
         }
       } catch (err) {
-        console.error('Error checking project status:', err);
-        setError('Failed to check project status.');
+        console.error("Error checking project status:", err);
+        setError("Failed to check project status.");
       }
     };
 
@@ -74,11 +75,8 @@ const TextsPage = () => {
       setLoading(true);
       try {
         // Query texts for this project
-        const textsRef = collection(db, 'texts');
-        const q = query(
-          textsRef,
-          where('projectId', '==', projectId)
-        );
+        const textsRef = collection(db, "texts");
+        const q = query(textsRef, where("projectId", "==", projectId));
 
         const querySnapshot = await getDocs(q);
 
@@ -95,8 +93,12 @@ const TextsPage = () => {
           if (!a.updatedAt) return 1;
           if (!b.updatedAt) return -1;
 
-          const aTime = a.updatedAt.toDate ? a.updatedAt.toDate().getTime() : new Date(a.updatedAt).getTime();
-          const bTime = b.updatedAt.toDate ? b.updatedAt.toDate().getTime() : new Date(b.updatedAt).getTime();
+          const aTime = a.updatedAt.toDate
+            ? a.updatedAt.toDate().getTime()
+            : new Date(a.updatedAt).getTime();
+          const bTime = b.updatedAt.toDate
+            ? b.updatedAt.toDate().getTime()
+            : new Date(b.updatedAt).getTime();
 
           return bTime - aTime; // Descending order (newest first)
         });
@@ -104,8 +106,8 @@ const TextsPage = () => {
         setTexts(sortedTexts);
         setFilteredTexts(sortedTexts);
       } catch (err) {
-        console.error('Error loading texts:', err);
-        setError('Failed to load texts. Please try refreshing the page.');
+        console.error("Error loading texts:", err);
+        setError("Failed to load texts. Please try refreshing the page.");
       } finally {
         setLoading(false);
       }
@@ -122,10 +124,14 @@ const TextsPage = () => {
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = texts.filter(text =>
-      text.textReferenceNumber?.toLowerCase().includes(query) ||
-      text.text?.toLowerCase().includes(query) ||
-      (text.textAuthors && text.textAuthors.some(author => author.toLowerCase().includes(query)))
+    const filtered = texts.filter(
+      (text) =>
+        text.textReferenceNumber?.toLowerCase().includes(query) ||
+        text.text?.toLowerCase().includes(query) ||
+        (text.textAuthors &&
+          text.textAuthors.some((author) =>
+            author.toLowerCase().includes(query)
+          ))
     );
 
     setFilteredTexts(filtered);
@@ -138,12 +144,12 @@ const TextsPage = () => {
 
   // Clear search
   const handleClearSearch = () => {
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   // Handle redirection to Objects page for linked objects
   const handleViewLinkedObjects = (textId) => {
-    const text = texts.find(t => t.id === textId);
+    const text = texts.find((t) => t.id === textId);
     if (text && text.linkedObjects && text.linkedObjects.length > 0) {
       // Navigate to Objects page with query params to filter and show the linked objects
       navigate(`/projects/${projectId}/objects?editTextId=${textId}`);
@@ -152,35 +158,10 @@ const TextsPage = () => {
       setError("No linked objects found for this text.");
 
       // Announce to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
+      const liveRegion = document.getElementById("a11y-live-region");
       if (liveRegion) {
-        liveRegion.textContent = 'No linked objects found for this text.';
+        liveRegion.textContent = "No linked objects found for this text.";
       }
-    }
-  };
-
-  // Handle editing a text - redirect to objects page for editing
-  const handleEditText = (textIds) => {
-    if (projectArchived) {
-      setError("This project is archived. Texts cannot be modified.");
-
-      // Announce to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
-      if (liveRegion) {
-        liveRegion.textContent = 'This project is archived. Texts cannot be modified.';
-      }
-      return;
-    }
-
-    // If it's an array with multiple texts, just edit the first one
-    // This is for the table row edit button which only edits one text
-    if (Array.isArray(textIds) && textIds.length > 0) {
-      // Redirect to objects page with edit parameter for first selected text
-      navigate(`/projects/${projectId}/objects?editTextId=${textIds[0]}`);
-    }
-    // If it's a single ID (string), edit that one
-    else if (typeof textIds === 'string') {
-      navigate(`/projects/${projectId}/objects?editTextId=${textIds}`);
     }
   };
 
@@ -190,7 +171,7 @@ const TextsPage = () => {
       setLoading(true);
 
       // Check project status again before deletion
-      const projectRef = doc(db, 'projects', projectId);
+      const projectRef = doc(db, "projects", projectId);
       const projectSnap = await getDoc(projectRef);
 
       if (projectSnap.exists() && projectSnap.data().archived) {
@@ -200,8 +181,8 @@ const TextsPage = () => {
       const batch = writeBatch(db);
 
       // Add each text to the batch for deletion
-      textIds.forEach(id => {
-        const textRef = doc(db, 'texts', id);
+      textIds.forEach((id) => {
+        const textRef = doc(db, "texts", id);
         batch.delete(textRef);
       });
 
@@ -209,29 +190,33 @@ const TextsPage = () => {
       await batch.commit();
 
       // Update local state
-      const updatedTexts = texts.filter(text => !textIds.includes(text.id));
+      const updatedTexts = texts.filter((text) => !textIds.includes(text.id));
       setTexts(updatedTexts);
-      setFilteredTexts(updatedTexts.filter(text =>
-        searchQuery ?
-          text.textReferenceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          text.text?.toLowerCase().includes(searchQuery.toLowerCase()) :
-          true
-      ));
+      setFilteredTexts(
+        updatedTexts.filter((text) =>
+          searchQuery
+            ? text.textReferenceNumber
+                ?.toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+              text.text?.toLowerCase().includes(searchQuery.toLowerCase())
+            : true
+        )
+      );
 
       // Clear selection
       setSelectedTextIds(new Set());
 
       // Announce deletion to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
+      const liveRegion = document.getElementById("a11y-live-region");
       if (liveRegion) {
         liveRegion.textContent = `${textIds.length} text(s) deleted successfully.`;
       }
     } catch (err) {
-      console.error('Error deleting texts:', err);
+      console.error("Error deleting texts:", err);
       setError(`Failed to delete texts: ${err.message}`);
 
       // Announce error to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
+      const liveRegion = document.getElementById("a11y-live-region");
       if (liveRegion) {
         liveRegion.textContent = `Error: ${err.message}`;
       }
@@ -246,7 +231,7 @@ const TextsPage = () => {
       setLoading(true);
 
       // Check project status again before saving
-      const projectRef = doc(db, 'projects', projectId);
+      const projectRef = doc(db, "projects", projectId);
       const projectSnap = await getDoc(projectRef);
 
       if (projectSnap.exists() && projectSnap.data().archived) {
@@ -260,10 +245,10 @@ const TextsPage = () => {
       for (const textId of textIdsToUpdate) {
         const changes = bulkEditData[textId];
         if (Object.keys(changes).length > 0) {
-          const textRef = doc(db, 'texts', textId);
+          const textRef = doc(db, "texts", textId);
           batch.update(textRef, {
             ...changes,
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp(),
           });
         }
       }
@@ -272,36 +257,40 @@ const TextsPage = () => {
       await batch.commit();
 
       // Update local state
-      const updatedTexts = texts.map(text => {
+      const updatedTexts = texts.map((text) => {
         if (textIdsToUpdate.includes(text.id)) {
           return {
             ...text,
             ...bulkEditData[text.id],
-            updatedAt: new Date() // Client-side timestamp for immediate UI update
+            updatedAt: new Date(), // Client-side timestamp for immediate UI update
           };
         }
         return text;
       });
 
       setTexts(updatedTexts);
-      setFilteredTexts(updatedTexts.filter(text =>
-        searchQuery ?
-          text.textReferenceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          text.text?.toLowerCase().includes(searchQuery.toLowerCase()) :
-          true
-      ));
+      setFilteredTexts(
+        updatedTexts.filter((text) =>
+          searchQuery
+            ? text.textReferenceNumber
+                ?.toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+              text.text?.toLowerCase().includes(searchQuery.toLowerCase())
+            : true
+        )
+      );
 
       // Announce update to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
+      const liveRegion = document.getElementById("a11y-live-region");
       if (liveRegion) {
         liveRegion.textContent = `${textIdsToUpdate.length} text(s) updated successfully.`;
       }
     } catch (err) {
-      console.error('Error updating texts:', err);
+      console.error("Error updating texts:", err);
       setError(`Failed to update texts: ${err.message}`);
 
       // Announce error to screen readers
-      const liveRegion = document.getElementById('a11y-live-region');
+      const liveRegion = document.getElementById("a11y-live-region");
       if (liveRegion) {
         liveRegion.textContent = `Error: ${err.message}`;
       }
@@ -318,8 +307,7 @@ const TextsPage = () => {
         className="sr-only"
         aria-live="polite"
         aria-atomic="true"
-      >
-      </div>
+      ></div>
       <div className="texts-content">
         <div className="texts-header">
           <div className="search-container">
@@ -345,7 +333,9 @@ const TextsPage = () => {
 
         {projectArchived && (
           <div className="archived-project-banner" role="alert">
-            <p>This project is archived. Texts cannot be modified or deleted.</p>
+            <p>
+              This project is archived. Texts cannot be modified or deleted.
+            </p>
           </div>
         )}
 

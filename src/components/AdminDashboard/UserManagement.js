@@ -7,7 +7,6 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
-  getDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
