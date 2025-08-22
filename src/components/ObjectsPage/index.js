@@ -1,24 +1,33 @@
-// src/components/ObjectsPage/index.js
+import { useContext, useEffect, useState, useCallback } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import {
+  collection,
+  doc,
+  serverTimestamp,
+  getDoc,
+  updateDoc,
+  addDoc,
+} from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { useForm, FormProvider } from "react-hook-form";
+import useProjectAuthors from "../../hooks/useProjectAuthors";
 
-import React, { useContext, useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-
-import { ObjectsDataContext, ObjectsDataProvider } from './ObjectsDataProvider';
-import SearchBar from './SearchBar';
-import DisplayOptions from './DisplayOptions';
-import RecordsTable from './RecordsTable';
-import RecordModal from './RecordModal';
-import PaginationControls from './PaginationControls';
-import SplitLayout from '../shared/AccessibleLayout/SplitLayout';
-import TextForm from '../shared/TextForm/index';
-import './ObjectsPage.css';
+import { ObjectsDataContext, ObjectsDataProvider } from "./ObjectsDataProvider";
+import SearchBar from "./SearchBar";
+import DisplayOptions from "./DisplayOptions";
+import RecordsTable from "./RecordsTable";
+import RecordModal from "./RecordModal";
+import PaginationControls from "./PaginationControls";
+import SplitLayout from "../common/AccessibleLayout/SplitLayout";
+import TextForm from "../common/TextForm/index";
+import "./ObjectsPage.css";
+import { useText } from "../../hooks/useText";
+import { useTexts } from "../../hooks/useTexts";
 
 const ObjectsPageContent = () => {
   const { projectId } = useParams();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { authors } = useProjectAuthors(projectId);
 
   const {
     filteredData,
@@ -27,7 +36,6 @@ const ObjectsPageContent = () => {
     searchQuery,
     showCollection,
     showTitle,
-    showSelectedOnly,
     setShowCollection,
     setShowTitle,
     setShowSelectedOnly,
@@ -37,89 +45,142 @@ const ObjectsPageContent = () => {
     handleHeaderCheckboxChange,
     loading,
     loadingProgress,
-    error
+    error,
   } = useContext(ObjectsDataContext);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const [layoutMode, setLayoutMode] = useState('split');
-  const [activeView, setActiveView] = useState('text');
+  const [saveError, setSaveError] = useState(null);
+  const [saveMessage, setSaveMessage] = useState(null);
 
-  const [isEditingText, setIsEditingText] = useState(true);
-  const [currentTextData, setCurrentTextData] = useState(null);
-  const [textEditId, setTextEditId] = useState(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [layoutMode, setLayoutMode] = useState("split");
+  const [activeView, setActiveView] = useState("text");
 
-  const [projectConfig, setProjectConfig] = useState({});
+  const [projectConfig, setProjectConfig] = useState();
+
+  const editTextId = searchParams.get("editTextId");
+  const { text } = useText(editTextId);
+  const { texts } = useTexts(projectId);
+
+  const methods = useForm({
+    defaultValues: {
+      text: "",
+      parentText: "",
+      textTag: "",
+      textAuthors: [],
+      textLanguages: [],
+      textStatus: "",
+      textNote: "",
+      linked_objects: [],
+      projectId: "",
+      textReferenceNumber: "",
+      projectReferenceNumber: "",
+    },
+  });
+
+  // Reset the form when `text` and projectConfig is loaded
+  useEffect(() => {
+    if (!texts || !authors) {
+      return;
+    }
+
+    let textReferenceNumber = "";
+
+    if (text?.textReferenceNumber) {
+      textReferenceNumber = text?.textReferenceNumber;
+    } else if (texts.length === 0) {
+      textReferenceNumber = "TXT00001";
+    } else {
+      const highestTextReferenceNumber = texts.sort((textA, textB) => {
+        return textA.textReferenceNumber - textB.textReferenceNumber;
+      })[0].textReferenceNumber;
+      const nextNumber =
+        parseInt(highestTextReferenceNumber.replace("TXT", "")) + 1;
+      textReferenceNumber = `TXT${String(nextNumber).padStart(5, "0")}`;
+    }
+
+    methods.reset({
+      text: text?.text,
+      textTag: text?.textTag || "",
+      textAuthors: text?.textAuthors || [],
+      textLanguages: text?.textLanguages || [],
+      textStatus: text?.textStatus || "",
+      textNote: text?.textNote || "",
+      parentText: text?.parentText || "",
+      linkedObjects: Array.from(text?.selectedRecords || []) || [],
+      projectId: projectId,
+      textReferenceNumber: textReferenceNumber,
+      projectReferenceNumber: projectConfig?.projectReferenceNumber || "",
+    });
+  }, [text, projectConfig]);
+
+  const submitForm = async (data) => {
+    const payload = {
+      ...data,
+      linkedObjects: Array.from(selectedRecords),
+      updatedAt: serverTimestamp(),
+      textDate: text?.textDate || new Date().toISOString().substring(0, 10),
+    };
+
+    setSaveError(null);
+
+    try {
+      if (editTextId) {
+        await updateDoc(doc(db, "texts", editTextId), payload);
+
+        setSaveMessage("Text updated successfully!");
+      } else {
+        payload.createdAt = serverTimestamp();
+
+        await addDoc(collection(db, "texts"), payload);
+
+        setSaveMessage("Text saved successfully!");
+        methods.reset();
+      }
+    } catch (error) {
+      setSaveError(error.message || "An error occurred while saving.");
+    }
+  };
 
   useEffect(() => {
     const fetchProjectConfig = async () => {
       try {
-        const projectRef = doc(db, 'projects', projectId);
+        // Get project info
+        const projectRef = doc(db, "projects", projectId);
         const projectSnap = await getDoc(projectRef);
 
         if (projectSnap.exists()) {
           const projectData = projectSnap.data();
+
           setProjectConfig({
             hasHierarchicalText: projectData.hasHierarchicalText || false,
             tracksTextStatus: projectData.tracksTextStatus || false,
             wantsTextTags: projectData.wantsTextTags || false,
-            textStatuses: projectData.textStatuses || ['Draft', 'Approved'],
+            textStatuses: projectData.textStatuses || ["Draft", "Approved"],
             textTags: projectData.textTags || [],
-            authors: projectData.authors || [],
-            languages: projectData.languages || ['English'],
-            textNumberPrefix: projectData.textNumberPrefix || 'TXT',
-            projectReferenceNumber: projectData.projectReferenceNumber || ""
+            authors: authors?.map((author) => author.name) || [],
+            languages: projectData.languages || ["English"],
+            textNumberPrefix: projectData.textNumberPrefix || "TXT",
+            projectReferenceNumber: projectData.projectReferenceNumber || "",
           });
         }
       } catch (error) {
-        console.error('Error fetching project config:', error);
+        console.error("Error fetching project config:", error);
       }
     };
 
     fetchProjectConfig();
-  }, [projectId]);
+  }, [projectId, authors]);
 
   useEffect(() => {
-    const editTextId = searchParams.get('editTextId');
-
-    if (editTextId) {
-      setTextEditId(editTextId);
-      setIsEditingText(true);
-      setIsEditMode(true);
-
-      const fetchTextData = async () => {
-        try {
-          const textRef = doc(db, 'texts', editTextId);
-          const textSnap = await getDoc(textRef);
-
-          if (textSnap.exists()) {
-            const textData = textSnap.data();
-            setCurrentTextData(textData);
-
-            if (textData.linkedObjects && textData.linkedObjects.length > 0) {
-              if (filteredData.length > 0) {
-                const linkedObjectUids = new Set(textData.linkedObjects);
-                setSelectedRecords(linkedObjectUids);
-                setShowSelectedOnly(true);
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching text data:', error);
-        }
-      };
-
-      fetchTextData();
+    if (text?.linkedObjects && text?.linkedObjects.length > 0) {
+      const linkedObjectUids = new Set(text.linkedObjects);
+      setSelectedRecords(linkedObjectUids);
+      setShowSelectedOnly(true);
     }
-  }, [searchParams, filteredData, setSelectedRecords, setShowSelectedOnly]);
-
-  const handleTextFormChange = (hasChanges) => setHasUnsavedChanges(hasChanges);
-  const handleCancelEdit = () => setIsEditMode(false);
-  const handleSaveText = () => setHasUnsavedChanges(false);
+  }, [text, setShowSelectedOnly, setSelectedRecords]);
 
   const handleViewRecord = useCallback((record) => {
     setSelectedRecord(record);
@@ -132,7 +193,138 @@ const ObjectsPageContent = () => {
     currentPage * recordsPerPage
   );
 
-  const renderObjectsTablePanel = () => (
+  const renderLayoutControls = () => (
+    <div className="layout-controls">
+      {/* Split layout button */}
+      <button
+        type="button"
+        className={`layout-btn ${layoutMode === "split" ? "active" : ""}`}
+        onClick={() => setLayoutMode("split")}
+        title="Split view"
+        aria-label="Split view"
+      >
+        <div className="layout-icon">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="2"
+              y="4"
+              width="20"
+              height="16"
+              rx="1"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <line
+              x1="12"
+              y1="4"
+              x2="12"
+              y2="20"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
+      </button>
+
+      {/* Horizontal layout button */}
+      <button
+        type="button"
+        className={`layout-btn ${layoutMode === "horizontal" ? "active" : ""}`}
+        onClick={() => setLayoutMode("horizontal")}
+        title="Horizontal view"
+        aria-label="Horizontal view"
+      >
+        <div className="layout-icon">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="2"
+              y="4"
+              width="20"
+              height="16"
+              rx="1"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <line
+              x1="2"
+              y1="12"
+              x2="22"
+              y2="12"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
+      </button>
+
+      {/* Focus layout button */}
+      <button
+        type="button"
+        className={`layout-btn ${layoutMode === "focus" ? "active" : ""}`}
+        onClick={() => setLayoutMode("focus")}
+        title="Focus view"
+        aria-label="Focus view"
+      >
+        <div className="layout-icon">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="2"
+              y="4"
+              width="20"
+              height="16"
+              rx="1"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
+      </button>
+
+      {/* Only show focus options when in focus mode */}
+      {layoutMode === "focus" && (
+        <div className="focus-options">
+          <button
+            type="button"
+            className={`focus-option-btn ${
+              activeView === "objects" ? "active" : ""
+            }`}
+            onClick={() => setActiveView("objects")}
+          >
+            Objects
+          </button>
+          <button
+            type="button"
+            className={`focus-option-btn ${
+              activeView === "text" ? "active" : ""
+            }`}
+            onClick={() => setActiveView("text")}
+          >
+            Text
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const ObjectsTablePanel = () => (
     <>
       <DisplayOptions
         showCollection={showCollection}
@@ -140,18 +332,18 @@ const ObjectsPageContent = () => {
         setShowCollection={setShowCollection}
         setShowTitle={setShowTitle}
         selectedRecords={selectedRecords}
-        filteredData={filteredData}
         handleHeaderCheckboxChange={handleHeaderCheckboxChange}
-        isEditMode={isEditMode}
       />
 
-      {loading ? (
+      {error && <p className="error-message">{error}</p>}
+
+      {!error && loading && (
         <p className="status-message">
           Loading records... {loadingProgress?.loaded?.toLocaleString()}
         </p>
-      ) : error ? (
-        <p className="error-message">{error}</p>
-      ) : (
+      )}
+
+      {!error && !loading && paginatedData.length > 0 && (
         <>
           <RecordsTable
             filteredData={paginatedData}
@@ -174,124 +366,17 @@ const ObjectsPageContent = () => {
       )}
     </>
   );
-
-  const renderTextFormPanel = () => (
+  const TextFormPanel = () => (
     <div className="text-form-panel">
       <TextForm
-        projectId={projectId}
-        projectReferenceNumber={projectConfig.projectReferenceNumber || ""}
-        textId={textEditId}
-        onSave={handleSaveText}
-        onCancel={handleCancelEdit}
+        submitForm={submitForm}
+        text={text}
         projectConfig={projectConfig}
-        linkedObjects={Array.from(selectedRecords)}
-        onTextChange={handleTextFormChange}
+        saveError={saveError}
+        saveMessage={saveMessage}
       />
     </div>
   );
-
-  const renderLayoutControls = () => (
-    <div className="layout-controls">
-      {/* Split layout button */}
-      <button
-        type="button"
-        className={`layout-btn ${layoutMode === 'split' ? 'active' : ''}`}
-        onClick={() => setLayoutMode('split')}
-        title="Split view"
-        aria-label="Split view"
-      >
-        <div className="layout-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="4" width="20" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
-            <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </div>
-      </button>
-
-      {/* Horizontal layout button */}
-      <button
-        type="button"
-        className={`layout-btn ${layoutMode === 'horizontal' ? 'active' : ''}`}
-        onClick={() => setLayoutMode('horizontal')}
-        title="Horizontal view"
-        aria-label="Horizontal view"
-      >
-        <div className="layout-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="4" width="20" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
-            <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </div>
-      </button>
-
-      {/* Focus layout button */}
-      <button
-        type="button"
-        className={`layout-btn ${layoutMode === 'focus' ? 'active' : ''}`}
-        onClick={() => setLayoutMode('focus')}
-        title="Focus view"
-        aria-label="Focus view"
-      >
-        <div className="layout-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="4" width="20" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </div>
-      </button>
-
-      {/* Only show focus options when in focus mode */}
-      {layoutMode === 'focus' && (
-        <div className="focus-options">
-          <button
-            type="button"
-            className={`focus-option-btn ${activeView === 'objects' ? 'active' : ''}`}
-            onClick={() => setActiveView('objects')}
-          >
-            Objects
-          </button>
-          <button
-            type="button"
-            className={`focus-option-btn ${activeView === 'text' ? 'active' : ''}`}
-            onClick={() => setActiveView('text')}
-          >
-            Text
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderLayout = () => {
-    switch (layoutMode) {
-      case 'split':
-        return (
-          <SplitLayout
-            leftPanel={renderObjectsTablePanel()}
-            rightPanel={renderTextFormPanel()}
-            leftPanelLabel="Objects"
-            rightPanelLabel="Text form"
-            initialSplit={60}
-            minLeftWidth={40}
-            maxLeftWidth={80}
-          />
-        );
-      case 'horizontal':
-        return (
-          <div className="horizontal-layout">
-            <div className="top-panel">{renderTextFormPanel()}</div>
-            <div className="bottom-panel">{renderObjectsTablePanel()}</div>
-          </div>
-        );
-      case 'focus':
-        return (
-          <div className="focus-layout">
-            {activeView === 'objects' ? renderObjectsTablePanel() : renderTextFormPanel()}
-          </div>
-        );
-      default:
-        return renderObjectsTablePanel();
-    }
-  };
 
   return (
     <div className="objects-page-container">
@@ -309,7 +394,39 @@ const ObjectsPageContent = () => {
         </div>
       </div>
 
-      {renderLayout()}
+      <FormProvider {...methods}>
+        {layoutMode === "split" && (
+          <SplitLayout
+            leftPanel={<ObjectsTablePanel />}
+            leftPanelLabel="Objects"
+            rightPanelLabel="Text form"
+            initialSplit={60}
+            minLeftWidth={40}
+            maxLeftWidth={80}
+          >
+            <TextFormPanel />
+          </SplitLayout>
+        )}
+        {layoutMode === "horizontal" && (
+          <div className="horizontal-layout">
+            <div className="top-panel">
+              <TextFormPanel />
+            </div>
+            <div className="bottom-panel">
+              <ObjectsTablePanel />
+            </div>
+          </div>
+        )}
+        {layoutMode === "focus" && (
+          <div className="focus-layout">
+            {activeView === "objects" ? (
+              <ObjectsTablePanel />
+            ) : (
+              <TextFormPanel />
+            )}
+          </div>
+        )}
+      </FormProvider>
 
       {selectedRecord && (
         <RecordModal

@@ -505,7 +505,7 @@
   max-width: none !important;
 }
 
-.terms-content body {
+.terms-content .terms {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
   line-height: 1.6 !important;
   color: var(--color-text) !important;

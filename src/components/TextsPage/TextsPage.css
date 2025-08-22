@@ -143,42 +143,6 @@
   font-style: italic;
 }
 
-/* Edit layout */
-.edit-layout {
-  background-color: white;
-  border-radius: 4px;
-  border: 1px solid #eee;
-  padding: 20px;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
-}
-
-.panel-header h2 {
-  margin: 0;
-  color: var(--color-primary);
-  font-size: 1.3rem;
-}
-
-.close-edit-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #666;
-  cursor: pointer;
-  padding: 0 5px;
-}
-
-.close-edit-btn:hover {
-  color: #333;
-}
-
 /* Confirmation dialog */
 .confirm-dialog {
   border: none;
@@ -262,10 +226,6 @@
     width: 100%;
     text-align: center;
   }
-  
-  .edit-layout {
-    padding: 15px;
-  }
 }
 
 /* High contrast mode support */
@@ -278,8 +238,7 @@
   }
   
   .archived-project-banner,
-  .error-message,
-  .panel-header {
+  .error-message {
     border: 1px solid ButtonText;
   }
 }
@@ -290,8 +249,7 @@
     animation: none;
   }
   
-  .create-text-btn,
-  .close-edit-btn {
+  .create-text-btn {
     transition: none;
   }
 }

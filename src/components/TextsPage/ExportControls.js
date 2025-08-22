@@ -1,13 +1,17 @@
-// File: src/components/TextsPage/ExportControls.js
-
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { exportToCsv, exportToCsvTwoFiles, exportToXml, exportToJson, exportToHtml } from '../TextsPage/utils/exports';
-import { useProjectForm } from '../ProjectSetup/hooks/useProjectForm';
+import { useParams } from "react-router-dom";
+import {
+  exportToCsv,
+  exportToCsvTwoFiles,
+  exportToXml,
+  exportToJson,
+  exportToHtml,
+} from "../TextsPage/utils/exports";
+import { useProjectForm } from "../ProjectSetup/hooks/useProjectForm";
 
 const ExportControls = ({ texts }) => {
   const { projectId } = useParams();
-  const { formData, selectedLanguages, assignedAuthors } = useProjectForm(projectId);
+  const { formData, selectedLanguages, assignedAuthors } =
+    useProjectForm(projectId);
 
   const handleExport = (type) => {
     const projectInfo = {
@@ -27,19 +31,19 @@ const ExportControls = ({ texts }) => {
     };
 
     switch (type) {
-      case 'csv':
+      case "csv":
         exportToCsv(texts, projectInfo);
         break;
-      case 'csv-two-files':
+      case "csv-two-files":
         exportToCsvTwoFiles(texts, projectInfo, projectInfo.settings);
         break;
-      case 'xml':
+      case "xml":
         exportToXml(texts, projectInfo);
         break;
-      case 'json':
+      case "json":
         exportToJson(texts, projectInfo);
         break;
-      case 'html':
+      case "html":
         exportToHtml(texts, projectInfo);
         break;
       default:
@@ -49,11 +53,13 @@ const ExportControls = ({ texts }) => {
 
   return (
     <div className="export-controls">
-      <button onClick={() => handleExport('csv')}>Export CSV</button>
-      <button onClick={() => handleExport('csv-two-files')}>Export CSV - 2 files</button>
-      <button onClick={() => handleExport('xml')}>Export XML</button>
-      <button onClick={() => handleExport('json')}>Export JSON</button>
-      <button onClick={() => handleExport('html')}>Export HTML</button>
+      <button onClick={() => handleExport("csv")}>Export CSV</button>
+      <button onClick={() => handleExport("csv-two-files")}>
+        Export CSV - 2 files
+      </button>
+      <button onClick={() => handleExport("xml")}>Export XML</button>
+      <button onClick={() => handleExport("json")}>Export JSON</button>
+      <button onClick={() => handleExport("html")}>Export HTML</button>
     </div>
   );
 };

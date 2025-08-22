@@ -1,33 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import './QuillEditor.css';
+import { useState, useEffect, useRef } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import "./QuillEditor.css";
 
 const QuillEditor = ({ value, onChange }) => {
-  const [editorHtml, setEditorHtml] = useState(value || '');
+  const [editorHtml, setEditorHtml] = useState(value || "");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isCodeView, setIsCodeView] = useState(false);
   const quillRef = useRef(null);
   const codeEditorRef = useRef(null);
-  const initialContentRef = useRef(value || '');
+  const initialContentRef = useRef(value || "");
 
   // Add useEffect to update editor content when value prop changes
   useEffect(() => {
-    setEditorHtml(value || '');
+    setEditorHtml(value || "");
     // Also update the initial content ref when value prop changes
-    initialContentRef.current = value || '';
+    initialContentRef.current = value || "";
   }, [value]);
-  
+
   // Set global dirty flag when content changes, but ONLY for text form
   useEffect(() => {
     if (editorHtml !== initialContentRef.current) {
       // Only set the flag if we're in the text form (Objects page)
-      if (window.location.pathname.includes('/objects')) {
+      if (window.location.pathname.includes("/objects")) {
         window.textFormIsDirty = true;
       }
     } else {
       // If content is back to initial value, clear the dirty flag
-      if (window.location.pathname.includes('/objects')) {
+      if (window.location.pathname.includes("/objects")) {
         window.textFormIsDirty = false;
       }
     }
@@ -52,9 +52,9 @@ const QuillEditor = ({ value, onChange }) => {
     if (onChange) {
       onChange(e.target.value);
     }
-    
+
     // Only set dirty flag on objects page
-    if (window.location.pathname.includes('/objects')) {
+    if (window.location.pathname.includes("/objects")) {
       window.textFormIsDirty = true;
     }
   };
@@ -64,9 +64,12 @@ const QuillEditor = ({ value, onChange }) => {
     if (onChange) {
       onChange(html);
     }
-    
+
     // Mark as dirty only if different from initial content
-    if (html !== initialContentRef.current && window.location.pathname.includes('/objects')) {
+    if (
+      html !== initialContentRef.current &&
+      window.location.pathname.includes("/objects")
+    ) {
       window.textFormIsDirty = true;
     }
   };
@@ -79,7 +82,7 @@ const QuillEditor = ({ value, onChange }) => {
   const isValidHttpsUrl = (url) => {
     try {
       const urlObj = new URL(url);
-      return urlObj.protocol === 'https:';
+      return urlObj.protocol === "https:";
     } catch (error) {
       return false;
     }
@@ -87,25 +90,28 @@ const QuillEditor = ({ value, onChange }) => {
 
   // Function to handle image insertion via URL
   const handleImageUrlInsert = () => {
-    const url = prompt('Enter the URL of the image (must be an https:// URL):');
-    
+    const url = prompt("Enter the URL of the image (must be an https:// URL):");
+
     if (!url) return; // User cancelled
-    
+
     // Validate URL - must be HTTPS
     if (!isValidHttpsUrl(url)) {
-      alert('Please enter a valid HTTPS URL (starting with https://)');
+      alert("Please enter a valid HTTPS URL (starting with https://)");
       return;
     }
-    
+
     try {
       // Only attempt to use the Quill API if we're in visual mode
       if (!isCodeView && quillRef.current) {
         const editor = quillRef.current.getEditor();
-        const range = editor.getSelection() || { index: editor.getLength(), length: 0 };
-        
+        const range = editor.getSelection() || {
+          index: editor.getLength(),
+          length: 0,
+        };
+
         // Insert the image at the cursor position
-        editor.insertEmbed(range.index, 'image', url);
-        
+        editor.insertEmbed(range.index, "image", url);
+
         // Move cursor after the image
         editor.setSelection(range.index + 1);
       } else if (isCodeView && codeEditorRef.current) {
@@ -113,16 +119,17 @@ const QuillEditor = ({ value, onChange }) => {
         const imgTag = `<img src="${url}" alt="Inserted image" />`;
         const textarea = codeEditorRef.current;
         const currentValue = textarea.value;
-        
+
         // Insert at cursor position if available, otherwise at the end
         if (textarea.selectionStart || textarea.selectionStart === 0) {
           const startPos = textarea.selectionStart;
           const endPos = textarea.selectionEnd;
-          
-          textarea.value = currentValue.substring(0, startPos) + 
-                          imgTag + 
-                          currentValue.substring(endPos, currentValue.length);
-          
+
+          textarea.value =
+            currentValue.substring(0, startPos) +
+            imgTag +
+            currentValue.substring(endPos, currentValue.length);
+
           // Update the content
           if (onChange) {
             onChange(textarea.value);
@@ -136,7 +143,7 @@ const QuillEditor = ({ value, onChange }) => {
         }
       }
     } catch (error) {
-      console.error('Error inserting image:', error);
+      console.error("Error inserting image:", error);
       // Fallback method - just append the image tag to the end
       const imgTag = `<img src="${url}" alt="Inserted image" />`;
       const newHtml = editorHtml + imgTag;
@@ -152,36 +159,42 @@ const QuillEditor = ({ value, onChange }) => {
   const modules = {
     toolbar: {
       container: [
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        ['bold', 'italic', 'underline'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'script': 'sub'}, { 'script': 'super' }],
-        [{ 'indent': '-1'}, { 'indent': '+1' }],
-        ['link'], // Removed 'image' from here
-        [{ 'align': [] }],
-        ['clean']
-      ]
-    }
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        ["bold", "italic", "underline"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ script: "sub" }, { script: "super" }],
+        [{ indent: "-1" }, { indent: "+1" }],
+        ["link"], // Removed 'image' from here
+        [{ align: [] }],
+        ["clean"],
+      ],
+    },
   };
 
   // Still keep 'image' in formats so inserted images work properly
   const formats = [
-    'header',
-    'bold', 'italic', 'underline',
-    'list', 'bullet',
-    'script',
-    'indent',
-    'link', 'image', // Keep image here for format support
-    'align',
-    'clean'
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "list",
+    "bullet",
+    "script",
+    "indent",
+    "link",
+    "image", // Keep image here for format support
+    "align",
+    "clean",
   ];
 
   return (
-    <div className={`quill-editor-container ${isFullScreen ? 'fullscreen' : ''}`}>
+    <div
+      className={`quill-editor-container ${isFullScreen ? "fullscreen" : ""}`}
+    >
       {isFullScreen && (
         <div className="fullscreen-controls">
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="exit-fullscreen-btn"
             onClick={toggleFullScreen}
           >
@@ -189,7 +202,7 @@ const QuillEditor = ({ value, onChange }) => {
           </button>
         </div>
       )}
-      
+
       <div className="editor-wrapper">
         {isCodeView ? (
           <textarea
@@ -199,7 +212,7 @@ const QuillEditor = ({ value, onChange }) => {
             onChange={handleCodeChange}
           />
         ) : (
-          <ReactQuill 
+          <ReactQuill
             ref={quillRef}
             theme="snow"
             value={editorHtml}
@@ -209,38 +222,40 @@ const QuillEditor = ({ value, onChange }) => {
           />
         )}
       </div>
-      
+
       <div className="editor-footer">
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="code-view-btn"
           onClick={toggleCodeView}
-          title={isCodeView ? "Switch to visual editor" : "Switch to HTML code view"}
+          title={
+            isCodeView ? "Switch to visual editor" : "Switch to HTML code view"
+          }
         >
           {isCodeView ? "Visual editor" : "HTML code view"}
         </button>
-        
-        <button 
-          type="button" 
+
+        <button
+          type="button"
           className="insert-image-url-btn"
           onClick={handleImageUrlInsert}
           title="Insert image from HTTPS URL"
-          style={{ 
-            marginLeft: '10px',
-            fontSize: '14px',
-            padding: '3px 10px',
-            borderRadius: '3px',
-            border: '1px solid #ccc',
-            background: '#f8f8f8',
-            cursor: 'pointer'
+          style={{
+            marginLeft: "10px",
+            fontSize: "14px",
+            padding: "3px 10px",
+            borderRadius: "3px",
+            border: "1px solid #ccc",
+            background: "#f8f8f8",
+            cursor: "pointer",
           }}
         >
           Insert image from URL
         </button>
-        
+
         {!isFullScreen && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="fullscreen-btn"
             onClick={toggleFullScreen}
             title="Toggle Full Screen"

@@ -1,273 +1,193 @@
-// src/context/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { hashPassword, verifyPassword, isTemporaryPassword, isTemporaryPasswordExpired } from '../utils/passwordUtils';
+import { createContext, useContext, useState, useEffect } from "react";
+import {
+  getAuth,
+  signOut,
+  updatePassword,
+  signInWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 
-// Create context
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
+
 const AuthContext = createContext();
+
 export const useAuth = () => useContext(AuthContext);
 
-// Define sessionStorage keys
-const USER_EMAIL_KEY = 'userEmail';
-const USER_ROLE_KEY = 'userRole';
-const PASSWORD_CHANGE_REQUIRED_KEY = 'passwordChangeRequired';
-
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+  const [user, setUser] = useState();
+  const [userRoles, setUserRoles] = useState();
   const [loading, setLoading] = useState(true);
-  const [passwordChangeRequired, setPasswordChangeRequired] = useState(false);
 
-  // Login function - authenticate user and store session
+  const auth = getAuth();
+
+  const getUserRolesFromFirestore = async (user) => {
+    // A user can be a whole site 'admin' or have multiple roles for different projects
+    const projectUserDocRef = doc(db, "projectUsers", user.email);
+    const projectUserDocSnap = await getDoc(projectUserDocRef);
+    const usersDocRef = doc(db, "userRoles", user.uid);
+    const usersDocSnap = await getDoc(usersDocRef);
+
+    let appRole = null;
+
+    if (usersDocSnap.exists()) {
+      // admin user
+      appRole = usersDocSnap.data().role;
+    } else if (projectUserDocSnap.exists()) {
+      appRole = "nonAdminUser";
+    }
+
+    if (!usersDocSnap.exists() && !projectUserDocSnap.exists()) {
+      return null;
+    }
+
+    return {
+      appRole,
+      projectRoles: projectUserDocSnap.data()?.projectRoles || {},
+    };
+  };
+
   const login = async (email, password) => {
     try {
-      console.log("Login attempt for:", email);
-      
-      // Find user in projectUsers collection
-      const projectUsersRef = collection(db, 'projectUsers');
-      const q = query(projectUsersRef, where('email', '==', email));
-      const querySnapshot = await getDocs(q);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-      if (querySnapshot.empty) {
-        console.error("User not found in projectUsers");
-        throw new Error('User not found. Please request access.');
+      if (!userCredential.user.emailVerified) {
+        await signOut(auth);
+
+        return {
+          success: false,
+          error: "auth/email-not-verified",
+          user: userCredential.user,
+        };
       }
 
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      console.log("User data found:", userData);
+      const user = userCredential.user;
+      const roles = await getUserRolesFromFirestore(user);
 
-      // Legacy support for default password
-      if (userData.password === 'default') {
-        if (password !== 'default') {
-          console.error("Invalid password");
-          throw new Error('Invalid password. Please try again.');
-        }
-        
-        // Legacy user - first login with default password will trigger password change
-        setPasswordChangeRequired(true);
-        sessionStorage.setItem(PASSWORD_CHANGE_REQUIRED_KEY, 'true');
-      } 
-      // Handle hashed password verification
-      else if (userData.passwordHash) {
-        // Verify the password against the stored hash
-        const isValid = await verifyPassword(password, userData.passwordHash);
-        if (!isValid) {
-          console.error("Invalid password");
-          throw new Error('Invalid password. Please try again.');
-        }
-        
-        // Check if this is a temporary password that needs to be changed
-        if (isTemporaryPassword(userData.passwordSettings)) {
-          // Check if temporary password has expired
-          if (isTemporaryPasswordExpired(userData.passwordSettings)) {
-            console.error("Temporary password expired");
-            throw new Error('Your temporary password has expired. Please use the "Forgotten password?" link to request a new one.');
-          }
-          
-          setPasswordChangeRequired(true);
-          sessionStorage.setItem(PASSWORD_CHANGE_REQUIRED_KEY, 'true');
-        } else {
-          setPasswordChangeRequired(false);
-          sessionStorage.removeItem(PASSWORD_CHANGE_REQUIRED_KEY);
-        }
-      }
-      // No valid password mechanism found
-      else {
-        console.error("User has no valid password mechanism");
-        throw new Error('Account setup incomplete. Please contact an administrator.');
+      if (roles) {
+        setUser(user);
+        setUserRoles(roles);
+
+        return {
+          success: true,
+          user,
+          roles,
+        };
       }
 
-      // Create user object
-      const user = {
-        id: userDoc.id,
-        email: email,
-        name: userData.name || email,
-        role: userData.role || 'author',
-        projects: userData.projectRoles || {}
+      return {
+        success: false,
+        error: "User record not found.",
       };
+    } catch (err) {
+      console.error("Login error:", err);
 
-      // Store in sessionStorage
-      sessionStorage.setItem(USER_EMAIL_KEY, email);
-      sessionStorage.setItem(USER_ROLE_KEY, user.role);
-      
-      // Update context state synchronously before returning
-      setCurrentUser(user);
-      setUserRole(user.role);
-      
-      console.log("Login successful, auth state updated");
-      
-      return { 
-        user, 
-        role: user.role, 
-        passwordChangeRequired: passwordChangeRequired 
+      let errorMessage = "";
+
+      if (
+        err.code === "auth/user-not-found" ||
+        err.code === "auth/wrong-password"
+      ) {
+        errorMessage = "Incorrect email or password.";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage =
+          "Too many failed login attempts. Please wait and try again.";
+      } else {
+        errorMessage = "Failed to sign in. Please try again.";
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
       };
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
     }
   };
 
-  // Change password function
+  const setPasswordForEmailLinkUser = async (newPassword) => {
+    const user = auth.currentUser;
+
+    if (!user) throw new Error("No user is currently signed in.");
+    return updatePassword(user, newPassword);
+  };
+
   const changePassword = async (currentPassword, newPassword) => {
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(
+      user.email,
+      currentPassword
+    );
+
     try {
-      if (!currentUser) {
-        throw new Error('You must be logged in to change your password');
-      }
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+    } catch (err) {
+      console.error("Error changing password:", err);
+      throw err; // rethrow or handle in your form logic
+    }
+  };
 
-      // Get the current user document
-      const projectUsersRef = collection(db, 'projectUsers');
-      const q = query(projectUsersRef, where('email', '==', currentUser.email));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        throw new Error('User not found');
-      }
-
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-
-      // Verify current password
-      let isCurrentPasswordValid = false;
-      
-      // Handle legacy default password
-      if (userData.password === 'default') {
-        isCurrentPasswordValid = currentPassword === 'default';
-      } 
-      // Handle hashed password
-      else if (userData.passwordHash) {
-        isCurrentPasswordValid = await verifyPassword(currentPassword, userData.passwordHash);
-      }
-
-      if (!isCurrentPasswordValid) {
-        throw new Error('Current password is incorrect');
-      }
-
-      // Hash the new password
-      const newPasswordHash = await hashPassword(newPassword);
-
-      // Update the user document with the new password hash
-      const userRef = doc(db, 'projectUsers', userDoc.id);
-      await updateDoc(userRef, {
-        passwordHash: newPasswordHash,
-        passwordSettings: {
-          isTemporary: false,
-          lastChanged: new Date().toISOString()
-        },
-        // Remove the old password field if it exists
-        password: null
-      });
-
-      // Update session state
-      setPasswordChangeRequired(false);
-      sessionStorage.removeItem(PASSWORD_CHANGE_REQUIRED_KEY);
-
-      return true;
+  const sendResetPasswordEmail = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
     } catch (error) {
-      console.error('Change password error:', error);
+      console.error("Error sending password reset email:", error);
       throw error;
     }
   };
 
-  // Logout function - clear session
   const logout = () => {
-    console.log("Logging out");
-    
-    // Clear sessionStorage
-    sessionStorage.removeItem(USER_EMAIL_KEY);
-    sessionStorage.removeItem(USER_ROLE_KEY);
-    sessionStorage.removeItem(PASSWORD_CHANGE_REQUIRED_KEY);
-    
-    // Reset context state
-    setCurrentUser(null);
-    setUserRole(null);
-    setPasswordChangeRequired(false);
-    
-    return Promise.resolve();
+    signOut(auth);
   };
 
-  // Reset password function (for admins)
-  const resetPassword = async (userEmail) => {
-    // This would be used by admins to reset a user's password
-    // Implement in the admin dashboard
-    return Promise.resolve();
-  };
-
-  // Restore session from sessionStorage on app load
   useEffect(() => {
-    const restoreSession = async () => {
-      try {
-        // Check sessionStorage for existing session
-        const email = sessionStorage.getItem(USER_EMAIL_KEY);
-        const role = sessionStorage.getItem(USER_ROLE_KEY);
-        const pwChangeRequired = sessionStorage.getItem(PASSWORD_CHANGE_REQUIRED_KEY) === 'true';
-        
-        console.log("Checking for existing session:", { email, role, pwChangeRequired });
-
-        if (!email || !role) {
-          console.log("No saved session found");
-          setLoading(false);
-          return;
-        }
-
-        // Verify user exists in Firestore
-        const projectUsersRef = collection(db, 'projectUsers');
-        const q = query(projectUsersRef, where('email', '==', email));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const userData = querySnapshot.docs[0].data();
-          
-          // Create user object
-          const user = {
-            id: querySnapshot.docs[0].id,
-            email,
-            name: userData.name || email,
-            role: userData.role || role,
-            projects: userData.projectRoles || {}
-          };
-          
-          console.log("Session restored for user:", user.email);
-          
-          // Restore the password change required state
-          setPasswordChangeRequired(pwChangeRequired);
-          
-          // Store in context
-          setCurrentUser(user);
-          setUserRole(user.role);
-        } else {
-          console.warn("User not found in Firestore, clearing session");
-          sessionStorage.removeItem(USER_EMAIL_KEY);
-          sessionStorage.removeItem(USER_ROLE_KEY);
-          sessionStorage.removeItem(PASSWORD_CHANGE_REQUIRED_KEY);
-        }
-      } catch (err) {
-        console.error('Error restoring session:', err);
-        sessionStorage.removeItem(USER_EMAIL_KEY);
-        sessionStorage.removeItem(USER_ROLE_KEY);
-        sessionStorage.removeItem(PASSWORD_CHANGE_REQUIRED_KEY);
-      } finally {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setUserRoles(null);
         setLoading(false);
+        return;
       }
-    };
 
-    restoreSession();
-  }, []);
+      getUserRolesFromFirestore(firebaseUser)
+        .then((roles) => {
+          if (roles) {
+            setUser(firebaseUser);
+            setUserRoles(roles);
+          } else {
+            console.warn("No user document found for UID:", firebaseUser.uid);
+          }
+        })
+        .catch((error) => {
+          console.error("Error getting user role:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    });
 
-  const value = {
-    currentUser,
-    userRole,
-    passwordChangeRequired,
-    login,
-    logout,
-    changePassword,
-    resetPassword,
-    loading
-  };
+    return () => unsubscribe();
+  }, [auth]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        user,
+        userRoles,
+        login,
+        logout,
+        changePassword,
+        setPasswordForEmailLinkUser,
+        sendResetPasswordEmail,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * SplitLayout component
@@ -7,14 +7,14 @@ import React, { useState, useEffect, useRef } from 'react';
  */
 const SplitLayout = ({
   leftPanel,                       // Content for left panel
-  rightPanel,                      // Content for right panel
   initialSplit = 60,               // Default split percentage (left panel width)
   minLeftWidth = 30,               // Minimum left panel width percentage
   maxLeftWidth = 70,               // Maximum left panel width percentage
   leftPanelLabel = 'Left panel',   // ARIA label for left panel
   rightPanelLabel = 'Right panel', // ARIA label for right panel
   handleAriaLabel = 'Resize panels. Use left and right arrow keys to adjust',
-  onSplitChange                    // Optional callback when split position changes
+  onSplitChange,                    // Optional callback when split position changes
+  children
 }) => {
   // State for split position and dragging
   const [splitPosition, setSplitPosition] = useState(initialSplit);
@@ -267,7 +267,7 @@ const SplitLayout = ({
         aria-label={rightPanelLabel}
         className="right-panel"
       >
-        {rightPanel}
+        {children}
       </div>
     </div>
   );

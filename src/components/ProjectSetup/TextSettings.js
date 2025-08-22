@@ -1,22 +1,20 @@
-// File: src/components/ProjectSetup/TextSettings.js
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 const TextSettings = ({ formData, handleFieldChange }) => {
   // State for text status options
-  const [textStatuses, setTextStatuses] = useState(['Draft', 'Approved']);
-  const [newStatus, setNewStatus] = useState('');
-  
+  const [textStatuses, setTextStatuses] = useState(["Draft", "Approved"]);
+  const [newStatus, setNewStatus] = useState("");
+
   // State for text tag options
   const [textTags, setTextTags] = useState([]);
-  const [newTag, setNewTag] = useState('');
+  const [newTag, setNewTag] = useState("");
 
   // Load statuses and tags from formData if they exist
   useEffect(() => {
     if (formData.textStatuses) {
       setTextStatuses(formData.textStatuses);
     }
-    
+
     if (formData.textTags) {
       setTextTags(formData.textTags);
     }
@@ -29,41 +27,45 @@ const TextSettings = ({ formData, handleFieldChange }) => {
 
   // Handle adding a new text status
   const handleAddStatus = () => {
-    if (newStatus && newStatus.trim() !== '' && !textStatuses.includes(newStatus.trim())) {
+    if (
+      newStatus &&
+      newStatus.trim() !== "" &&
+      !textStatuses.includes(newStatus.trim())
+    ) {
       const updatedStatuses = [...textStatuses, newStatus.trim()];
       setTextStatuses(updatedStatuses);
-      handleFieldChange('textStatuses', updatedStatuses);
-      setNewStatus('');
+      handleFieldChange("textStatuses", updatedStatuses);
+      setNewStatus("");
     }
   };
 
   // Handle removing a text status
   const handleRemoveStatus = (status) => {
-    const updatedStatuses = textStatuses.filter(s => s !== status);
+    const updatedStatuses = textStatuses.filter((s) => s !== status);
     setTextStatuses(updatedStatuses);
-    handleFieldChange('textStatuses', updatedStatuses);
+    handleFieldChange("textStatuses", updatedStatuses);
   };
 
   // Handle adding a new tag
   const handleAddTag = () => {
-    if (newTag && newTag.trim() !== '' && !textTags.includes(newTag.trim())) {
+    if (newTag && newTag.trim() !== "" && !textTags.includes(newTag.trim())) {
       const updatedTags = [...textTags, newTag.trim()];
       setTextTags(updatedTags);
-      handleFieldChange('textTags', updatedTags);
-      setNewTag('');
+      handleFieldChange("textTags", updatedTags);
+      setNewTag("");
     }
   };
 
   // Handle removing a tag
   const handleRemoveTag = (tag) => {
-    const updatedTags = textTags.filter(t => t !== tag);
+    const updatedTags = textTags.filter((t) => t !== tag);
     setTextTags(updatedTags);
-    handleFieldChange('textTags', updatedTags);
+    handleFieldChange("textTags", updatedTags);
   };
 
   // Handle key press in input fields
   const handleKeyPress = (e, action) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       action();
     }
@@ -72,62 +74,76 @@ const TextSettings = ({ formData, handleFieldChange }) => {
   return (
     <div className="form-section">
       <h3>Text settings</h3>
-      
+
       <div className="form-group">
         <div className="checkbox-item">
           <input
             type="checkbox"
             id="hasHierarchicalText"
             checked={formData.hasHierarchicalText || false}
-            onChange={(e) => handleCheckboxChange('hasHierarchicalText', e.target.checked)}
+            onChange={(e) =>
+              handleCheckboxChange("hasHierarchicalText", e.target.checked)
+            }
           />
-          <label htmlFor="hasHierarchicalText">My project has hierarchical text</label>
+          <label htmlFor="hasHierarchicalText">
+            My project has hierarchical text
+          </label>
         </div>
-        
+
         <div className="checkbox-item">
           <input
             type="checkbox"
             id="tracksTextStatus"
             checked={formData.tracksTextStatus || false}
-            onChange={(e) => handleCheckboxChange('tracksTextStatus', e.target.checked)}
+            onChange={(e) =>
+              handleCheckboxChange("tracksTextStatus", e.target.checked)
+            }
           />
-          <label htmlFor="tracksTextStatus">I want to track the status of texts</label>
+          <label htmlFor="tracksTextStatus">
+            I want to track the status of texts
+          </label>
         </div>
-        
+
         <div className="checkbox-item">
           <input
             type="checkbox"
             id="wantsTextTags"
             checked={formData.wantsTextTags || false}
-            onChange={(e) => handleCheckboxChange('wantsTextTags', e.target.checked)}
+            onChange={(e) =>
+              handleCheckboxChange("wantsTextTags", e.target.checked)
+            }
           />
           <label htmlFor="wantsTextTags">I want to add a tag to texts</label>
         </div>
-        
+
         {/* Fix 7: Add new checkbox for author names in archived projects */}
         <div className="checkbox-item">
           <input
             type="checkbox"
             id="doNotSaveAuthorNames"
             checked={formData.doNotSaveAuthorNames || false}
-            onChange={(e) => handleCheckboxChange('doNotSaveAuthorNames', e.target.checked)}
+            onChange={(e) =>
+              handleCheckboxChange("doNotSaveAuthorNames", e.target.checked)
+            }
           />
-          <label htmlFor="doNotSaveAuthorNames">Do not include author names when exporting</label>
+          <label htmlFor="doNotSaveAuthorNames">
+            Do not include author names when exporting
+          </label>
         </div>
       </div>
-      
+
       {/* Text statuses section - only visible when tracksTextStatus is true */}
       {formData.tracksTextStatus && (
         <div className="form-group">
           <h3>Text statuses</h3>
           <p>Define the statuses that can be assigned to project texts.</p>
-          
+
           <div className="selected-items-list">
             {textStatuses.map((status) => (
               <div key={status} className="selected-item">
                 <span>{status}</span>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="remove-item-btn"
                   onClick={() => handleRemoveStatus(status)}
                 >
@@ -136,7 +152,7 @@ const TextSettings = ({ formData, handleFieldChange }) => {
               </div>
             ))}
           </div>
-          
+
           <div className="input-with-button">
             <input
               type="text"
@@ -156,19 +172,19 @@ const TextSettings = ({ formData, handleFieldChange }) => {
           </div>
         </div>
       )}
-      
+
       {/* Text tags section - only visible when wantsTextTags is true */}
       {formData.wantsTextTags && (
         <div className="form-group">
           <h3>Text tags</h3>
           <p>Define the tags that can be assigned to project texts.</p>
-          
+
           <div className="selected-items-list">
             {textTags.map((tag) => (
               <div key={tag} className="selected-item">
                 <span>{tag}</span>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="remove-item-btn"
                   onClick={() => handleRemoveTag(tag)}
                 >
@@ -177,7 +193,7 @@ const TextSettings = ({ formData, handleFieldChange }) => {
               </div>
             ))}
           </div>
-          
+
           <div className="input-with-button">
             <input
               type="text"

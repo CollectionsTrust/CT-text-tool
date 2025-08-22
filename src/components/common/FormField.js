@@ -1,7 +1,3 @@
-// File: src/components/common/FormField.js
-
-import React from 'react';
-
 const FormField = ({
   id,
   name,
@@ -9,18 +5,22 @@ const FormField = ({
   value,
   onChange,
   required = false,
-  type = 'text',
-  placeholder = '',
-  tooltip = ''
+  type = "text",
+  placeholder = "",
+  tooltip = "",
 }) => {
-  const inputClasses = type === 'date' ? 'date-input' : 'text-input';
-  
+  const inputClasses = type === "date" ? "date-input" : "text-input";
+
   return (
     <div className="form-group">
       <label htmlFor={id}>
         {label}
         {required && <span className="required-indicator">*</span>}
-        {tooltip && <span className="tooltip-icon" title={tooltip}>ⓘ</span>}
+        {tooltip && (
+          <span className="tooltip-icon" title={tooltip}>
+            ⓘ
+          </span>
+        )}
       </label>
       <input
         type={type}
