@@ -34,6 +34,8 @@ body {
   line-height: 1.6;
   color: var(--color-text);
   background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -247,6 +249,10 @@ label {
   border-color: #bbb;
 }
 
+.password-change-btn {
+  margin-right: 12px;
+}
+
 /* Message components */
 .success-message {
   background-color: var(--color-success-bg);
@@ -293,7 +299,7 @@ label {
   width: 30px;
   height: 30px;
   animation: spin 1s linear infinite;
-  margin: 0 auto;
+  margin: 24px auto;
 }
 
 @keyframes spin {
@@ -420,4 +426,15 @@ label {
   resize: vertical;
 }
 
-/* Rest of your existing App.css content... */
+.auth-form-container { 
+  max-width: 600px;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .auth-form-container {
+    padding: 1.5rem;
+    margin: 1.5rem;
+    max-width: none;
+  }
+}

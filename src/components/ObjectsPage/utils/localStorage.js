@@ -1,5 +1,3 @@
-// src/components/ObjectsPage/utils/localStorage.js
-
 const CHUNK_SIZE = 1000;
 
 export const saveRecordsToStorage = (data, tokenMeta, projectId) => {
@@ -8,10 +6,13 @@ export const saveRecordsToStorage = (data, tokenMeta, projectId) => {
       totalRecords: data.length,
       tokenMeta,
       chunks: Math.ceil(data.length / CHUNK_SIZE),
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
 
-    localStorage.setItem(`mdsRecordsMeta_${projectId}`, JSON.stringify(metadata));
+    localStorage.setItem(
+      `mdsRecordsMeta_${projectId}`,
+      JSON.stringify(metadata)
+    );
 
     for (let i = 0; i < data.length; i += CHUNK_SIZE) {
       const chunk = data.slice(i, i + CHUNK_SIZE);
@@ -23,7 +24,7 @@ export const saveRecordsToStorage = (data, tokenMeta, projectId) => {
 
     return true;
   } catch (error) {
-    console.error('Error saving records to localStorage:', error);
+    console.error("Error saving records to localStorage:", error);
     return false;
   }
 };
@@ -38,7 +39,9 @@ export const getRecordsFromStorage = (currentToken, projectId) => {
 
     const allData = [];
     for (let i = 0; i < metadata.chunks; i++) {
-      const chunkStr = localStorage.getItem(`mdsRecordsData_${projectId}_chunk_${i}`);
+      const chunkStr = localStorage.getItem(
+        `mdsRecordsData_${projectId}_chunk_${i}`
+      );
       if (chunkStr) {
         allData.push(...JSON.parse(chunkStr));
       }
@@ -47,10 +50,10 @@ export const getRecordsFromStorage = (currentToken, projectId) => {
     return {
       data: allData,
       tokenMeta: metadata.tokenMeta,
-      success: true
+      success: true,
     };
   } catch (error) {
-    console.error('Error retrieving records from localStorage:', error);
+    console.error("Error retrieving records from localStorage:", error);
     return { success: false, error };
   }
 };

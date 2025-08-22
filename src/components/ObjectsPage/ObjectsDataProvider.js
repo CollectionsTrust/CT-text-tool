@@ -1,93 +1,101 @@
-// src/components/ObjectsPage/ObjectsDataProvider.js
-
-import React, { createContext, useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { searchRecords } from './utils/search';
-import { saveRecordsToStorage, getRecordsFromStorage } from './utils/localStorage';
+import { createContext, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { searchRecords } from "./utils/search";
+import {
+  saveRecordsToStorage,
+  getRecordsFromStorage,
+} from "./utils/localStorage";
+import { useProject } from "../../hooks/useProject";
+import { getAuth } from "firebase/auth";
 
 export const ObjectsDataContext = createContext();
 
 export const ObjectsDataProvider = ({ children }) => {
   const { projectId } = useParams();
-  const [searchParams] = useSearchParams();
+  const { project } = useProject(projectId);
 
   const [allRecords, setAllRecords] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0 });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [showCollection, setShowCollection] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState(new Set());
-  
+
+  const auth = getAuth();
+
   // Add a counter to force re-renders when needed
   const [updateCounter, setUpdateCounter] = useState(0);
 
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
-  const handleClearSearch = () => setSearchQuery('');
+  const handleClearSearch = () => setSearchQuery("");
 
   const handleRecordSelection = (record) => {
     const objectUid = record["@admin"]?.uid;
+
     if (!objectUid) return;
-    
+
     // Create new Set instead of modifying existing one
     const currentSelection = new Set(selectedRecords);
-    
+
     if (currentSelection.has(objectUid)) {
       currentSelection.delete(objectUid);
     } else {
       currentSelection.add(objectUid);
     }
-    
+
     // Set the new Set and force update
     setSelectedRecords(currentSelection);
-    setUpdateCounter(prev => prev + 1);
+    // setUpdateCounter(prev => prev + 1);
   };
 
   const handleHeaderCheckboxChange = () => {
     // For the current page of records, toggle their selection state
-    const visibleRecords = showSelectedOnly 
-      ? allRecords.filter(record => selectedRecords.has(record["@admin"]?.uid))
+    const visibleRecords = showSelectedOnly
+      ? allRecords.filter((record) =>
+          selectedRecords.has(record["@admin"]?.uid)
+        )
       : filteredData;
-    
+
     // Check if all visible records are selected
-    const allSelected = visibleRecords.every(record => 
+    const allSelected = visibleRecords.every((record) =>
       selectedRecords.has(record["@admin"]?.uid)
     );
-    
+
     const newSelection = new Set(selectedRecords);
-    
+
     if (allSelected) {
       // Deselect all visible records
-      visibleRecords.forEach(record => {
+      visibleRecords.forEach((record) => {
         const uid = record["@admin"]?.uid;
         if (uid) newSelection.delete(uid);
       });
     } else {
       // Select all visible records
-      visibleRecords.forEach(record => {
+      visibleRecords.forEach((record) => {
         const uid = record["@admin"]?.uid;
         if (uid) newSelection.add(uid);
       });
     }
-    
+
     setSelectedRecords(newSelection);
-    setUpdateCounter(prev => prev + 1);
+    setUpdateCounter((prev) => prev + 1);
   };
 
   // Add event listener for clear selection
   useEffect(() => {
     const handleClearSelection = () => {
       setSelectedRecords(new Set());
-      setUpdateCounter(prev => prev + 1);
+      setUpdateCounter((prev) => prev + 1);
     };
 
-    document.addEventListener('clearSelection', handleClearSelection);
+    document.addEventListener("clearSelection", handleClearSelection);
     return () => {
-      document.removeEventListener('clearSelection', handleClearSelection);
+      document.removeEventListener("clearSelection", handleClearSelection);
     };
   }, []);
 
@@ -96,43 +104,50 @@ export const ObjectsDataProvider = ({ children }) => {
       "@admin": {
         uid: record["@admin"]?.uid || null,
         data_source: {
-          organisation: record["@admin"]?.data_source?.organisation || null
-        }
+          organisation: record["@admin"]?.data_source?.organisation || null,
+        },
       },
       "@document": {
-        units: []
-      }
+        units: [],
+      },
     };
 
     const neededFields = [
       "spectrum/object_number",
       "spectrum/title",
       "spectrum/object_name",
-      "spectrum/brief_description"
+      "spectrum/brief_description",
     ];
 
     if (record["@document"]?.units) {
       essentialRecord["@document"].units = record["@document"].units
-        .filter(unit => neededFields.includes(unit.type))
-        .map(unit => ({
+        .filter((unit) => neededFields.includes(unit.type))
+        .map((unit) => ({
           type: unit.type,
           value: unit.value,
-          label: unit.label
+          label: unit.label,
         }));
     }
 
     return essentialRecord;
   };
 
-  const processRecordsWithDelay = async (records, processFn, batchSize = 100, delayMs = 5) => {
+  const processRecordsWithDelay = async (
+    records,
+    processFn,
+    batchSize = 100,
+    delayMs = 5
+  ) => {
     const result = [];
     for (let i = 0; i < records.length; i += batchSize) {
       const batch = records.slice(i, i + batchSize);
       const processed = batch.map(processFn);
       result.push(...processed);
-      setLoadingProgress(prev => ({ loaded: prev.loaded + processed.length }));
+      setLoadingProgress((prev) => ({
+        loaded: prev.loaded + processed.length,
+      }));
       if (i + batchSize < records.length) {
-        await new Promise(res => setTimeout(res, delayMs));
+        await new Promise((res) => setTimeout(res, delayMs));
       }
     }
     return result;
@@ -154,7 +169,10 @@ export const ObjectsDataProvider = ({ children }) => {
         const json = await response.json();
 
         const nextBatch = json.data.slice(0, FETCH_BATCH_SIZE);
-        const processed = await processRecordsWithDelay(nextBatch, extractEssentialFields);
+        const processed = await processRecordsWithDelay(
+          nextBatch,
+          extractEssentialFields
+        );
         fullData.push(...processed);
 
         if (json.has_next && json.next_url && fullData.length < MAX_RECORDS) {
@@ -167,7 +185,7 @@ export const ObjectsDataProvider = ({ children }) => {
 
       return { records: fullData, truncated };
     } catch (err) {
-      console.error('MDS fetch error:', err);
+      console.error("MDS fetch error:", err);
       throw err;
     }
   };
@@ -175,57 +193,88 @@ export const ObjectsDataProvider = ({ children }) => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      setError('');
+      setError("");
       setLoadingProgress({ loaded: 0 });
 
       try {
         const token = localStorage.getItem(`mdsApiToken_${projectId}`);
-        if (!token) {
-          setError('Missing MDS API token. Please complete project setup.');
-          setLoading(false);
+
+        // If there is no token in the localStorage then wait until the project is
+        // loaded so we can get the token from there
+        if (!token && !project) {
           return;
         }
 
-        const { success, data, tokenMeta } = getRecordsFromStorage(token, projectId);
+        const isAuthorOnProject = project?.authors.some(
+          (author) => author.id === auth.currentUser.email
+        );
+
+        if (!token && !project.mdsApiToken) {
+          if (isAuthorOnProject) {
+            setError(
+              "Missing MDS API token. This needs to be added by the project owner."
+            );
+          } else {
+            setError("Missing MDS API token. Please complete project setup.");
+          }
+          return;
+        }
+
+        if (!token) {
+          // Set the token in storage so next page load doesn't need to wait for useProject response
+          localStorage.setItem(`mdsApiToken_${projectId}`, project.mdsApiToken);
+        }
+
+        const { success, data } = getRecordsFromStorage(token, projectId);
+
         if (success && Array.isArray(data)) {
           setAllRecords(data);
-          setLoading(false);
           return;
         }
 
-        await new Promise(res => setTimeout(res, 100));
+        const { records, truncated } = await fetchAllMdsRecords(
+          token || project.mdsApiToken
+        );
 
-        const { records, truncated } = await fetchAllMdsRecords(token);
         setAllRecords(records);
-
-        setTimeout(() => {
-          saveRecordsToStorage(records, { token, timestamp: Date.now() }, projectId);
-        }, 100);
+        saveRecordsToStorage(
+          records,
+          { token: token || project.mdsApiToken, timestamp: Date.now() },
+          projectId
+        );
 
         if (truncated) {
-          setError('Showing first 50,000 records only.');
+          setError("Showing first 50,000 records only.");
         }
       } catch (err) {
-        setError('Failed to fetch records: ' + (err.message || 'Unknown error'));
+        setError(
+          "Failed to fetch records: " + (err.message || "Unknown error")
+        );
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [projectId]);
+  }, [projectId, project]);
 
   useEffect(() => {
     let result = searchRecords(allRecords, searchQuery);
 
     if (showSelectedOnly && selectedRecords.size > 0) {
-      result = result.filter(record => 
+      result = result.filter((record) =>
         selectedRecords.has(record["@admin"]?.uid)
       );
     }
 
     setFilteredData(result);
-  }, [allRecords, searchQuery, showSelectedOnly, selectedRecords, updateCounter]);
+  }, [
+    allRecords,
+    searchQuery,
+    showSelectedOnly,
+    selectedRecords,
+    updateCounter,
+  ]);
 
   const value = {
     filteredData,
@@ -244,7 +293,7 @@ export const ObjectsDataProvider = ({ children }) => {
     handleHeaderCheckboxChange,
     loading,
     loadingProgress,
-    error
+    error,
   };
 
   return (

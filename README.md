@@ -36,13 +36,6 @@ A comprehensive React and Firebase web application for managing museum collectio
 - **Advanced table views** with customizable columns and hierarchical display
 - **Search and filtering** across all text content and metadata
 
-### 🔐 Security & Access Control
-- **PBKDF2 password hashing** with 600,000 iterations for enhanced security
-- **Temporary password system** with automatic expiration and forced changes
-- **Session management** with automatic logout and navigation protection
-- **Admin-controlled user management** with email-based account creation
-- **Project-specific role assignment** supporting multiple project participation
-
 ### ♿ Accessibility & User Experience
 - **WCAG-compliant design** with comprehensive ARIA support and screen reader announcements
 - **Keyboard navigation** throughout the application with focus management
@@ -68,7 +61,7 @@ A comprehensive React and Firebase web application for managing museum collectio
 - **Context providers** for global state and authentication
 - **Component composition** with reusable UI elements
 - **Provider pattern** for data management (ObjectsDataProvider)
-- **Custom hooks** for business logic abstraction (useProjectForm, useLanguageSelection)
+- **Custom hooks** for business logic abstraction (useProjectForm)
 
 ---
 
@@ -99,8 +92,6 @@ ct-text-tool/
 │   │   ├── Auth/                    # Authentication components
 │   │   │   ├── Login.js
 │   │   │   ├── PasswordChange.js
-│   │   │   ├── ForcedPasswordChange.js
-│   │   │   ├── ResetPassword.js
 │   │   │   └── ProtectedRoute.js
 │   │   │
 │   │   ├── LandingPage/             # Public landing page
@@ -115,7 +106,7 @@ ct-text-tool/
 │   │   │
 │   │   ├── AdminDashboard/          # Administrative interface
 │   │   │   ├── index.js
-│   │   │   ├── Requests.js          # Project and password reset requests
+│   │   │   ├── Requests.js          # To approve or reject projects 
 │   │   │   ├── ProjectsList.js      # All projects management
 │   │   │   ├── UserManagement.js    # User accounts and roles
 │   │   │   └── AdminDashboard.css
@@ -135,9 +126,7 @@ ct-text-tool/
 │   │   │   ├── TokenField.js         # MDS API token input
 │   │   │   ├── ProjectSetup.css
 │   │   │   └── hooks/
-│   │   │       ├── useProjectForm.js
-│   │   │       ├── useLanguageSelection.js
-│   │   │       └── useAuthorSelection.js
+│   │   │       └── useProjectForm.js
 │   │   │
 │   │   ├── ObjectsPage/             # MDS data browsing and text creation
 │   │   │   ├── index.js
@@ -168,7 +157,7 @@ ct-text-tool/
 │   │   │       ├── exportToJson.js
 │   │   │       └── exportToHtml.js
 │   │   │
-│   │   ├── shared/                  # Reusable components
+│   │   ├── common/                  # Reusable components
 │   │   │   ├── FormField.js
 │   │   │   ├── Tooltip.js
 │   │   │   │
@@ -191,7 +180,6 @@ ct-text-tool/
 │   │       └── UserGuide.css
 │   │
 │   └── styles/                      # Additional stylesheets
-│       ├── Auth.css
 │       └── ProjectSetup.css
 │
 ├── netlify.toml                     # Netlify deployment configuration
@@ -257,7 +245,7 @@ npm start
 ### Author Management
 Project owners can manage their team through a comprehensive author management interface:
 
-- **Add Authors**: Invite new users with automatic email generation and temporary passwords
+- **Add Authors**: Invite new users with automatic email generation
 - **Edit Authors**: Update author details and project assignments with automatic email notifications
 - **Remove Authors**: Clean removal from projects with full cleanup of associated data
 - **Multi-Project Support**: Authors can be assigned to multiple projects simultaneously
@@ -280,14 +268,6 @@ Project owners can manage their team through a comprehensive author management i
 
 ## 🔧 Technical Implementation Details
 
-### Authentication System
-The application uses a custom authentication system built on Firebase with several key features:
-
-- **Session Management**: Uses sessionStorage for secure session persistence
-- **Password Security**: PBKDF2 hashing with 600,000 iterations and random salts
-- **Temporary Passwords**: 7-day expiration with automatic cleanup
-- **Legacy Support**: Handles migration from older password systems
-
 ### User Dashboard
 The user dashboard provides different interfaces based on user roles:
 
@@ -306,13 +286,7 @@ The user dashboard provides different interfaces based on user roles:
 
 ## 🔒 Security Features
 
-- **PBKDF2 password hashing** with 600,000 iterations
-- **Temporary password expiration** (7-day limit)
-- **Session management** with automatic logout
-- **Role-based access control** with project-specific permissions
-- **Data validation** and sanitization throughout the application
-- **Admin-controlled password resets** for enhanced security
-- **Constant-time password comparison** to prevent timing attacks
+- Tables are locked secured via Firebase authentication and Firestore Rules.
 
 ---
 
@@ -343,10 +317,7 @@ The application is optimized for Netlify deployment with:
 
 ### Password Utilities
 The `passwordUtils.js` module provides comprehensive password management:
-- PBKDF2 implementation using Web Crypto API
-- Secure random password generation
 - Password strength validation
-- Temporary password management with expiration
 
 ### User Management
 The author management system includes:
@@ -375,7 +346,7 @@ Built with support from Arts Council England as part of Collections Trust's dyna
 
 - **Application Support**: Katie Brown (katie@collectionstrust.org.uk)
 - **MDS Integration**: Arran Rees (support@museumdata.uk)
-- **User Guide**: Comprehensive documentation available at `/guide`
+- **User Guide**: Comprehensive documentation available at `/user-guide`
 - **Collections Trust**: https://collectionstrust.org.uk
 - **Museum Data Service**: https://museumdata.uk
 
@@ -387,7 +358,6 @@ Built with support from Arts Council England as part of Collections Trust's dyna
 - 🗃️ JSON import/export for project templates
 - 🧑‍🎨 Custom themes and branding per organization
 - 🌍 Enhanced multi-language UI support
-- 🔒 Advanced Firebase security rules enforcement
 - 📊 Analytics and usage reporting dashboard
 - 📧 Enhanced email notification system
 - 🔍 Advanced text search and indexing

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import './ParentTextSelector.css';
@@ -17,7 +17,7 @@ const booleanSearch = (text, query) => {
   });
 };
 
-const ParentTextSelector = ({ projectId, parentText, setParentText }) => {
+const ParentTextSelector = ({ value, onChange, projectId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [texts, setTexts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,13 +48,13 @@ const ParentTextSelector = ({ projectId, parentText, setParentText }) => {
         <input
           type="text"
           className="form-input readonly"
-          value={parentText || ''}
+          value={value || ''}
           readOnly
           placeholder="Select parent text"
           onClick={() => setModalOpen(true)}
         />
-        {parentText && (
-          <button className="clear-btn" onClick={() => setParentText(null)}>✕</button>
+        {value && (
+          <button className="clear-btn" onClick={() => onChange(null)}>✕</button>
         )}
       </div>
 
@@ -94,7 +94,7 @@ const ParentTextSelector = ({ projectId, parentText, setParentText }) => {
                             <button
                               className="select-btn"
                               onClick={() => {
-                                setParentText(t.textReferenceNumber);
+                                onChange(t.textReferenceNumber);
                                 setModalOpen(false);
                               }}
                             >

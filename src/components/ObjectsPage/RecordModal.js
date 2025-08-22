@@ -1,4 +1,3 @@
-import React from 'react';
 import { getOrganisation, getPropertyValue, getArrayPropertyValues } from './utils/dataExtractors';
 
 const RecordModal = ({ selectedRecord, handleCloseModal, handleViewRecord }) => {
