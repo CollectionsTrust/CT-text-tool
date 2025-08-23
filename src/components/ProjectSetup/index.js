@@ -229,7 +229,6 @@ const ProjectSetup = () => {
             </p>
             <AuthorsSelector
               isAdmin={userRoles?.appRole === "admin"}
-              projectID={projectId}
               projectAuthors={formData["authors"]}
               selectedAuthors={assignedAuthors}
               onAddAuthor={onAddAuthor}
