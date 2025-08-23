@@ -1,15 +1,14 @@
-import useProjectAuthors from "../../hooks/useProjectAuthors";
+import useOwnedAuthors from "../../hooks/useOwnedAuthors";
 
 const AuthorsSelector = ({
   selectedAuthors,
   onAddAuthor,
   onRemoveAuthor,
-  projectID,
   isAdmin,
 }) => {
-  const { authors } = useProjectAuthors(projectID);
+  const { ownedAuthors } = useOwnedAuthors();
 
-  if (!authors || !selectedAuthors) {
+  if (!ownedAuthors || !selectedAuthors) {
     return;
   }
 
@@ -20,14 +19,14 @@ const AuthorsSelector = ({
       <select
         id="authors"
         onChange={(e) =>
-          onAddAuthor(authors.find((a) => a.id === e.target.value))
+          onAddAuthor(ownedAuthors.find((a) => a.id === e.target.value))
         }
         className="form-select"
         defaultValue=""
         disabled={isAdmin}
       >
         <option value="">Select author</option>
-        {authors
+        {ownedAuthors
           .filter((author) => !selectedAuthorsIds.includes(author.id))
           .map((author) => (
             <option key={author.id} value={author.id}>
