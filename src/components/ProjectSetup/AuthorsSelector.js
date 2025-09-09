@@ -8,7 +8,7 @@ const AuthorsSelector = ({
 }) => {
   const { ownedAuthors } = useOwnedAuthors();
 
-  if (!ownedAuthors || !selectedAuthors) {
+  if (!ownedAuthors && !selectedAuthors) {
     return;
   }
 
@@ -16,25 +16,27 @@ const AuthorsSelector = ({
 
   return (
     <div className="form-group">
-      <select
-        id="authors"
-        onChange={(e) =>
-          onAddAuthor(ownedAuthors.find((a) => a.id === e.target.value))
-        }
-        className="form-select"
-        defaultValue=""
-        disabled={isAdmin}
-      >
-        <option value="">Select author</option>
-        {ownedAuthors
-          .filter((author) => !selectedAuthorsIds.includes(author.id))
-          .map((author) => (
-            <option key={author.id} value={author.id}>
-              {author.name} - {author.id}
-            </option>
-          ))}
-      </select>
-      {selectedAuthors.length > 0 && (
+      {ownedAuthors?.length > 0 && (
+        <select
+          id="authors"
+          onChange={(e) =>
+            onAddAuthor(ownedAuthors.find((a) => a.id === e.target.value))
+          }
+          className="form-select"
+          defaultValue=""
+          disabled={isAdmin}
+        >
+          <option value="">Select author</option>
+          {ownedAuthors
+            .filter((author) => !selectedAuthorsIds.includes(author.id))
+            .map((author) => (
+              <option key={author.id} value={author.id}>
+                {author.name} - {author.id}
+              </option>
+            ))}
+        </select>
+      )}
+      {selectedAuthors?.length > 0 && (
         <div className="selected-items-container">
           <ul className="selected-items-list">
             {selectedAuthors.map((author) => (
