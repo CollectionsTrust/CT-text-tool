@@ -4,14 +4,11 @@ import {
   getArrayPropertyValues,
   truncateToWords,
 } from "./utils/dataExtractors";
+import { useFormContext } from "react-hook-form";
 
-const RecordsTable = ({
-  filteredData,
-  showCollection,
-  showTitle,
-  selectedRecords,
-  handleRecordSelection,
-}) => {
+const RecordsTable = ({ filteredData, showCollection, showTitle }) => {
+  const { register, watch } = useFormContext();
+
   return (
     <div className="table-wrapper">
       <table className="records-table">
@@ -46,7 +43,9 @@ const RecordsTable = ({
             return (
               <tr
                 key={index}
-                className={selectedRecords.has(uid) ? "selected-row" : ""}
+                className={
+                  watch("linkedObjects").includes(uid) ? "selected-row" : ""
+                }
               >
                 {showCollection && <td>{collection}</td>}
                 <td>{objectNumber}</td>
@@ -83,9 +82,11 @@ const RecordsTable = ({
                       View
                     </button>
                     <input
+                      {...register("linkedObjects")}
+                      // onMouseDown to stop the page jumping when a checkbox is clicked
+                      onMouseDown={(e) => e.preventDefault()}
                       type="checkbox"
-                      checked={selectedRecords.has(uid)}
-                      onChange={() => handleRecordSelection(record)}
+                      value={uid}
                     />
                   </div>
                 </td>

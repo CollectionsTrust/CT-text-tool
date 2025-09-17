@@ -1,103 +1,30 @@
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { searchRecords } from "./utils/search";
+import { searchRecords } from "../components/ObjectsPage/utils/search";
 import {
   saveRecordsToStorage,
   getRecordsFromStorage,
-} from "./utils/localStorage";
-import { useProject } from "../../hooks/useProject";
+} from "../components/ObjectsPage/utils/localStorage";
+import { useProject } from "./useProject";
 import { getAuth } from "firebase/auth";
 
-export const ObjectsDataContext = createContext();
-
-export const ObjectsDataProvider = ({ children }) => {
+export const useObjectsList = (linkedObjects) => {
   const { projectId } = useParams();
   const { project } = useProject(projectId);
-
   const [allRecords, setAllRecords] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0 });
   const [error, setError] = useState("");
-
   const [showCollection, setShowCollection] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const [selectedRecords, setSelectedRecords] = useState(new Set());
 
   const auth = getAuth();
 
-  // Add a counter to force re-renders when needed
-  const [updateCounter, setUpdateCounter] = useState(0);
-
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
   const handleClearSearch = () => setSearchQuery("");
-
-  const handleRecordSelection = (record) => {
-    const objectUid = record["@admin"]?.uid;
-
-    if (!objectUid) return;
-
-    // Create new Set instead of modifying existing one
-    const currentSelection = new Set(selectedRecords);
-
-    if (currentSelection.has(objectUid)) {
-      currentSelection.delete(objectUid);
-    } else {
-      currentSelection.add(objectUid);
-    }
-
-    // Set the new Set and force update
-    setSelectedRecords(currentSelection);
-    // setUpdateCounter(prev => prev + 1);
-  };
-
-  const handleHeaderCheckboxChange = () => {
-    // For the current page of records, toggle their selection state
-    const visibleRecords = showSelectedOnly
-      ? allRecords.filter((record) =>
-          selectedRecords.has(record["@admin"]?.uid)
-        )
-      : filteredData;
-
-    // Check if all visible records are selected
-    const allSelected = visibleRecords.every((record) =>
-      selectedRecords.has(record["@admin"]?.uid)
-    );
-
-    const newSelection = new Set(selectedRecords);
-
-    if (allSelected) {
-      // Deselect all visible records
-      visibleRecords.forEach((record) => {
-        const uid = record["@admin"]?.uid;
-        if (uid) newSelection.delete(uid);
-      });
-    } else {
-      // Select all visible records
-      visibleRecords.forEach((record) => {
-        const uid = record["@admin"]?.uid;
-        if (uid) newSelection.add(uid);
-      });
-    }
-
-    setSelectedRecords(newSelection);
-    setUpdateCounter((prev) => prev + 1);
-  };
-
-  // Add event listener for clear selection
-  useEffect(() => {
-    const handleClearSelection = () => {
-      setSelectedRecords(new Set());
-      setUpdateCounter((prev) => prev + 1);
-    };
-
-    document.addEventListener("clearSelection", handleClearSelection);
-    return () => {
-      document.removeEventListener("clearSelection", handleClearSelection);
-    };
-  }, []);
 
   const extractEssentialFields = (record) => {
     const essentialRecord = {
@@ -261,22 +188,16 @@ export const ObjectsDataProvider = ({ children }) => {
   useEffect(() => {
     let result = searchRecords(allRecords, searchQuery);
 
-    if (showSelectedOnly && selectedRecords.size > 0) {
+    if (showSelectedOnly && linkedObjects?.length > 0) {
       result = result.filter((record) =>
-        selectedRecords.has(record["@admin"]?.uid)
+        linkedObjects.includes(record["@admin"]?.uid)
       );
     }
 
     setFilteredData(result);
-  }, [
-    allRecords,
-    searchQuery,
-    showSelectedOnly,
-    selectedRecords,
-    updateCounter,
-  ]);
+  }, [allRecords, searchQuery, showSelectedOnly, linkedObjects]);
 
-  const value = {
+  return {
     filteredData,
     searchQuery,
     handleSearchChange,
@@ -287,18 +208,8 @@ export const ObjectsDataProvider = ({ children }) => {
     setShowCollection,
     setShowTitle,
     setShowSelectedOnly,
-    selectedRecords,
-    setSelectedRecords,
-    handleRecordSelection,
-    handleHeaderCheckboxChange,
     loading,
     loadingProgress,
     error,
   };
-
-  return (
-    <ObjectsDataContext.Provider value={value}>
-      {children}
-    </ObjectsDataContext.Provider>
-  );
 };

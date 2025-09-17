@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   collection,
@@ -9,10 +9,9 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import useProjectAuthors from "../../hooks/useProjectAuthors";
-
-import { ObjectsDataContext, ObjectsDataProvider } from "./ObjectsDataProvider";
+import { useObjectsList } from "../../hooks/useObjectsList";
 import SearchBar from "./SearchBar";
 import DisplayOptions from "./DisplayOptions";
 import RecordsTable from "./RecordsTable";
@@ -24,42 +23,18 @@ import "./ObjectsPage.css";
 import { useText } from "../../hooks/useText";
 import { useTexts } from "../../hooks/useTexts";
 
-const ObjectsPageContent = () => {
+const ObjectsPage = () => {
   const { projectId } = useParams();
-  const [searchParams] = useSearchParams();
   const { authors } = useProjectAuthors(projectId);
-
-  const {
-    filteredData,
-    handleSearchChange,
-    handleClearSearch,
-    searchQuery,
-    showCollection,
-    showTitle,
-    setShowCollection,
-    setShowTitle,
-    setShowSelectedOnly,
-    selectedRecords,
-    setSelectedRecords,
-    handleRecordSelection,
-    handleHeaderCheckboxChange,
-    loading,
-    loadingProgress,
-    error,
-  } = useContext(ObjectsDataContext);
-
+  const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [selectedRecord, setSelectedRecord] = useState(null);
-
   const [saveError, setSaveError] = useState(null);
   const [saveMessage, setSaveMessage] = useState(null);
-
   const [layoutMode, setLayoutMode] = useState("split");
   const [activeView, setActiveView] = useState("text");
-
   const [projectConfig, setProjectConfig] = useState();
-
   const editTextId = searchParams.get("editTextId");
   const { text } = useText(editTextId);
   const { texts } = useTexts(projectId);
@@ -73,12 +48,21 @@ const ObjectsPageContent = () => {
       textLanguages: [],
       textStatus: "",
       textNote: "",
-      linked_objects: [],
+      linkedObjects: [],
       projectId: "",
       textReferenceNumber: "",
       projectReferenceNumber: "",
     },
   });
+
+  const clearLinkedObjects = () => {
+    methods.setValue("linkedObjects", []);
+  };
+
+  const selectAllObjects = () => {
+    const allIds = filteredData.map((record) => record["@admin"].uid);
+    methods.setValue("linkedObjects", allIds);
+  };
 
   // Reset the form when `text` and projectConfig is loaded
   useEffect(() => {
@@ -109,17 +93,33 @@ const ObjectsPageContent = () => {
       textStatus: text?.textStatus || "",
       textNote: text?.textNote || "",
       parentText: text?.parentText || "",
-      linkedObjects: Array.from(text?.selectedRecords || []) || [],
+      linkedObjects: Array.from(text?.linkedObjects || []) || [],
       projectId: projectId,
       textReferenceNumber: textReferenceNumber,
       projectReferenceNumber: projectConfig?.projectReferenceNumber || "",
     });
   }, [text, projectConfig]);
 
+  const {
+    filteredData,
+    handleSearchChange,
+    handleClearSearch,
+    searchQuery,
+    showCollection,
+    showTitle,
+    setShowCollection,
+    setShowTitle,
+    setShowSelectedOnly,
+    showSelectedOnly,
+    handleHeaderCheckboxChange,
+    loading,
+    loadingProgress,
+    error,
+  } = useObjectsList(methods.watch("linkedObjects"));
+
   const submitForm = async (data) => {
     const payload = {
       ...data,
-      linkedObjects: Array.from(selectedRecords),
       updatedAt: serverTimestamp(),
       textDate: text?.textDate || new Date().toISOString().substring(0, 10),
     };
@@ -173,14 +173,6 @@ const ObjectsPageContent = () => {
 
     fetchProjectConfig();
   }, [projectId, authors]);
-
-  useEffect(() => {
-    if (text?.linkedObjects && text?.linkedObjects.length > 0) {
-      const linkedObjectUids = new Set(text.linkedObjects);
-      setSelectedRecords(linkedObjectUids);
-      setShowSelectedOnly(true);
-    }
-  }, [text, setShowSelectedOnly, setSelectedRecords]);
 
   const handleViewRecord = useCallback((record) => {
     setSelectedRecord(record);
@@ -331,8 +323,10 @@ const ObjectsPageContent = () => {
         showTitle={showTitle}
         setShowCollection={setShowCollection}
         setShowTitle={setShowTitle}
-        selectedRecords={selectedRecords}
-        handleHeaderCheckboxChange={handleHeaderCheckboxChange}
+        selectAllObjects={selectAllObjects}
+        setShowSelectedOnly={setShowSelectedOnly}
+        showSelectedOnly={showSelectedOnly}
+        clearLinkedObjects={clearLinkedObjects}
       />
 
       {error && <p className="error-message">{error}</p>}
@@ -349,9 +343,7 @@ const ObjectsPageContent = () => {
             filteredData={paginatedData}
             showCollection={showCollection}
             showTitle={showTitle}
-            selectedRecords={selectedRecords}
             handleHeaderCheckboxChange={handleHeaderCheckboxChange}
-            handleRecordSelection={handleRecordSelection}
             handleViewRecord={handleViewRecord}
           />
 
@@ -365,17 +357,6 @@ const ObjectsPageContent = () => {
         </>
       )}
     </>
-  );
-  const TextFormPanel = () => (
-    <div className="text-form-panel">
-      <TextForm
-        submitForm={submitForm}
-        text={text}
-        projectConfig={projectConfig}
-        saveError={saveError}
-        saveMessage={saveMessage}
-      />
-    </div>
   );
 
   return (
@@ -404,13 +385,29 @@ const ObjectsPageContent = () => {
             minLeftWidth={40}
             maxLeftWidth={80}
           >
-            <TextFormPanel />
+            <div className="text-form-panel">
+              <TextForm
+                submitForm={submitForm}
+                text={text}
+                projectConfig={projectConfig}
+                saveError={saveError}
+                saveMessage={saveMessage}
+              />
+            </div>
           </SplitLayout>
         )}
         {layoutMode === "horizontal" && (
           <div className="horizontal-layout">
             <div className="top-panel">
-              <TextFormPanel />
+              <div className="text-form-panel">
+                <TextForm
+                  submitForm={submitForm}
+                  text={text}
+                  projectConfig={projectConfig}
+                  saveError={saveError}
+                  saveMessage={saveMessage}
+                />
+              </div>
             </div>
             <div className="bottom-panel">
               <ObjectsTablePanel />
@@ -422,7 +419,15 @@ const ObjectsPageContent = () => {
             {activeView === "objects" ? (
               <ObjectsTablePanel />
             ) : (
-              <TextFormPanel />
+              <div className="text-form-panel">
+                <TextForm
+                  submitForm={submitForm}
+                  text={text}
+                  projectConfig={projectConfig}
+                  saveError={saveError}
+                  saveMessage={saveMessage}
+                />
+              </div>
             )}
           </div>
         )}
@@ -438,11 +443,5 @@ const ObjectsPageContent = () => {
     </div>
   );
 };
-
-const ObjectsPage = () => (
-  <ObjectsDataProvider>
-    <ObjectsPageContent />
-  </ObjectsDataProvider>
-);
 
 export default ObjectsPage;

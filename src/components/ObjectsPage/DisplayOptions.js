@@ -1,5 +1,4 @@
-import { useContext } from "react";
-import { ObjectsDataContext } from "./ObjectsDataProvider";
+import { useFormContext } from "react-hook-form";
 import "./DisplayOptions.css";
 
 const DisplayOptions = ({
@@ -7,27 +6,23 @@ const DisplayOptions = ({
   showTitle,
   setShowCollection,
   setShowTitle,
-  selectedRecords,
-  handleHeaderCheckboxChange,
+  selectAllObjects,
+  clearLinkedObjects,
+  setShowSelectedOnly,
+  showSelectedOnly,
 }) => {
-  const { showSelectedOnly, setShowSelectedOnly } =
-    useContext(ObjectsDataContext);
-  const selectedCount = selectedRecords.size;
+  const { watch } = useFormContext();
 
-  // Handle clearing selection
-  const handleClearSelection = () => {
-    const event = new CustomEvent("clearSelection");
-    document.dispatchEvent(event);
-  };
+  const selectedCount = watch("linkedObjects").length;
 
   // Toggle button handler - either select all or clear all
   const handleToggleSelection = () => {
     if (selectedCount > 0) {
       // If records are selected, clear them
-      handleClearSelection();
+      clearLinkedObjects();
     } else {
       // If no records are selected, select all
-      handleHeaderCheckboxChange();
+      selectAllObjects();
     }
   };
 
@@ -71,11 +66,9 @@ const DisplayOptions = ({
       </div>
 
       <div className="selected-records-count">
-        {selectedCount > 0 && (
-          <span>
-            {selectedCount} record{selectedCount > 1 ? "s" : ""} selected
-          </span>
-        )}
+        <span>
+          {selectedCount} record{selectedCount === 1 ? "" : "s"} selected
+        </span>
       </div>
     </div>
   );
