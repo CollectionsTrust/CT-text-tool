@@ -159,7 +159,6 @@
 .text-form-panel {
   height: 100%;
   padding: 0 0 20px 0;
-  overflow-y: auto;
 }
 
 .text-form-panel h3 {

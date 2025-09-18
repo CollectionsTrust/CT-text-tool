@@ -4,6 +4,8 @@
   padding: 1.5rem;
   max-width: 100%;
   margin-bottom: 2rem;
+  position: sticky;
+  top: 24px;
 }
 
 /* New header styles - buttons on same line as heading */
