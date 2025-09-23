@@ -9,6 +9,7 @@ import TextSettings from "./TextSettings";
 import { useTexts } from "../../hooks/useTexts";
 import AuthorsSelector from "./AuthorsSelector";
 import { useAuth } from "../../context/AuthContext";
+import Tooltip from "../common/Tooltip";
 
 const ProjectSetup = () => {
   const navigate = useNavigate();
@@ -180,12 +181,12 @@ const ProjectSetup = () => {
             <label htmlFor="projectNote">
               Project note
               <span className="required-indicator">*</span>
-              <span
-                className="tooltip-icon"
-                title="Contextual information about the project. For example, this may include an overview of your project and the main objectives, or if you are working with a group, some more information about who they are and why you are working with them on this project."
-              >
-                ⓘ
-              </span>
+              <Tooltip>
+                Contextual information about the project. For example, this may
+                include an overview of your project and the main objectives, or
+                if you are working with a group, some more information about who
+                they are and why you are working with them on this project.
+              </Tooltip>
             </label>
             <RichTextEditor
               value={formData.projectNote}
@@ -210,12 +211,9 @@ const ProjectSetup = () => {
             <label htmlFor="authors">
               Authors
               <span className="required-indicator">*</span>
-              <span
-                className="tooltip-icon"
-                title="The authors who created the texts associated with this project."
-              >
-                ⓘ
-              </span>
+              <Tooltip>
+                The authors who created the texts associated with this project.
+              </Tooltip>
             </label>
             <p>
               Add new authors to the app via the{" "}
@@ -243,12 +241,11 @@ const ProjectSetup = () => {
               <label htmlFor="copyrightLicensor">
                 Copyright licensor
                 <span className="required-indicator">*</span>
-                <span
-                  className="tooltip-icon"
-                  title="The person or organisation who is authorised to grant usage permission(s) associated with the text. This is not necessarily the copyright holder."
-                >
-                  ⓘ
-                </span>
+                <Tooltip>
+                  The person or organisation who is authorised to grant usage
+                  permission(s) associated with the text. This is not
+                  necessarily the copyright holder.
+                </Tooltip>
               </label>
               <input
                 type="text"
@@ -268,12 +265,10 @@ const ProjectSetup = () => {
               <label htmlFor="usageLicence">
                 Usage licence
                 <span className="required-indicator">*</span>
-                <span
-                  className="tooltip-icon"
-                  title="The type of licence that has been granted. For example, CC BY 4.0. You may also want to list any restrictions on the use."
-                >
-                  ⓘ
-                </span>
+                <Tooltip>
+                  The type of licence that has been granted. For example, CC BY
+                  4.0. You may also want to list any restrictions on the use.
+                </Tooltip>
               </label>
               <select
                 id="usageLicence"
@@ -320,12 +315,10 @@ const ProjectSetup = () => {
             <div className="form-group half-width">
               <label htmlFor="projectType">
                 Project type
-                <span
-                  className="tooltip-icon"
-                  title="A term describing the nature of the project. For example, a workshop, or exhibition."
-                >
-                  ⓘ
-                </span>
+                <Tooltip>
+                  A term describing the nature of the project. For example, a
+                  workshop, or exhibition."
+                </Tooltip>
               </label>
               <input
                 type="text"
@@ -343,12 +336,11 @@ const ProjectSetup = () => {
             <div className="form-group half-width">
               <label htmlFor="projectVenue">
                 Project venue
-                <span
-                  className="tooltip-icon"
-                  title="The place where the project is taking place. This may not always be applicable; if you are creating an online exhibition, for example."
-                >
-                  ⓘ
-                </span>
+                <Tooltip>
+                  The place where the project is taking place. This may not
+                  always be applicable; if you are creating an online
+                  exhibition, for example.
+                </Tooltip>
               </label>
               <input
                 type="text"
@@ -367,12 +359,10 @@ const ProjectSetup = () => {
           <div className="form-group">
             <label htmlFor="creditLine">
               Credit line
-              <span
-                className="tooltip-icon"
-                title="Text to acknowledge the copyright holder or text author(s). The format should be agreed with the copyright holder/author(s)."
-              >
-                ⓘ
-              </span>
+              <Tooltip>
+                Text to acknowledge the copyright holder or text author(s). The
+                format should be agreed with the copyright holder/author(s).
+              </Tooltip>
             </label>
             <input
               type="text"
@@ -389,12 +379,10 @@ const ProjectSetup = () => {
             <div className="form-group half-width">
               <label htmlFor="textAudience">
                 Text audience
-                <span
-                  className="tooltip-icon"
-                  title="The type of person the text was created for. For example, KS3, or the general public. Use a standard term source."
-                >
-                  ⓘ
-                </span>
+                <Tooltip>
+                  The type of person the text was created for. For example, KS3,
+                  or the general public. Use a standard term source.
+                </Tooltip>
               </label>
               <input
                 type="text"
@@ -412,12 +400,11 @@ const ProjectSetup = () => {
             <div className="form-group half-width">
               <label htmlFor="rightsReferenceNumber">
                 Rights in/out reference number
-                <span
-                  className="tooltip-icon"
-                  title="The unique number used to identify the licence granted to use rights not held by the organisation, or to identify the licence granted to use the organisation's rights."
-                >
-                  ⓘ
-                </span>
+                <Tooltip>
+                  The unique number used to identify the licence granted to use
+                  rights not held by the organisation, or to identify the
+                  licence granted to use the organisation's rights.
+                </Tooltip>
               </label>
               <input
                 type="text"
@@ -437,12 +424,10 @@ const ProjectSetup = () => {
             <label htmlFor="token">
               MDS API token
               <span className="required-indicator">*</span>
-              <span
-                className="tooltip-icon"
-                title="The API token needed to access the Museum Data Service. This is required to fetch object records."
-              >
-                ⓘ
-              </span>
+              <Tooltip>
+                The API token needed to access the Museum Data Service. This is
+                required to fetch object records.
+              </Tooltip>
             </label>
             {texts?.length > 0 && (
               <p className="mds-not-editable">
