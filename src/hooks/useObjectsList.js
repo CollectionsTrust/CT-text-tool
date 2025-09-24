@@ -174,9 +174,7 @@ export const useObjectsList = (linkedObjects) => {
           setError("Showing first 50,000 records only.");
         }
       } catch (err) {
-        setError(
-          "Failed to fetch records: " + (err.message || "Unknown error")
-        );
+        setError("Failed to fetch records. Check that the MDS token is valid.");
       } finally {
         setLoading(false);
       }
@@ -188,7 +186,7 @@ export const useObjectsList = (linkedObjects) => {
   useEffect(() => {
     let result = searchRecords(allRecords, searchQuery);
 
-    if (showSelectedOnly && linkedObjects?.length > 0) {
+    if (showSelectedOnly) {
       result = result.filter((record) =>
         linkedObjects.includes(record["@admin"]?.uid)
       );

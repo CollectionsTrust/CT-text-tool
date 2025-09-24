@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import AddNewProject from "../ProjectSetup/AddNewProject";
 import {
   collection,
   doc,
@@ -50,7 +51,12 @@ const ProjectsList = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
+
+  const handleRefreshProjects = () => {
+    setRefreshKey((prev) => prev + 1); // Triggers useEffect
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -111,7 +117,7 @@ const ProjectsList = () => {
     };
 
     fetchProjects();
-  }, [user]);
+  }, [user, refreshKey]);
 
   useEffect(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -205,6 +211,7 @@ const ProjectsList = () => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setSuccessMessage("Project deleted.");
     setConfirmDelete(null);
+    setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   return (
@@ -220,9 +227,32 @@ const ProjectsList = () => {
           Manage users
         </Link>
       </div>
-
       <div className="header-row">
         <h2 className="section-title">Manage projects</h2>
+      </div>
+      <AddNewProject
+        setSuccessMessage={setSuccessMessage}
+        handleRefreshProjects={handleRefreshProjects}
+      />
+      {error && <div className="error-message">{error}</div>}
+      {successMessage && (
+        <div className="success-message">{successMessage}</div>
+      )}
+      <div className="toggle-archived-btn-wrapper">
+        <div className="search-bar-row">
+          <input
+            type="text"
+            className="project-search-input "
+            placeholder="Search projects (supports AND/OR)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="clear-btn" onClick={() => setSearchQuery("")}>
+              Clear
+            </button>
+          )}
+        </div>
         <button
           className="secondary-btn toggle-archived-btn"
           onClick={() => setShowArchived(!showArchived)}
@@ -230,27 +260,6 @@ const ProjectsList = () => {
           {showArchived ? "Hide archived projects" : "Show archived projects"}
         </button>
       </div>
-
-      <div className="search-bar-row">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search projects (supports AND/OR)"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchQuery && (
-          <button className="clear-btn" onClick={() => setSearchQuery("")}>
-            Clear
-          </button>
-        )}
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-      {successMessage && (
-        <div className="success-message">{successMessage}</div>
-      )}
-
       <div className="admin-table-container">
         <table className="admin-table">
           <thead>
@@ -281,7 +290,7 @@ const ProjectsList = () => {
                     </span>
                   </div>
                   <div>Created: {formatDate(project.createdAt)}</div>
-                  <div>Authors: {project.authorCount}</div>
+                  <div>Authors: {project.authorCount || 0}</div>
                 </td>
                 <td className="actions-cell">
                   <button
@@ -317,7 +326,6 @@ const ProjectsList = () => {
           </tbody>
         </table>
       </div>
-
       {totalPages > 1 && (
         <div className="pagination">
           {[...Array(totalPages)].map((_, i) => (
@@ -331,7 +339,6 @@ const ProjectsList = () => {
           ))}
         </div>
       )}
-
       {/* Confirmation dialogs */}
       {confirmArchive && (
         <div className="confirm-dialog-backdrop">

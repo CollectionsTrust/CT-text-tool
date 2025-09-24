@@ -58,7 +58,6 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
         </div>
       </div>
 
-      {/* Project title */}
       <div className="form-group">
         <label htmlFor="projectTitle">
           Project title

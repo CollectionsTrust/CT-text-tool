@@ -515,48 +515,52 @@ const UserManagement = () => {
           Manage users
         </Link>
       </div>
-
-      <h2 className="section-title">Manage users</h2>
+      <div className="header-row">
+        <h2 className="section-title">Manage users</h2>
+      </div>
 
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
 
       <form onSubmit={handleAddUser} className="add-user-form">
         <div className="user-form-row">
-          <input
-            type="text"
-            placeholder="Name"
-            value={newUserName}
-            onChange={(e) => setNewUserName(e.target.value)}
-            className="user-form-input"
-          />
-          <input
-            type="text"
-            placeholder="Organization"
-            value={newUserOrg}
-            onChange={(e) => setNewUserOrg(e.target.value)}
-            className="user-form-input"
-          />
-          <input
-            type="email"
-            placeholder="User email"
-            value={newUserEmail}
-            onChange={(e) => setNewUserEmail(e.target.value)}
-            className="user-form-input"
-            required
-          />
-          <button type="submit" className="primary-btn reset-btn">
-            Add user
-          </button>
-          {showDuplicateUserError && (
-            <button
-              type="button"
-              className="secondary-btn reset-btn"
-              onClick={clearUserForm}
-            >
-              Clear
+          <h2 className="user-form-label">Add new user</h2>
+          <div className="user-form__input-row">
+            <input
+              type="text"
+              placeholder="Name"
+              value={newUserName}
+              onChange={(e) => setNewUserName(e.target.value)}
+              className="user-form-input"
+            />
+            <input
+              type="text"
+              placeholder="Organization"
+              value={newUserOrg}
+              onChange={(e) => setNewUserOrg(e.target.value)}
+              className="user-form-input"
+            />
+            <input
+              type="email"
+              placeholder="User email"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              className="user-form-input"
+              required
+            />
+            <button type="submit" className="primary-btn reset-btn">
+              Add new user
             </button>
-          )}
+            {showDuplicateUserError && (
+              <button
+                type="button"
+                className="secondary-btn reset-btn"
+                onClick={clearUserForm}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </form>
 

@@ -217,6 +217,10 @@
   color: #666;
 }
 
+.records-table {
+  width: 100%;
+}
+
 .records-table th,
 .records-table td {
   padding: 10px;

@@ -430,6 +430,10 @@ label {
   max-width: 600px;
 }
 
+.authors {
+  margin-top: 48px;
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   .auth-form-container {

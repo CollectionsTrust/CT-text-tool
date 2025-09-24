@@ -602,7 +602,7 @@ const AuthorManagement = () => {
   }
 
   return (
-    <div className="user-section author-management">
+    <div className="user-section authors">
       <h2 className="section-title">Manage authors</h2>
 
       {error && <div className="error-message">{error}</div>}
@@ -610,111 +610,115 @@ const AuthorManagement = () => {
 
       <form onSubmit={handleAddAuthor} className="add-user-form">
         <div className="user-form-row">
-          <input
-            type="text"
-            placeholder="Name"
-            value={newUserName}
-            onChange={(e) => setNewUserName(e.target.value)}
-            className="user-form-input"
-          />
-          <input
-            type="text"
-            placeholder="Organization"
-            value={newUserOrg}
-            onChange={(e) => setNewUserOrg(e.target.value)}
-            className="user-form-input"
-          />
-          <input
-            type="email"
-            placeholder="Email address"
-            value={newUserEmail}
-            onChange={(e) => setNewUserEmail(e.target.value)}
-            className="user-form-input"
-            required
-          />
+          <h2 className="user-form-label">Add new user</h2>
+          <div className="author-form__input-row">
+            <input
+              type="text"
+              placeholder="Name"
+              value={newUserName}
+              onChange={(e) => setNewUserName(e.target.value)}
+              className="user-form-input"
+            />
+            <input
+              type="text"
+              placeholder="Organization"
+              value={newUserOrg}
+              onChange={(e) => setNewUserOrg(e.target.value)}
+              className="user-form-input"
+            />
+            <input
+              type="email"
+              placeholder="Email address"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              className="user-form-input"
+              required
+            />
 
-          {/* Custom dropdown */}
-          <div
-            className="custom-select-container"
-            style={{ position: "relative" }}
-          >
+            {/* Custom dropdown */}
             <div
-              className="custom-select-input"
-              onClick={() => setShowDropdown(!showDropdown)}
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                padding: "8px 12px",
-                cursor: "pointer",
-                position: "relative",
-                backgroundColor: "white",
-                minWidth: "200px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+              className="custom-select-container"
+              style={{ position: "relative" }}
             >
-              <span>{getSelectedProjectsText()}</span>
-              <span style={{ marginLeft: "8px" }}>▼</span>
-            </div>
-
-            {showDropdown && (
               <div
-                className="custom-select-dropdown"
+                className="custom-select-input"
+                onClick={() => setShowDropdown(!showDropdown)}
                 style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  zIndex: 10,
-                  backgroundColor: "white",
                   border: "1px solid #ccc",
                   borderRadius: "4px",
-                  marginTop: "4px",
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  position: "relative",
+                  backgroundColor: "white",
+                  minWidth: "200px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                {userProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="custom-select-option"
-                    onClick={() => toggleProjectSelection(project.id)}
-                    style={{
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      backgroundColor: selectedProjects.includes(project.id)
-                        ? "#f0f0f0"
-                        : "white",
-                      color: selectedProjects.includes(project.id)
-                        ? "#4a4d85"
-                        : "inherit",
-                      fontWeight: selectedProjects.includes(project.id)
-                        ? "bold"
-                        : "normal",
-                    }}
-                  >
-                    {project.title}
-                  </div>
-                ))}
+                <span>{getSelectedProjectsText()}</span>
+                <span style={{ marginLeft: "8px" }}>▼</span>
               </div>
+
+              {showDropdown && (
+                <div
+                  className="custom-select-dropdown"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                    backgroundColor: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    marginTop: "4px",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {userProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="custom-select-option"
+                      onClick={() => toggleProjectSelection(project.id)}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        backgroundColor: selectedProjects.includes(project.id)
+                          ? "#f0f0f0"
+                          : "white",
+                        color: selectedProjects.includes(project.id)
+                          ? "#4a4d85"
+                          : "inherit",
+                        fontWeight: selectedProjects.includes(project.id)
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      {project.title}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button type="submit" className="primary-btn">
+              Add author
+            </button>
+            {showDuplicateUserError && (
+              <button
+                type="button"
+                className="secondary-btn reset-btn"
+                onClick={clearUserForm}
+              >
+                Clear
+              </button>
             )}
           </div>
-
-          <button type="submit" className="primary-btn">
-            Add author
-          </button>
-          {showDuplicateUserError && (
-            <button
-              type="button"
-              className="secondary-btn reset-btn"
-              onClick={clearUserForm}
-            >
-              Clear
-            </button>
-          )}
         </div>
+
         <div className="form-help-text">
           Click multiple projects to select more than one
         </div>

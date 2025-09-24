@@ -9,7 +9,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { useForm, FormProvider, useWatch } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import useProjectAuthors from "../../hooks/useProjectAuthors";
 import { useObjectsList } from "../../hooks/useObjectsList";
 import SearchBar from "./SearchBar";

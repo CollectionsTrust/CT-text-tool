@@ -162,27 +162,25 @@ const UserDashboard = () => {
             </div>
           )}
 
-          <div className="user-content">
-            {loading ? (
-              <div className="loading">Loading your data...</div>
-            ) : (
-              <>
-                {activeTab === "projects" && (
-                  <ProjectsList
-                    projects={projects}
-                    setProjects={setProjects}
-                    error={error}
-                    successMessage={successMessage}
-                    setSuccessMessage={setSuccessMessage}
-                  />
+          {loading ? (
+            <div className="loading">Loading your data...</div>
+          ) : (
+            <>
+              {activeTab === "projects" && (
+                <ProjectsList
+                  projects={projects}
+                  setProjects={setProjects}
+                  error={error}
+                  successMessage={successMessage}
+                  setSuccessMessage={setSuccessMessage}
+                />
+              )}
+              {activeTab === "authors" &&
+                (userRoles.appRole === "admin" || userIsOwnerOfAProject) && (
+                  <AuthorManagement />
                 )}
-                {activeTab === "authors" &&
-                  (userRoles.appRole === "admin" || userIsOwnerOfAProject) && (
-                    <AuthorManagement />
-                  )}
-              </>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
     </>

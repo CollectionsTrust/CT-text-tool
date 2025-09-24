@@ -27,11 +27,9 @@
   line-height: 1.2;
 }
 
-/* === Navigation Tabs === */
 .admin-nav-tabs {
   display: flex;
   gap: 10px;
-  margin-bottom: 1rem;
 }
 
 .admin-nav-tab {
@@ -71,22 +69,25 @@
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  min-width: auto;
 }
 
 .toggle-archived-btn:hover {
   background-color: #0d9488;
 }
 
-/* === Search Input and Clear Button Layout === */
-.search-bar-row {
+.toggle-archived-btn-wrapper {
   display: flex;
-  margin-bottom: 1rem;
-  position: relative;
+  gap: 12px;
+  justify-content: space-between;
   width: 100%;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.search-input {
-  width: 100%;
+.project-search-input {
+  width: 400px;
   padding: 8px 12px;
   padding-right: 40px;
   font-size: 0.95rem;
@@ -435,13 +436,45 @@
   color: #6b7280;
 }
 
-/* === User Management Form === */
 .user-form-row {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 1.5rem;
-  align-items: center;
+  align-items: start;
+}
+
+.user-form__input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-direction: row;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.author-form__input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-direction: row;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.user-form-label {
+  margin: 0;
+  font-size: 16px;
+  color: #333333;
+  line-height: 1.5;
+}
+
+.user-form-input-wrapper {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .user-form-input,
