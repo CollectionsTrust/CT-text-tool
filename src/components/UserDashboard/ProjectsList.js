@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
+import AddNewProjectAsOwner from "../ProjectSetup/AddNewProjectAsOwner";
 
 const ITEMS_PER_PAGE = 25;
 
@@ -20,6 +21,15 @@ const ProjectsList = ({
   const [confirmDelete, setConfirmDelete] = useState(null);
   const { userRoles } = useAuth();
   const navigate = useNavigate();
+
+  const handleRefreshProjects = (newDocID, newDoc) => {
+    console.log("Refreshing projects list with new document:", newDoc);
+
+    setProjects((prev) => [
+      ...prev,
+      { ...newDoc, id: newDocID, userRole: "owner" },
+    ]);
+  };
 
   useEffect(() => {
     // Only perform search if we have projects
@@ -138,7 +148,6 @@ const ProjectsList = ({
     try {
       await updateDoc(doc(db, "projects", id), { status: "archived" });
       setSuccessMessage("Project archived successfully.");
-      // Update the local state
       const updatedProjects = projects.map((p) => {
         if (p.id === id) return { ...p, status: "archived" };
         return p;
@@ -154,7 +163,6 @@ const ProjectsList = ({
     try {
       await deleteDoc(doc(db, "projects", id));
       setSuccessMessage("Project deleted successfully.");
-      // Remove the project from the local state
       const updatedProjects = projects.filter((p) => p.id !== id);
       setProjects(updatedProjects);
       setConfirmDelete(null);
@@ -174,7 +182,10 @@ const ProjectsList = ({
       <div className="header-row">
         <h2 className="section-title">Your projects</h2>
       </div>
-
+      <AddNewProjectAsOwner
+        setSuccessMessage={setSuccessMessage}
+        handleRefreshProjects={handleRefreshProjects}
+      />
       <div className="search-bar-row">
         <input
           type="text"
@@ -189,12 +200,10 @@ const ProjectsList = ({
           </button>
         )}
       </div>
-
       {error && <div className="error-message">{error}</div>}
       {successMessage && (
         <div className="success-message">{successMessage}</div>
       )}
-
       <div className="user-table-container">
         <table className="user-table">
           <thead>
@@ -239,7 +248,7 @@ const ProjectsList = ({
                   >
                     Open
                   </button>
-                  {userRoles.projectRoles[project.id] === "owner" && (
+                  {project.userRole === "owner" && (
                     <button
                       className="delete-btn"
                       onClick={() => setConfirmDelete(project.id)}
@@ -253,7 +262,6 @@ const ProjectsList = ({
           </tbody>
         </table>
       </div>
-
       {totalPages > 1 && (
         <div className="pagination">
           {[...Array(totalPages)].map((_, i) => (
@@ -267,7 +275,6 @@ const ProjectsList = ({
           ))}
         </div>
       )}
-
       {/* Keeping confirmation dialogs in code for future use */}
       {confirmArchive && (
         <div className="confirm-dialog-backdrop">

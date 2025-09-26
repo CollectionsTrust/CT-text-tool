@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import AddNewProject from "../ProjectSetup/AddNewProject";
+import AddNewProjectAsAdmin from "../ProjectSetup/AddNewProjectAsAdmin";
 import {
   collection,
   doc,
@@ -230,7 +230,7 @@ const ProjectsList = () => {
       <div className="header-row">
         <h2 className="section-title">Manage projects</h2>
       </div>
-      <AddNewProject
+      <AddNewProjectAsAdmin
         setSuccessMessage={setSuccessMessage}
         handleRefreshProjects={handleRefreshProjects}
       />

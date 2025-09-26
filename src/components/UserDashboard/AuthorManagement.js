@@ -602,9 +602,10 @@ const AuthorManagement = () => {
   }
 
   return (
-    <div className="user-section authors">
-      <h2 className="section-title">Manage authors</h2>
-
+    <div className="user-section">
+      <div className="header-row">
+        <h2 className="section-title">Manage authors</h2>
+      </div>
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
 

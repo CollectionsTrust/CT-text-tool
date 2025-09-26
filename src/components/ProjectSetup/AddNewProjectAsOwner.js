@@ -6,30 +6,35 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import useAllUsers from "../../hooks/useAllUsers";
 
-const AddNewProject = ({ setSuccessMessage, handleRefreshProjects }) => {
+const AddNewProjectAsOwner = ({ setSuccessMessage, handleRefreshProjects }) => {
   const { register, handleSubmit, reset } = useForm();
 
   const { user } = useAuth();
-  const { users } = useAllUsers();
 
   const onSubmit = async (data) => {
-    const newProjectRef = await addDoc(collection(db, "projects"), {
+    const newProjData = {
       title: data.projectTitle,
       status: "active",
       createdAt: serverTimestamp(),
       createdBy: user.email,
-      owner: data.owner,
+      owner: user.email,
+    };
+
+    const newProjectRef = await addDoc(collection(db, "projects"), newProjData);
+    const ownerRef = doc(db, "projectUsers", user.email);
+    await updateDoc(ownerRef, {
+      [`projectRoles.${newProjectRef.id}`]: "owner",
     });
 
-    const ownerRef = doc(db, "projectUsers", data.owner);
-    updateDoc(ownerRef, { [`projectRoles.${newProjectRef.id}`]: "owner" });
+    // Fetch the doc to get server-generated fields
+    const docSnap = await getDoc(newProjectRef);
 
     reset();
-    handleRefreshProjects();
+    handleRefreshProjects(newProjectRef.id, docSnap.data());
     setSuccessMessage("Project added.");
     setTimeout(() => setSuccessMessage(""), 3000);
   };
@@ -46,16 +51,6 @@ const AddNewProject = ({ setSuccessMessage, handleRefreshProjects }) => {
             className="user-form-input"
             required
           />
-          <select
-            {...register("owner", { required: true })}
-            className="user-form-input"
-            required
-          >
-            <option value="">Select an owner</option>
-            {users?.map((user) => (
-              <option value={user}>{user}</option>
-            ))}
-          </select>
           <button type="submit" className="primary-btn reset-btn">
             Add new project
           </button>
@@ -65,4 +60,4 @@ const AddNewProject = ({ setSuccessMessage, handleRefreshProjects }) => {
   );
 };
 
-export default AddNewProject;
+export default AddNewProjectAsOwner;
