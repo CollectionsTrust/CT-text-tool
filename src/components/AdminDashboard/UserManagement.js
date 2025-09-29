@@ -370,7 +370,7 @@ const UserManagement = () => {
                 ? "As a project owner, you now have full access to manage project settings, invite authors, and control all aspects of this project."
                 : "As an author, you can view objects and create/edit texts for this project."
             }\n\n` +
-            `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
+            `You can access the CT Text Tool at: ${window.location.origin}\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
             `Thank you,\n` +
             `Collections Trust Team`
@@ -457,7 +457,7 @@ const UserManagement = () => {
                 ? "As a project owner, you have full access to manage project settings, invite authors, and control all aspects of this project."
                 : "As an author, you can view objects and create/edit texts for this project."
             }\n\n` +
-            `You can access this project using your existing CT Text Tool login at: https://texts.collectionstrust.org.uk.\n\n` +
+            `You can access this project using your existing CT Text Tool login at: ${window.location.origin}.\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
             `Thank you,\n` +
             `Collections Trust Team`

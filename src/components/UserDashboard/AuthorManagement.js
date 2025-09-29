@@ -5,8 +5,6 @@ import {
   getDocs,
   updateDoc,
   setDoc,
-  query,
-  where,
   getDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -340,7 +338,7 @@ const AuthorManagement = () => {
           `Hello ${editAuthorName || author.id},\n\n` +
             `Your project access in the CT Text Tool has been updated:\n\n` +
             `${changeDescription}\n\n` +
-            `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
+            `You can access the CT Text Tool at: ${window.location.origin}\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
             `Best regards,\n` +
             `${user?.name || user?.email || "Project Owner"}`
@@ -418,18 +416,12 @@ const AuthorManagement = () => {
         return;
       }
 
-      // Check if user already exists
-      const usersRef = collection(db, "projectUsers");
-      const existingUserQuery = query(
-        usersRef,
-        where("email", "==", newUserEmail)
-      );
-      const existingUserSnapshot = await getDocs(existingUserQuery);
+      const usersRef = doc(db, "projectUsers", newUserEmail);
+      const existingUserSnapshot = await getDoc(usersRef);
 
-      if (!existingUserSnapshot.empty) {
-        // User exists, update their projectRoles
-        const existingUser = existingUserSnapshot.docs[0];
-        const existingUserData = existingUser.data();
+      // Check if user already exists
+      if (existingUserSnapshot.exists()) {
+        const existingUserData = existingUserSnapshot.data();
 
         // Get current project roles
         const currentProjectRoles = existingUserData.projectRoles || {};
@@ -451,7 +443,7 @@ const AuthorManagement = () => {
         }
 
         if (newProjectsAdded) {
-          await updateDoc(doc(db, "projectUsers", existingUser.id), {
+          await updateDoc(doc(db, "projectUsers", newUserEmail), {
             projectRoles: updatedProjectRoles,
             // Only update name and org if they're empty
             name: existingUserData.name || newUserName || "No name provided",
@@ -472,11 +464,11 @@ const AuthorManagement = () => {
               `You have been added to the following CT Text Tool project${
                 addedProjectNames.length > 1 ? "s" : ""
               } as an author:\n\n` +
-              `${addedProjectNames.join("\n")}\n\n` +
+              `"${addedProjectNames.join("\n")}"\n\n` +
               `As an author, you can view objects and create/edit texts for ${
                 addedProjectNames.length > 1 ? "these projects" : "this project"
               }.\n\n` +
-              `You can access the CT Text Tool using your existing login at: https://texts.collectionstrust.org.uk\n\n` +
+              `You can access the CT Text Tool using your existing login at: ${window.location.origin}\n\n` +
               `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
               `Best regards,\n` +
               `${user?.name || user?.email || "Project Owner"}`
