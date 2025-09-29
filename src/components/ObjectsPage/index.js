@@ -77,12 +77,24 @@ const ObjectsPage = () => {
     } else if (texts.length === 0) {
       textReferenceNumber = "TXT00001";
     } else {
-      const highestTextReferenceNumber = texts.sort((textA, textB) => {
-        return textA.textReferenceNumber - textB.textReferenceNumber;
-      })[0].textReferenceNumber;
-      const nextNumber =
-        parseInt(highestTextReferenceNumber.replace("TXT", "")) + 1;
-      textReferenceNumber = `TXT${String(nextNumber).padStart(5, "0")}`;
+      const sortedTexts = texts.sort((textA, textB) => {
+        const numA = parseInt(textA.textReferenceNumber.replace("TXT", ""));
+        const numB = parseInt(textB.textReferenceNumber.replace("TXT", ""));
+        return numA - numB;
+      });
+      const highestTextReferenceNumber =
+        sortedTexts[sortedTexts.length - 1].textReferenceNumber;
+      const highestNumber = parseInt(
+        highestTextReferenceNumber.replace("TXT", "")
+      );
+      const nextNumber = highestNumber + 1;
+      const nextTextReferenceNumber =
+        "TXT" +
+        nextNumber
+          .toString()
+          .padStart(highestTextReferenceNumber.length - 3, "0");
+
+      textReferenceNumber = nextTextReferenceNumber;
     }
 
     methods.reset({
