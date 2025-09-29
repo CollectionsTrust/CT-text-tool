@@ -93,8 +93,17 @@ const UserDashboard = () => {
         projectsData.sort((a, b) => {
           const statusCompare =
             (a.status === "archived") - (b.status === "archived");
+
           if (statusCompare !== 0) return statusCompare;
-          return new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0);
+
+          const dateA = new Date(
+            a.createdAt.seconds * 1000 + a.createdAt.nanoseconds / 1e6
+          );
+          const dateB = new Date(
+            b.createdAt.seconds * 1000 + b.createdAt.nanoseconds / 1e6
+          );
+
+          return dateB - dateA;
         });
 
         setProjects(projectsData);
