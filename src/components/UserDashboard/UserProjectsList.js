@@ -1,35 +1,118 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import AddNewProjectAsOwner from "../ProjectSetup/AddNewProjectAsOwner";
+import {
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+} from "firebase/firestore";
 
 const ITEMS_PER_PAGE = 25;
 
-const ProjectsList = ({
-  projects,
-  setProjects,
-  error,
-  successMessage,
-  setSuccessMessage,
-}) => {
+const UserProjectsList = () => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmArchive, setConfirmArchive] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const { userRoles } = useAuth();
   const navigate = useNavigate();
+  const { user, userRoles, loading: authLoading } = useAuth();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleRefreshProjects = (newDocID, newDoc) => {
-    console.log("Refreshing projects list with new document:", newDoc);
-
     setProjects((prev) => [
       ...prev,
       { ...newDoc, id: newDocID, userRole: "owner" },
     ]);
   };
+
+  useEffect(() => {
+    if (!user || authLoading) return;
+
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+
+        // Step 1: Find the user document in Firestore
+        const userDocRef = doc(db, "projectUsers", user.email);
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.exists() ? userDocSnap.data() : null;
+
+        const projectRoles = userData.projectRoles || {};
+        const userOwns = Object.fromEntries(
+          Object.entries(projectRoles).filter(
+            ([key, value]) => value === "owner" || value === "author"
+          )
+        );
+        const userProjectIds = Object.keys(userOwns);
+
+        // Step 2: Get projects where user is the owner (always check this first)
+        const docs = await Promise.all(
+          userProjectIds.map((id) => getDoc(doc(db, "projects", id)))
+        );
+
+        const projectsData = await Promise.all(
+          docs
+            .filter((docSnap) => docSnap.exists())
+            .map(async (docSnap) => {
+              const proj = {
+                id: docSnap.id,
+                ...docSnap.data(),
+                userRole: projectRoles[docSnap.id],
+              };
+
+              const q = query(
+                collection(db, "projectUsers"),
+                where(`projectRoles.${proj.id}`, "==", "author")
+              );
+              const snapshot = await getDocs(q);
+
+              return {
+                ...proj,
+                authorCount: snapshot.size, // number of matching docs
+              };
+            })
+        );
+
+        // Step 3: Sort projects: active first, then by creation date
+        // NOTE: We still sort with archived status even though we don't show archived projects in the UI
+        projectsData.sort((a, b) => {
+          const statusCompare =
+            (a.status === "archived") - (b.status === "archived");
+
+          if (statusCompare !== 0) return statusCompare;
+
+          const dateA = new Date(
+            a.createdAt.seconds * 1000 + a.createdAt.nanoseconds / 1e6
+          );
+          const dateB = new Date(
+            b.createdAt.seconds * 1000 + b.createdAt.nanoseconds / 1e6
+          );
+
+          return dateB - dateA;
+        });
+
+        setProjects(projectsData);
+      } catch (err) {
+        console.error("Error loading projects:", err);
+        setError("Failed to load projects. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [user, userRoles, authLoading]);
 
   useEffect(() => {
     // Only perform search if we have projects
@@ -170,6 +253,10 @@ const ProjectsList = ({
       console.error("Error deleting project:", error);
     }
   };
+
+  if (loading) {
+    return <div className="loading">Loading projects...</div>;
+  }
 
   if (projects.length === 0) {
     return (
@@ -324,4 +411,4 @@ const ProjectsList = ({
   );
 };
 
-export default ProjectsList;
+export default UserProjectsList;

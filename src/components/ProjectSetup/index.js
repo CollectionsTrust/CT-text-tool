@@ -218,10 +218,10 @@ const ProjectSetup = () => {
             <p>
               Add new authors to the app via the{" "}
               {userRoles?.appRole === "admin" && (
-                <Link to="/admin#users">Manage users page</Link>
+                <Link to="/admin/users">Manage users page</Link>
               )}
               {userRoles?.appRole !== "admin" && (
-                <Link to="/dashboard#authors">Manage authors page</Link>
+                <Link to="/dashboard/authors">Manage authors page</Link>
               )}
               .
             </p>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AddNewProjectAsAdmin from "../ProjectSetup/AddNewProjectAsAdmin";
 import {
   collection,
@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
+import AdminNavLinks from "./AdminNavLinks";
 import "./AdminDashboard.css";
 
 const ITEMS_PER_PAGE = 25;
@@ -39,7 +40,7 @@ const getAuthorsCount = async (projectIDs) => {
   return projectAuthors;
 };
 
-const ProjectsList = () => {
+const AdminProjectsList = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -216,17 +217,7 @@ const ProjectsList = () => {
 
   return (
     <div className="admin-section projects-list">
-      <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab">
-          Requests
-        </Link>
-        <Link to="/admin#projects" className="admin-nav-tab active">
-          Manage projects
-        </Link>
-        <Link to="/admin#users" className="admin-nav-tab">
-          Manage users
-        </Link>
-      </div>
+      <AdminNavLinks />
       <div className="header-row">
         <h2 className="section-title">Manage projects</h2>
       </div>
@@ -410,4 +401,4 @@ const ProjectsList = () => {
   );
 };
 
-export default ProjectsList;
+export default AdminProjectsList;

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   collection,
   query,
@@ -15,6 +14,7 @@ import {
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import "./AdminDashboard.css";
+import AdminNavLinks from "./AdminNavLinks";
 
 const Requests = () => {
   const [projectRequests, setProjectRequests] = useState([]);
@@ -216,17 +216,7 @@ const Requests = () => {
 
   return (
     <div className="admin-section requests">
-      <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab active">
-          Requests
-        </Link>
-        <Link to="/admin#projects" className="admin-nav-tab">
-          Manage projects
-        </Link>
-        <Link to="/admin#users" className="admin-nav-tab">
-          Manage users
-        </Link>
-      </div>
+      <AdminNavLinks />
 
       {error && <div className="error-message">{error}</div>}
       {successMessage && (

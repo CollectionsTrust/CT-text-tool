@@ -8,6 +8,7 @@ import {
   getDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { Navigate } from "react-router-dom";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import "./UserDashboard.css";
@@ -33,6 +34,13 @@ const AuthorManagement = () => {
   const [showEditDropdown, setShowEditDropdown] = useState(false);
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
   const { user, userRoles } = useAuth();
+
+  // userRoles.appRole === "admin" || userIsOwnerOfAProject
+  // CHECK THIS -> @TODO userIsOwnerOfAProject
+
+  const userIsOwnerOfAProject = Object.values(userRoles?.projectRoles).includes(
+    "owner"
+  );
 
   // Fetch authors and owner's projects on component mount
   useEffect(() => {
@@ -588,6 +596,10 @@ const AuthorManagement = () => {
       })
       .join(", ");
   };
+
+  if (!userIsOwnerOfAProject) {
+    return <Navigate to="/dashboard/projects" replace />;
+  }
 
   if (loading) {
     return <div className="loading">Loading authors...</div>;

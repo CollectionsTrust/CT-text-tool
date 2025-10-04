@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   collection,
   doc,
@@ -13,6 +12,7 @@ import { db } from "../../firebase/config";
 import { getAuth } from "firebase/auth";
 import "./AdminDashboard.css";
 import { useAuth } from "../../context/AuthContext";
+import AdminNavLinks from "./AdminNavLinks";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -504,17 +504,7 @@ const UserManagement = () => {
 
   return (
     <div className="admin-section user-management">
-      <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab">
-          Requests
-        </Link>
-        <Link to="/admin#projects" className="admin-nav-tab">
-          Manage projects
-        </Link>
-        <Link to="/admin#users" className="admin-nav-tab active">
-          Manage users
-        </Link>
-      </div>
+      <AdminNavLinks />
       <div className="header-row">
         <h2 className="section-title">Manage users</h2>
       </div>
