@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserGuide.css";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const UserGuide = () => {
   const navigate = useNavigate();
+  usePageTitle("User Guide");
 
   const handleClose = () => {
     // Go back one step in the history to the page a user was on before

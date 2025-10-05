@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import usePageTitle from "../../hooks/usePageTitle";
+
 
 const TermsPage = () => {
   const navigate = useNavigate();
+  usePageTitle("Terms and Conditions");
 
   // Handle escape key to close popup
   useEffect(() => {

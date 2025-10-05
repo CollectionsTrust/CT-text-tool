@@ -15,7 +15,8 @@
     "react-scripts": "5.0.1",
     "uuid": "^9.0.1",
     "web-vitals": "^2.1.4",
-    "react-hook-form": "7.60.0"
+    "react-hook-form": "7.60.0",
+    "react-tooltip": "5.29.1"
   },
   "scripts": {
     "start": "react-scripts start",

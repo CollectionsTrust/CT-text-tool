@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   collection,
   query,
@@ -10,10 +9,13 @@ import {
   addDoc,
   serverTimestamp,
   setDoc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import "./AdminDashboard.css";
+import AdminNavLinks from "./AdminNavLinks";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Requests = () => {
   const [projectRequests, setProjectRequests] = useState([]);
@@ -22,6 +24,7 @@ const Requests = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [processingRequestId, setProcessingRequestId] = useState(null);
   const { user } = useAuth();
+  usePageTitle("Project Requests");
 
   const fetchRequests = async () => {
     try {
@@ -91,19 +94,12 @@ const Requests = () => {
       });
 
       // Check if user already exists in Firestore
-      const usersRef = collection(db, "projectUsers");
-      const userQuery = query(
-        usersRef,
-        where("email", "==", request.email.toLowerCase())
-      );
-      const userSnapshot = await getDocs(userQuery);
+      const projectUserId = request.email.toLowerCase();
+      const userDocRef = doc(db, "projectUsers", projectUserId);
+      const userSnapshot = await getDoc(userDocRef);
 
-      let projectUserRef;
-      let projectUserId;
-
-      if (userSnapshot.empty) {
-        const emailDocId = request.email.toLowerCase();
-        projectUserRef = doc(db, "projectUsers", emailDocId);
+      if (!userSnapshot.exists()) {
+        const projectUserRef = doc(db, "projectUsers", projectUserId);
 
         await setDoc(projectUserRef, {
           name: request.name,
@@ -115,13 +111,9 @@ const Requests = () => {
             [projectRef.id]: "owner",
           },
         });
-        projectUserId = projectUserRef.id;
       } else {
         // User already exists, update their projectRoles
-        const existingUserDoc = userSnapshot.docs[0];
-        projectUserId = existingUserDoc.id;
-
-        const userData = existingUserDoc.data();
+        const userData = userSnapshot.data();
         const currentProjectRoles = userData.projectRoles || {};
 
         await updateDoc(doc(db, "projectUsers", projectUserId), {
@@ -149,6 +141,9 @@ const Requests = () => {
           request.projectTitle || "Project Request"
         }" has been approved`
       );
+      const accessMessage = userSnapshot.exists()
+        ? `Visit ${window.location.origin}/dashboard to view the project.`
+        : `Visit ${window.location.origin}/signup to create your account.`;
       const emailBody = encodeURIComponent(
         `Hello ${request.name},\n\n` +
           `Your project request for "${
@@ -157,7 +152,7 @@ const Requests = () => {
           `Your project "${
             request.projectTitle || "Project"
           }" is now set up and ready for you to begin working on.\n\n` +
-          `Visit ${window.location.origin}/signup to create your account. \n\n` +
+          `${accessMessage} \n\n` +
           `For any questions, please contact us.\n\n` +
           `Thank you,\n` +
           `Collections Trust Team`
@@ -223,17 +218,7 @@ const Requests = () => {
 
   return (
     <div className="admin-section requests">
-      <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab active">
-          Requests
-        </Link>
-        <Link to="/admin#projects" className="admin-nav-tab">
-          Manage projects
-        </Link>
-        <Link to="/admin#users" className="admin-nav-tab">
-          Manage users
-        </Link>
-      </div>
+      <AdminNavLinks />
 
       {error && <div className="error-message">{error}</div>}
       {successMessage && (

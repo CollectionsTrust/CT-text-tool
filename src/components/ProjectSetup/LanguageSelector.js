@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Tooltip from "../common/Tooltip";
 
 // List of ISO languages
 const isoLanguages = [
@@ -271,12 +272,10 @@ const LanguageSelector = ({
       <label htmlFor="languages">
         Languages
         <span className="required-indicator">*</span>
-        <span
-          className="tooltip-icon"
-          title="The language(s) used in the texts associated with this project. If multiple languages are used, select all that apply."
-        >
-          ⓘ
-        </span>
+        <Tooltip>
+          The language(s) used in the texts associated with this project. If
+          multiple languages are used, select all that apply.
+        </Tooltip>
       </label>
       <div className="language-selection">
         <div

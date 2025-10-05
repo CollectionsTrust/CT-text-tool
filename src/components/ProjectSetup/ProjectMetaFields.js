@@ -1,3 +1,5 @@
+import Tooltip from "../common/Tooltip";
+
 const ProjectMetaFields = ({ formData, handleFieldChange }) => {
   return (
     <>
@@ -8,12 +10,14 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
           <label htmlFor="projectReferenceNumber">
             Project reference number
             <span className="required-indicator">*</span>
-            <span
-              className="tooltip-icon"
-              title="The unique number assigned to your project. This may include a prefix to distinguish it from other projects followed by a year and running number. If you are working on a large project that involves several smaller projects such as workshops, you may wish to sub-number these projects using the same prefix. For example, LWD2022.1.1, LWD2022.1.2"
-            >
-              ⓘ
-            </span>
+            <Tooltip>
+              The unique number assigned to your project. This may include a
+              prefix to distinguish it from other projects followed by a year
+              and running number. If you are working on a large project that
+              involves several smaller projects such as workshops, you may wish
+              to sub-number these projects using the same prefix. For example,
+              LWD2022.1.1, LWD2022.1.2
+            </Tooltip>
           </label>
           <input
             type="text"
@@ -33,12 +37,11 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
           <label htmlFor="textNumberPrefix">
             Text number prefix
             <span className="required-indicator">*</span>
-            <span
-              className="tooltip-icon"
-              title="The default prefix for the text reference number is TXT followed by a sequential number starting at 0001. If you have your own text numbering system and wish to amend this prefix you can do so here."
-            >
-              ⓘ
-            </span>
+            <Tooltip>
+              The default prefix for the text reference number is TXT followed
+              by a sequential number starting at 0001. If you have your own text
+              numbering system and wish to amend this prefix you can do so here.
+            </Tooltip>
           </label>
           <input
             type="text"
@@ -55,17 +58,14 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
         </div>
       </div>
 
-      {/* Project title */}
       <div className="form-group">
         <label htmlFor="projectTitle">
           Project title
           <span className="required-indicator">*</span>
-          <span
-            className="tooltip-icon"
-            title="The name of your project. For example, the title of an exhibition, workshop or collections review."
-          >
-            ⓘ
-          </span>
+          <Tooltip>
+            The name of your project. For example, the title of an exhibition,
+            workshop or collections review.
+          </Tooltip>
         </label>
         <input
           type="text"
@@ -83,12 +83,12 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
         <label htmlFor="projectOrganiser">
           Project organiser
           <span className="required-indicator">*</span>
-          <span
-            className="tooltip-icon"
-            title="The person or organisation organising the project. Usually the museum. If the project is being organised by several museums as part of a partnership, use the lead museum, or use the name of the partnership. For example, Wessex Museums."
-          >
-            ⓘ
-          </span>
+          <Tooltip>
+            The person or organisation organising the project. Usually the
+            museum. If the project is being organised by several museums as part
+            of a partnership, use the lead museum, or use the name of the
+            partnership. For example, Wessex Museums.
+          </Tooltip>
         </label>
         <input
           type="text"
@@ -110,9 +110,7 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
           <label htmlFor="projectStartDate">
             Project start date
             <span className="required-indicator">*</span>
-            <span className="tooltip-icon" title="The date the project began.">
-              ⓘ
-            </span>
+            <Tooltip>The date the project began.</Tooltip>
           </label>
           <input
             type="date"
@@ -132,12 +130,10 @@ const ProjectMetaFields = ({ formData, handleFieldChange }) => {
           <label htmlFor="projectEndDate">
             Project end date
             <span className="required-indicator">*</span>
-            <span
-              className="tooltip-icon"
-              title="The date the project ended or is due to end. You can edit this later, before archiving the project, if the date changes."
-            >
-              ⓘ
-            </span>
+            <Tooltip>
+              The date the project ended or is due to end. You can edit this
+              later, before archiving the project, if the date changes.
+            </Tooltip>
           </label>
           <input
             type="date"

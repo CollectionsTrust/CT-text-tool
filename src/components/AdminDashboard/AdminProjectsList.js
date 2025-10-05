@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AddNewProjectAsAdmin from "../ProjectSetup/AddNewProjectAsAdmin";
 import {
   collection,
   doc,
@@ -11,11 +12,36 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
+import AdminNavLinks from "./AdminNavLinks";
 import "./AdminDashboard.css";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const ITEMS_PER_PAGE = 25;
 
-const ProjectsList = () => {
+const getAuthorsCount = async (projectIDs) => {
+  const usersRef = collection(db, "projectUsers");
+  const userSnapshot = await getDocs(usersRef);
+  const projectAuthors = {};
+
+  userSnapshot.forEach((userDoc) => {
+    const userData = userDoc.data();
+    const projectRoles = userData.projectRoles || {};
+
+    // Includes authors and owners
+    Object.entries(projectRoles).forEach(([id, role]) => {
+      if (!projectAuthors[id]) {
+        projectAuthors[id] = 0;
+      }
+
+      // Increment the count
+      projectAuthors[id] += 1;
+    });
+  });
+
+  return projectAuthors;
+};
+
+const AdminProjectsList = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -27,7 +53,13 @@ const ProjectsList = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
+  usePageTitle("Projects");
+
+  const handleRefreshProjects = () => {
+    setRefreshKey((prev) => prev + 1); // Triggers useEffect
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -61,7 +93,6 @@ const ProjectsList = () => {
             ...projectData,
             ownerName: ownerData.name,
             ownerOrganization: ownerData.organization,
-            authorCount: projectData.authors?.length || 0,
           };
         });
 
@@ -73,6 +104,14 @@ const ProjectsList = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
+        const allProjectIds = projectsData.map((proj) => proj.id);
+        const allAuthorsCount = await getAuthorsCount(allProjectIds);
+
+        // Add authors and owners as "authorCount"
+        projectsData.forEach((proj) => {
+          proj["authorCount"] = allAuthorsCount[proj["id"]];
+        });
+
         setProjects(projectsData);
       } catch (err) {
         console.error("Error fetching projects:", err);
@@ -81,7 +120,7 @@ const ProjectsList = () => {
     };
 
     fetchProjects();
-  }, [user]);
+  }, [user, refreshKey]);
 
   useEffect(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -175,24 +214,38 @@ const ProjectsList = () => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setSuccessMessage("Project deleted.");
     setConfirmDelete(null);
+    setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   return (
     <div className="admin-section projects-list">
-      <div className="admin-nav-tabs">
-        <Link to="/admin#requests" className="admin-nav-tab">
-          Requests
-        </Link>
-        <Link to="/admin#projects" className="admin-nav-tab active">
-          Manage projects
-        </Link>
-        <Link to="/admin#users" className="admin-nav-tab">
-          Manage users
-        </Link>
-      </div>
-
+      <AdminNavLinks />
       <div className="header-row">
         <h2 className="section-title">Manage projects</h2>
+      </div>
+      <AddNewProjectAsAdmin
+        setSuccessMessage={setSuccessMessage}
+        handleRefreshProjects={handleRefreshProjects}
+      />
+      {error && <div className="error-message">{error}</div>}
+      {successMessage && (
+        <div className="success-message">{successMessage}</div>
+      )}
+      <div className="toggle-archived-btn-wrapper">
+        <div className="search-bar-row">
+          <input
+            type="text"
+            className="project-search-input "
+            placeholder="Search projects (supports AND/OR)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="clear-btn" onClick={() => setSearchQuery("")}>
+              Clear
+            </button>
+          )}
+        </div>
         <button
           className="secondary-btn toggle-archived-btn"
           onClick={() => setShowArchived(!showArchived)}
@@ -200,27 +253,6 @@ const ProjectsList = () => {
           {showArchived ? "Hide archived projects" : "Show archived projects"}
         </button>
       </div>
-
-      <div className="search-bar-row">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search projects (supports AND/OR)"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchQuery && (
-          <button className="clear-btn" onClick={() => setSearchQuery("")}>
-            Clear
-          </button>
-        )}
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-      {successMessage && (
-        <div className="success-message">{successMessage}</div>
-      )}
-
       <div className="admin-table-container">
         <table className="admin-table">
           <thead>
@@ -251,7 +283,7 @@ const ProjectsList = () => {
                     </span>
                   </div>
                   <div>Created: {formatDate(project.createdAt)}</div>
-                  <div>Authors: {project.authorCount}</div>
+                  <div>Authors: {project.authorCount || 0}</div>
                 </td>
                 <td className="actions-cell">
                   <button
@@ -287,7 +319,6 @@ const ProjectsList = () => {
           </tbody>
         </table>
       </div>
-
       {totalPages > 1 && (
         <div className="pagination">
           {[...Array(totalPages)].map((_, i) => (
@@ -301,7 +332,6 @@ const ProjectsList = () => {
           ))}
         </div>
       )}
-
       {/* Confirmation dialogs */}
       {confirmArchive && (
         <div className="confirm-dialog-backdrop">
@@ -373,4 +403,4 @@ const ProjectsList = () => {
   );
 };
 
-export default ProjectsList;
+export default AdminProjectsList;
