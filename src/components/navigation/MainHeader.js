@@ -94,11 +94,17 @@ const MainHeader = () => {
             </>
           )}
 
-          {userRoles.appRole === "nonAdminUser" && (
-            <Link to="/dashboard" className="nav-button">
-              Dashboard
-            </Link>
-          )}
+          {location.pathname !== "/dashboard" &&
+            location.pathname !== "/admin" && (
+              <Link
+                to={
+                  userRoles.appRole === "nonAdminUser" ? "/dashboard" : "/admin"
+                }
+                className="nav-button"
+              >
+                Dashboard
+              </Link>
+            )}
 
           <button onClick={handleLogout} className="nav-button logout-button">
             Logout

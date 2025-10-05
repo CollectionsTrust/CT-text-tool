@@ -13,6 +13,7 @@ import {
 import { db } from "../../firebase/config";
 import TextsTable from "./TextsTable";
 import "./TextsPage.css";
+import usePageTitle from "../../hooks/usePageTitle";
 
 /**
  * Main TextsPage component
@@ -21,6 +22,7 @@ import "./TextsPage.css";
 const TextsPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  usePageTitle("Texts");
 
   // State for texts data
   const [texts, setTexts] = useState([]);

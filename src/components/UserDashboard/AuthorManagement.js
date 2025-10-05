@@ -5,14 +5,14 @@ import {
   getDocs,
   updateDoc,
   setDoc,
-  query,
-  where,
   getDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { Navigate } from "react-router-dom";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import "./UserDashboard.css";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const AuthorManagement = () => {
   const [authors, setAuthors] = useState([]);
@@ -35,6 +35,11 @@ const AuthorManagement = () => {
   const [showEditDropdown, setShowEditDropdown] = useState(false);
   const [showDuplicateUserError, setShowDuplicateUserError] = useState(false);
   const { user, userRoles } = useAuth();
+  usePageTitle("Manage Authors");
+
+  const userIsOwnerOfAProject = Object.values(userRoles?.projectRoles).includes(
+    "owner"
+  );
 
   // Fetch authors and owner's projects on component mount
   useEffect(() => {
@@ -340,7 +345,7 @@ const AuthorManagement = () => {
           `Hello ${editAuthorName || author.id},\n\n` +
             `Your project access in the CT Text Tool has been updated:\n\n` +
             `${changeDescription}\n\n` +
-            `You can access the CT Text Tool at: https://texts.collectionstrust.org.uk\n\n` +
+            `You can access the CT Text Tool at: ${window.location.origin}\n\n` +
             `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
             `Best regards,\n` +
             `${user?.name || user?.email || "Project Owner"}`
@@ -418,18 +423,12 @@ const AuthorManagement = () => {
         return;
       }
 
-      // Check if user already exists
-      const usersRef = collection(db, "projectUsers");
-      const existingUserQuery = query(
-        usersRef,
-        where("email", "==", newUserEmail)
-      );
-      const existingUserSnapshot = await getDocs(existingUserQuery);
+      const usersRef = doc(db, "projectUsers", newUserEmail);
+      const existingUserSnapshot = await getDoc(usersRef);
 
-      if (!existingUserSnapshot.empty) {
-        // User exists, update their projectRoles
-        const existingUser = existingUserSnapshot.docs[0];
-        const existingUserData = existingUser.data();
+      // Check if user already exists
+      if (existingUserSnapshot.exists()) {
+        const existingUserData = existingUserSnapshot.data();
 
         // Get current project roles
         const currentProjectRoles = existingUserData.projectRoles || {};
@@ -451,7 +450,7 @@ const AuthorManagement = () => {
         }
 
         if (newProjectsAdded) {
-          await updateDoc(doc(db, "projectUsers", existingUser.id), {
+          await updateDoc(doc(db, "projectUsers", newUserEmail), {
             projectRoles: updatedProjectRoles,
             // Only update name and org if they're empty
             name: existingUserData.name || newUserName || "No name provided",
@@ -472,11 +471,11 @@ const AuthorManagement = () => {
               `You have been added to the following CT Text Tool project${
                 addedProjectNames.length > 1 ? "s" : ""
               } as an author:\n\n` +
-              `${addedProjectNames.join("\n")}\n\n` +
+              `"${addedProjectNames.join("\n")}"\n\n` +
               `As an author, you can view objects and create/edit texts for ${
                 addedProjectNames.length > 1 ? "these projects" : "this project"
               }.\n\n` +
-              `You can access the CT Text Tool using your existing login at: https://texts.collectionstrust.org.uk\n\n` +
+              `You can access the CT Text Tool using your existing login at: ${window.location.origin}\n\n` +
               `If you think this change has been made in error, please contact us by replying to this email.\n\n` +
               `Best regards,\n` +
               `${user?.name || user?.email || "Project Owner"}`
@@ -597,124 +596,133 @@ const AuthorManagement = () => {
       .join(", ");
   };
 
+  if (!userIsOwnerOfAProject) {
+    return <Navigate to="/dashboard/projects" replace />;
+  }
+
   if (loading) {
     return <div className="loading">Loading authors...</div>;
   }
 
   return (
-    <div className="user-section author-management">
-      <h2 className="section-title">Manage authors</h2>
-
+    <div className="user-section">
+      <div className="header-row">
+        <h2 className="section-title">Manage authors</h2>
+      </div>
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
 
       <form onSubmit={handleAddAuthor} className="add-user-form">
         <div className="user-form-row">
-          <input
-            type="text"
-            placeholder="Name"
-            value={newUserName}
-            onChange={(e) => setNewUserName(e.target.value)}
-            className="user-form-input"
-          />
-          <input
-            type="text"
-            placeholder="Organization"
-            value={newUserOrg}
-            onChange={(e) => setNewUserOrg(e.target.value)}
-            className="user-form-input"
-          />
-          <input
-            type="email"
-            placeholder="Email address"
-            value={newUserEmail}
-            onChange={(e) => setNewUserEmail(e.target.value)}
-            className="user-form-input"
-            required
-          />
+          <h2 className="user-form-label">Add new user</h2>
+          <div className="author-form__input-row">
+            <input
+              type="text"
+              placeholder="Name"
+              value={newUserName}
+              onChange={(e) => setNewUserName(e.target.value)}
+              className="user-form-input"
+            />
+            <input
+              type="text"
+              placeholder="Organization"
+              value={newUserOrg}
+              onChange={(e) => setNewUserOrg(e.target.value)}
+              className="user-form-input"
+            />
+            <input
+              type="email"
+              placeholder="Email address"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              className="user-form-input"
+              required
+            />
 
-          {/* Custom dropdown */}
-          <div
-            className="custom-select-container"
-            style={{ position: "relative" }}
-          >
+            {/* Custom dropdown */}
             <div
-              className="custom-select-input"
-              onClick={() => setShowDropdown(!showDropdown)}
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                padding: "8px 12px",
-                cursor: "pointer",
-                position: "relative",
-                backgroundColor: "white",
-                minWidth: "200px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+              className="custom-select-container"
+              style={{ position: "relative" }}
             >
-              <span>{getSelectedProjectsText()}</span>
-              <span style={{ marginLeft: "8px" }}>▼</span>
-            </div>
-
-            {showDropdown && (
               <div
-                className="custom-select-dropdown"
+                className="custom-select-input"
+                onClick={() => setShowDropdown(!showDropdown)}
                 style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  zIndex: 10,
-                  backgroundColor: "white",
                   border: "1px solid #ccc",
                   borderRadius: "4px",
-                  marginTop: "4px",
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  position: "relative",
+                  backgroundColor: "white",
+                  minWidth: "200px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                {userProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="custom-select-option"
-                    onClick={() => toggleProjectSelection(project.id)}
-                    style={{
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      backgroundColor: selectedProjects.includes(project.id)
-                        ? "#f0f0f0"
-                        : "white",
-                      color: selectedProjects.includes(project.id)
-                        ? "#4a4d85"
-                        : "inherit",
-                      fontWeight: selectedProjects.includes(project.id)
-                        ? "bold"
-                        : "normal",
-                    }}
-                  >
-                    {project.title}
-                  </div>
-                ))}
+                <span>{getSelectedProjectsText()}</span>
+                <span style={{ marginLeft: "8px" }}>▼</span>
               </div>
+
+              {showDropdown && (
+                <div
+                  className="custom-select-dropdown"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                    backgroundColor: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    marginTop: "4px",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {userProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="custom-select-option"
+                      onClick={() => toggleProjectSelection(project.id)}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        backgroundColor: selectedProjects.includes(project.id)
+                          ? "#f0f0f0"
+                          : "white",
+                        color: selectedProjects.includes(project.id)
+                          ? "#4a4d85"
+                          : "inherit",
+                        fontWeight: selectedProjects.includes(project.id)
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      {project.title}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button type="submit" className="primary-btn">
+              Add author
+            </button>
+            {showDuplicateUserError && (
+              <button
+                type="button"
+                className="secondary-btn reset-btn"
+                onClick={clearUserForm}
+              >
+                Clear
+              </button>
             )}
           </div>
-
-          <button type="submit" className="primary-btn">
-            Add author
-          </button>
-          {showDuplicateUserError && (
-            <button
-              type="button"
-              className="secondary-btn reset-btn"
-              onClick={clearUserForm}
-            >
-              Clear
-            </button>
-          )}
         </div>
+
         <div className="form-help-text">
           Click multiple projects to select more than one
         </div>

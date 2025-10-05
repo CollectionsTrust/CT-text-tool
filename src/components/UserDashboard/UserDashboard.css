@@ -1,4 +1,3 @@
-/* === Layout === */
 .user-dashboard {
   padding: 2rem;
   max-width: 1200px;
@@ -26,7 +25,6 @@
   margin: 0;
 }
 
-/* === Navigation Tabs === */
 .user-nav-tabs {
   display: flex;
   gap: 10px;
@@ -49,7 +47,6 @@
   color: white;
 }
 
-/* === Section Header and Archive Toggle === */
 .header-row {
   display: flex;
   justify-content: space-between;
@@ -77,12 +74,9 @@
   background-color: #0d9488;
 }
 
-/* === Search Input and Clear Button Layout === */
 .search-bar-row {
   display: flex;
-  margin-bottom: 1rem;
   position: relative;
-  width: 100%;
 }
 
 .search-input {
@@ -143,7 +137,6 @@
   vertical-align: top;
 }
 
-/* === Column Widths === */
 .user-table th:nth-child(1),
 .user-table td:nth-child(1) {
   width: 15%;
@@ -180,7 +173,6 @@
   text-align: center;
 }
 
-/* === Project Title Styling === */
 .project-title-text {
   margin-bottom: 5px;
   font-size: 1rem;
@@ -192,7 +184,6 @@
   line-height: 1.4;
 }
 
-/* === Button Styles === */
 .actions-cell button {
   margin-bottom: 6px;
   display: block;
@@ -256,7 +247,6 @@
   font-size: 0.9rem;
 }
 
-/* === Status Badges === */
 .status-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -276,7 +266,6 @@
   color: #92400e;
 }
 
-/* === Pagination === */
 .pagination {
   display: flex;
   justify-content: center;
@@ -297,7 +286,6 @@
   color: white;
 }
 
-/* === Confirmation Dialog === */
 .confirm-dialog-backdrop {
   position: fixed;
   top: 0;
@@ -326,7 +314,6 @@
   gap: 10px;
 }
 
-/* === Messages === */
 .success-message {
   background-color: #d1fae5;
   color: #065f46;
@@ -350,17 +337,8 @@
   color: #6b7280;
 }
 
-/* === User/Author Management Form === */
 .add-user-form {
-  margin-bottom: 1.5rem;
-}
-
-.user-form-row {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 0.5rem;
-  align-items: center;
+  margin-bottom: 40px;
 }
 
 .user-form-input,
@@ -390,7 +368,6 @@
   margin-left: 0.5rem;
 }
 
-/* === Custom Select Styling === */
 .custom-select-container {
   position: relative;
   min-width: 200px;
@@ -482,7 +459,6 @@
   color: #ccc;
 }
 
-/* === Responsive Adjustments === */
 @media (max-width: 768px) {
   .user-info {
     flex-direction: column;
@@ -492,11 +468,6 @@
   
   .change-password-btn {
     align-self: flex-start;
-  }
-  
-  .user-form-row {
-    flex-direction: column;
-    gap: 10px;
   }
   
   .user-form-input,

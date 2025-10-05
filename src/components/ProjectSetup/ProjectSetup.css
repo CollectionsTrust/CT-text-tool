@@ -67,6 +67,14 @@
   cursor: help;
 }
 
+.tooltip-content {
+  display: none;
+}
+
+.tooltip-icon:hover .tooltip-content {
+  display: inline-block;
+}
+
 .form-group input,
 .form-group textarea,
 .form-group select {

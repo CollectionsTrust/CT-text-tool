@@ -1,3 +1,5 @@
+import Tooltip from "../common/Tooltip";
+
 const FormField = ({
   id,
   name,
@@ -16,11 +18,7 @@ const FormField = ({
       <label htmlFor={id}>
         {label}
         {required && <span className="required-indicator">*</span>}
-        {tooltip && (
-          <span className="tooltip-icon" title={tooltip}>
-            ⓘ
-          </span>
-        )}
+        {tooltip && <Tooltip>{tooltip}</Tooltip>}
       </label>
       <input
         type={type}

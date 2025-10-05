@@ -18,10 +18,7 @@ export function exportToCsvTwoFiles(texts, projectInfo, projectSettings = {}) {
   }, 500);
 }
 
-/**
- * Export project metadata as a separate CSV file
- */
-function exportProjectMetadataCsv(projectInfo, projectSettings = {}) {
+export function constructProjectMetadataCsv(projectInfo, projectSettings) {
   // Define all project metadata fields in logical order
   const metadataFields = [
     { key: "projectReferenceNumber", label: "Project reference number" },
@@ -90,6 +87,15 @@ function exportProjectMetadataCsv(projectInfo, projectSettings = {}) {
 
   // Add export timestamp
   csvContent += `"Export date","${new Date().toISOString()}"\r\n`;
+
+  return csvContent;
+}
+
+/**
+ * Export project metadata as a separate CSV file
+ */
+function exportProjectMetadataCsv(projectInfo, projectSettings = {}) {
+  const csvContent = constructProjectMetadataCsv(projectInfo, projectSettings);
 
   // Prepend BOM for UTF-8 encoding
   const BOM = "\uFEFF";
