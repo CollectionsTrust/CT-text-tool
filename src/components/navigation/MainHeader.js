@@ -31,15 +31,7 @@ const MainHeader = () => {
   // Specific handler for the Create texts button
   const handleCreateTexts = (e) => {
     e.preventDefault();
-
-    const isTextsPage = pathParts[pathParts.length - 1] === "texts";
-
-    if (editTextId || isTextsPage) {
-      navigate(`/projects/${projectId}/objects`);
-      navigate(0);
-      return;
-    }
-
+    navigate(`/projects/${projectId}/objects`);
     navigate(0);
   };
 
