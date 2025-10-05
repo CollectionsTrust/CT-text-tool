@@ -15,6 +15,7 @@ import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import "./AdminDashboard.css";
 import AdminNavLinks from "./AdminNavLinks";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const Requests = () => {
   const [projectRequests, setProjectRequests] = useState([]);
@@ -23,6 +24,7 @@ const Requests = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [processingRequestId, setProcessingRequestId] = useState(null);
   const { user } = useAuth();
+  usePageTitle("Project Requests");
 
   const fetchRequests = async () => {
     try {

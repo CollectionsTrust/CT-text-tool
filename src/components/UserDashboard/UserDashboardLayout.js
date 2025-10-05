@@ -1,4 +1,4 @@
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useNavigate, useLocation, Outlet, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import MainHeader from "../navigation/MainHeader";
 import "./UserDashboard.css";
@@ -38,8 +38,8 @@ const UserDashboardLayout = () => {
           {(userRoles.appRole === "admin" || userIsOwnerOfAProject) && (
             <div className="user-nav-tabs">
               {userIsOwnerOfAProject && (
-                <a
-                  href="/dashboard/projects"
+                <Link
+                  to="/dashboard/projects"
                   className={`user-nav-tab ${
                     activeTab === "projects" ? "active" : ""
                   }`}
@@ -48,11 +48,11 @@ const UserDashboardLayout = () => {
                   }}
                 >
                   Manage projects
-                </a>
+                </Link>
               )}
               {(userRoles.appRole === "admin" || userIsOwnerOfAProject) && (
-                <a
-                  href="/dashboard/authors"
+                <Link
+                  to="/dashboard/authors"
                   className={`user-nav-tab ${
                     activeTab === "authors" ? "active" : ""
                   }`}
@@ -61,7 +61,7 @@ const UserDashboardLayout = () => {
                   }}
                 >
                   Manage authors
-                </a>
+                </Link>
               )}
             </div>
           )}

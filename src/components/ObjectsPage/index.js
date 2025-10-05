@@ -22,6 +22,7 @@ import TextForm from "../common/TextForm/index";
 import "./ObjectsPage.css";
 import { useText } from "../../hooks/useText";
 import { useTexts } from "../../hooks/useTexts";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const ObjectsPage = () => {
   const { projectId } = useParams();
@@ -38,6 +39,7 @@ const ObjectsPage = () => {
   const editTextId = searchParams.get("editTextId");
   const { text } = useText(editTextId);
   const { texts } = useTexts(projectId);
+  usePageTitle(text ? `Edit text` : "Create text");
 
   const methods = useForm({
     defaultValues: {

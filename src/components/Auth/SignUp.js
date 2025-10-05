@@ -7,6 +7,7 @@ import {
   sendEmailVerification,
   signOut,
 } from "firebase/auth";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const SignUp = () => {
   const [password, setPassword] = useState("");
@@ -16,6 +17,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const auth = getAuth();
+  usePageTitle("Sign Up");
 
   const handleRegister = async (e) => {
     e.preventDefault();

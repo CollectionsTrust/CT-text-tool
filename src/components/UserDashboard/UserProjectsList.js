@@ -13,6 +13,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const ITEMS_PER_PAGE = 25;
 
@@ -28,6 +29,7 @@ const UserProjectsList = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
+  usePageTitle("Projects");
 
   const handleRefreshProjects = (newDocID, newDoc) => {
     setProjects((prev) => [

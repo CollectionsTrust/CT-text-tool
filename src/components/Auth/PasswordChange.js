@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import MainHeader from "../navigation/MainHeader";
 import { validatePassword } from "../../utils/passwordUtils";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const PasswordChange = ({ onComplete = null }) => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -16,6 +17,7 @@ const PasswordChange = ({ onComplete = null }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { changePassword } = useAuth();
+  usePageTitle("Change password");
 
   const handleSubmit = async (event) => {
     event.preventDefault();

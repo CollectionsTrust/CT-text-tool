@@ -13,6 +13,7 @@ import { getAuth } from "firebase/auth";
 import "./AdminDashboard.css";
 import { useAuth } from "../../context/AuthContext";
 import AdminNavLinks from "./AdminNavLinks";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -37,6 +38,7 @@ const UserManagement = () => {
   const [ownershipConflict, setOwnershipConflict] = useState(null);
   const { sendResetPasswordEmail } = useAuth();
   const auth = getAuth();
+  usePageTitle("User Management");
 
   useEffect(() => {
     fetchUsers();

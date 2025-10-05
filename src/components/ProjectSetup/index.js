@@ -10,11 +10,15 @@ import { useTexts } from "../../hooks/useTexts";
 import AuthorsSelector from "./AuthorsSelector";
 import { useAuth } from "../../context/AuthContext";
 import Tooltip from "../common/Tooltip";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const ProjectSetup = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const { texts } = useTexts(projectId);
+
+  usePageTitle("Project setup");
+
   const { userRoles } = useAuth();
   const {
     formData,

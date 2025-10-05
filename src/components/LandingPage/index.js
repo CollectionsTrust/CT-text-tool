@@ -9,8 +9,10 @@ import ctHeaderLogo from "../../assets/images/cttt-logo.png";
 import ctLogo from "../../assets/images/ct-logo.png";
 import mdsLogo from "../../assets/images/mds-logo.png";
 import aceLogo from "../../assets/images/ace-logo.png";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const LandingPage = () => {
+  usePageTitle("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

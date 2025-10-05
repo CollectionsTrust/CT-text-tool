@@ -14,6 +14,7 @@ import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import AdminNavLinks from "./AdminNavLinks";
 import "./AdminDashboard.css";
+import usePageTitle from "../../hooks/usePageTitle";
 
 const ITEMS_PER_PAGE = 25;
 
@@ -54,6 +55,7 @@ const AdminProjectsList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
+  usePageTitle("Projects");
 
   const handleRefreshProjects = () => {
     setRefreshKey((prev) => prev + 1); // Triggers useEffect
