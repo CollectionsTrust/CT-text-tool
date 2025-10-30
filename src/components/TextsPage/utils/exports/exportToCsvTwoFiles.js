@@ -138,7 +138,8 @@ function exportTextsCsv(
     "Parent text",
     "Tag",
     "Note",
-    "Linked object UIDs"
+    "Linked object UIDs",
+    "Linked object numbers"
   );
 
   // Start CSV content with headers
@@ -171,7 +172,8 @@ function exportTextsCsv(
       text.textTag || "",
       text.textNote || "",
       // Ensure all object UIDs have the full URL
-      (text.linkedObjects || []).map((uid) => formatObjectUrl(uid)).join("; ")
+      (text.linkedObjects || []).map((uid) => formatObjectUrl(uid)).join("; "),
+      (text.linkedObjectsNumbers || []).join("; ")
     );
 
     return row;

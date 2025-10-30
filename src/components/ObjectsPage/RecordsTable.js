@@ -86,7 +86,7 @@ const RecordsTable = ({ filteredData, showCollection, showTitle }) => {
                       // onMouseDown to stop the page jumping when a checkbox is clicked
                       onMouseDown={(e) => e.preventDefault()}
                       type="checkbox"
-                      value={uid}
+                      value={JSON.stringify({ uid, objectNumber })}
                     />
                   </div>
                 </td>
