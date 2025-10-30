@@ -41,7 +41,7 @@ const ExportControls = ({ texts }) => {
         exportToXml(texts, projectInfo);
         break;
       case "json":
-        exportToJson(texts, projectInfo);
+        exportToJson(texts, projectInfo, projectInfo.settings);
         break;
       case "html":
         exportToHtml(texts, projectInfo);
