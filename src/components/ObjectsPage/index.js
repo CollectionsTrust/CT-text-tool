@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { getPropertyValue } from "./utils/dataExtractors";
 import {
   collection,
   doc,
@@ -62,8 +63,14 @@ const ObjectsPage = () => {
   };
 
   const selectAllObjects = () => {
-    const allIds = filteredData.map((record) => record["@admin"].uid);
-    methods.setValue("linkedObjects", allIds);
+    const linkedObjectsData = filteredData.map((record) =>
+      JSON.stringify({
+        uid: record["@admin"].uid,
+        objectNumber: getPropertyValue(record, "spectrum/object_number") || "-",
+      })
+    );
+
+    methods.setValue("linkedObjects", linkedObjectsData);
   };
 
   // Reset the form when `text` and projectConfig is loaded
@@ -132,10 +139,13 @@ const ObjectsPage = () => {
   } = useObjectsList(methods.watch("linkedObjects"));
 
   const submitForm = async (data) => {
+    const linkedObjects = data.linkedObjects.map((v) => JSON.parse(v));
     const payload = {
       ...data,
       updatedAt: serverTimestamp(),
       textDate: text?.textDate || new Date().toISOString().substring(0, 10),
+      linkedObjects: linkedObjects.map((obj) => obj.uid),
+      linkedObjectsNumbers: linkedObjects.map((obj) => obj.objectNumber),
     };
 
     setSaveError(null);

@@ -120,6 +120,13 @@ export function exportToXml(texts, projectInfo, projectSettings = {}) {
               .join("")}</linkedObjects>`
           : ""
       }
+      ${
+        text.linkedObjectsNumbers?.length
+          ? `<linkedObjectsNumbers>${text.linkedObjectsNumbers
+              .map((num) => `<object>${escapeXml(num)}</object>`)
+              .join("")}</linkedObjectsNumbers>`
+          : ""
+      }
     </text>`
     )
     .join("\n");

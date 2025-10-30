@@ -8,7 +8,7 @@ import {
 import { useProject } from "./useProject";
 import { getAuth } from "firebase/auth";
 
-export const useObjectsList = (linkedObjects) => {
+export const useObjectsList = (linkedObjectsData) => {
   const { projectId } = useParams();
   const { project } = useProject(projectId);
   const [allRecords, setAllRecords] = useState([]);
@@ -185,6 +185,9 @@ export const useObjectsList = (linkedObjects) => {
 
   useEffect(() => {
     let result = searchRecords(allRecords, searchQuery);
+    const linkedObjects = linkedObjectsData
+      .map((v) => JSON.parse(v))
+      .map((obj) => obj.uid);
 
     if (showSelectedOnly) {
       result = result.filter((record) =>
@@ -193,7 +196,7 @@ export const useObjectsList = (linkedObjects) => {
     }
 
     setFilteredData(result);
-  }, [allRecords, searchQuery, showSelectedOnly, linkedObjects]);
+  }, [allRecords, searchQuery, showSelectedOnly, linkedObjectsData]);
 
   return {
     filteredData,

@@ -43,7 +43,8 @@ export function exportToCsv(texts, projectInfo, projectSettings = {}) {
     "Parent text",
     "Tag",
     "Note",
-    "Linked object UIDs"
+    "Linked object UIDs",
+    "Linked object numbers"
   );
 
   // Add headers to CSV
@@ -71,7 +72,8 @@ export function exportToCsv(texts, projectInfo, projectSettings = {}) {
       text.textTag || "",
       text.textNote || "",
       // Ensure all object UIDs have the full URL
-      (text.linkedObjects || []).map((uid) => formatObjectUrl(uid)).join("; ")
+      (text.linkedObjects || []).map((uid) => formatObjectUrl(uid)).join("; "),
+      (text.linkedObjectsNumbers || []).join("; ")
     );
 
     return row;
