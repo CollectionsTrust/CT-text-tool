@@ -156,6 +156,8 @@ export function exportToHtml(texts, projectInfo) {
             ? `<div><strong>${toSentenceCase(
                 "linkedObjects"
               )}:</strong> ${text.linkedObjects
+                .map((obj) => obj.uid)
+                .filter((uid) => uid)
                 .map((uid) => {
                   const label = objectUidMap[uid] || uid;
                   const url = formatObjectUrl(uid);
@@ -165,11 +167,14 @@ export function exportToHtml(texts, projectInfo) {
             : ""
         }
         ${
-          (text.linkedObjectsNumbers || []).length > 0
+          (text.linkedObjects || []).length > 0
             ? `<div>
                 <strong>${toSentenceCase(
                   "linkedObjectNumbers"
-                )}:</strong>&nbsp;${text.linkedObjectsNumbers.join(", ")}
+                )}:</strong>&nbsp;${(text.linkedObjects || [])
+                .map((obj) => obj.objectNumber)
+                .filter((num) => num)
+                .join(", ")}
               </div>`
             : ""
         }

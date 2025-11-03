@@ -68,10 +68,13 @@ export function exportToJson(texts, projectInfo, projectSettings = {}) {
       parentText: text.parentText || "",
       tag: text.textTag || "",
       note: text.textNote || "",
-      linkedObjectUids: (text.linkedObjects || []).map((uid) =>
-        formatObjectUrl(uid)
-      ), // Ensure all object UIDs are full URLs
-      linkedObjectNumbers: text.linkedObjectsNumbers || [],
+      linkedObjectUids: (text.linkedObjects || [])
+        .map((obj) => obj.uid)
+        .filter((uid) => uid)
+        .map((uid) => formatObjectUrl(uid)), // Ensure all object UIDs are full URLs
+      linkedObjectNumbers: (text.linkedObjects || [])
+        .map((obj) => obj.objectNumber)
+        .filter((num) => num),
     };
 
     // Only add authors if the flag allows it
