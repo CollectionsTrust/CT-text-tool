@@ -114,6 +114,8 @@ export function exportToXml(texts, projectInfo, projectSettings = {}) {
       ${
         text.linkedObjects?.length
           ? `<linkedObjects>${text.linkedObjects
+              .map((obj) => obj.uid)
+              .filter((uid) => uid)
               .map(
                 (uid) => `<object>${escapeXml(formatObjectUrl(uid))}</object>`
               )
@@ -121,9 +123,9 @@ export function exportToXml(texts, projectInfo, projectSettings = {}) {
           : ""
       }
       ${
-        text.linkedObjectsNumbers?.length
-          ? `<linkedObjectsNumbers>${text.linkedObjectsNumbers
-              .map((num) => `<object>${escapeXml(num)}</object>`)
+        text.linkedObjects?.length
+          ? `<linkedObjectsNumbers>${text.linkedObjects
+              .map((obj) => `<object>${escapeXml(obj.objectNumber)}</object>`)
               .join("")}</linkedObjectsNumbers>`
           : ""
       }
