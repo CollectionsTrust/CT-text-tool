@@ -185,13 +185,13 @@ export const useObjectsList = (linkedObjectsData) => {
 
   useEffect(() => {
     let result = searchRecords(allRecords, searchQuery);
-    const linkedObjects = linkedObjectsData
-      .map((v) => JSON.parse(v))
-      .map((obj) => obj.uid);
+    const linkedObjectsUids = linkedObjectsData.map(
+      (obj) => JSON.parse(obj).uid
+    );
 
     if (showSelectedOnly) {
       result = result.filter((record) =>
-        linkedObjects.includes(record["@admin"]?.uid)
+        linkedObjectsUids.includes(record["@admin"]?.uid)
       );
     }
 

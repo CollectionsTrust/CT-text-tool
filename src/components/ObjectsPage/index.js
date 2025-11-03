@@ -114,7 +114,10 @@ const ObjectsPage = () => {
       textStatus: text?.textStatus || "",
       textNote: text?.textNote || "",
       parentText: text?.parentText || "",
-      linkedObjects: Array.from(text?.linkedObjects || []) || [],
+      linkedObjects:
+        text?.linkedObjects.map((obj) =>
+          JSON.stringify(obj, ["uid", "objectNumber"])
+        ) || [],
       projectId: projectId,
       textReferenceNumber: textReferenceNumber,
       projectReferenceNumber: projectConfig?.projectReferenceNumber || "",
@@ -139,13 +142,11 @@ const ObjectsPage = () => {
   } = useObjectsList(methods.watch("linkedObjects"));
 
   const submitForm = async (data) => {
-    const linkedObjects = data.linkedObjects.map((v) => JSON.parse(v));
     const payload = {
       ...data,
       updatedAt: serverTimestamp(),
       textDate: text?.textDate || new Date().toISOString().substring(0, 10),
-      linkedObjects: linkedObjects.map((obj) => obj.uid),
-      linkedObjectsNumbers: linkedObjects.map((obj) => obj.objectNumber),
+      linkedObjects: data.linkedObjects.map((v) => JSON.parse(v)),
     };
 
     setSaveError(null);

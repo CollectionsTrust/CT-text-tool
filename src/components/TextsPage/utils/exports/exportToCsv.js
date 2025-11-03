@@ -72,8 +72,12 @@ export function exportToCsv(texts, projectInfo, projectSettings = {}) {
       text.textTag || "",
       text.textNote || "",
       // Ensure all object UIDs have the full URL
-      (text.linkedObjects || []).map((uid) => formatObjectUrl(uid)).join("; "),
-      (text.linkedObjectsNumbers || []).join("; ")
+      (text.linkedObjects || [])
+        .map((obj) => obj.uid)
+        .filter((uid) => uid)
+        .map((uid) => formatObjectUrl(uid))
+        .join("; "),
+      (text.linkedObjects || []).map((obj) => obj.objectNumber).join("; ")
     );
 
     return row;
