@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import usePageTitle from "../../hooks/usePageTitle";
 
-
 const TermsPage = () => {
   const navigate = useNavigate();
   usePageTitle("Terms and Conditions");
@@ -49,20 +48,17 @@ const TermsPage = () => {
             <div className="terms">
               <h1 className="terms-h1">CT Text Tool Terms and Conditions</h1>
               <p>
-                <strong>Last updated:</strong> March 2024
+                <strong>Last updated:</strong> November 2025
               </p>
               <h2 className="terms-h2">1. Acceptance of Terms</h2>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
-              </p>
-              <p>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse
-                cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                cupidatat non proident, sunt in culpa qui officia deserunt
-                mollit anim id est laborum.
+                The following terms and conditions (the "Terms") shall govern
+                and be the binding contract between{" "}
+                <a href="https://texts.collectionstrust.org.uk">
+                  https://texts.collectionstrust.org.uk
+                </a>{" "}
+                (the "Site") and its users. The website owner,{" "}
+                <strong>Collections Trust</strong>, owns and operates the Site.
               </p>
               <div className="info-box">
                 <strong>Important:</strong> By using the CT Text Tool, you
@@ -70,140 +66,233 @@ const TermsPage = () => {
                 bound by these terms and conditions.
               </div>
               <h2 className="terms-h2">2. Service Description</h2>
-              <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-              </p>
-              <p>
-                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit
-                aut fugit, sed quia consequuntur magni dolores eos qui ratione
-                voluptatem sequi nesciunt.
-              </p>
               <h3 className="terms-h3">2.1 Museum Data Service Integration</h3>
               <p>
-                Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,
-                consectetur, adipisci velit, sed quia non numquam eius modi
-                tempora incidunt ut labore et dolore magnam aliquam quaerat
-                voluptatem.
+                The Tool is intended for use by museums and other related
+                institutions that have object records in the Museum Data Service
+                (MDS). By using this Tool, you confirm that you are authorized
+                to represent such an institution and that you have the necessary
+                rights and permissions to use the Tool for the intended purpose.
               </p>
               <h3 className="terms-h3">2.2 Text Creation and Management</h3>
               <p>
-                Ut enim ad minima veniam, quis nostrum exercitationem ullam
-                corporis suscipit laboriosam, nisi ut aliquid ex ea commodi
-                consequatur. Quis autem vel eum iure reprehenderit qui in ea
-                voluptate velit esse quam nihil molestiae consequatur.
+                Users may input, edit, and manage museum-related text entries.
+                These entries may be exported, shared, or integrated into other
+                Collections Trust systems, in accordance with these Terms and
+                any applicable privacy or licensing agreements.
               </p>
               <h2 className="terms-h2">3. User Responsibilities</h2>
-              <p>
-                At vero eos et accusamus et iusto odio dignissimos ducimus qui
-                blanditiis praesentium voluptatum deleniti atque corrupti quos
-                dolores et quas molestias excepturi sint occaecati cupiditate
-                non provident.
-              </p>
-              <ul>
-                <li>
-                  Similique sunt in culpa qui officia deserunt mollitia animi
-                </li>
-                <li>Id est laborum et dolorum fuga et harum quidem rerum</li>
-                <li>Facilis est et expedita distinctio nam libero tempore</li>
-                <li>
-                  Cum soluta nobis est eligendi optio cumque nihil impedit
-                </li>
-              </ul>
               <h3 className="terms-h3">3.1 Account Security</h3>
               <p>
-                Temporibus autem quibusdam et aut officiis debitis aut rerum
-                necessitatibus saepe eveniet ut et voluptates repudiandae sint
-                et molestiae non recusandae.
+                Users are responsible for maintaining the confidentiality of
+                their login credentials. Unauthorized access or misuse of an
+                account must be reported immediately. Collections Trust is not
+                liable for any loss or damage arising from a failure to protect
+                account details.
               </p>
-              <div className="highlight">
-                <strong>Security Notice:</strong> You are responsible for
-                maintaining the confidentiality of your account credentials and
-                for all activities that occur under your account.
-              </div>
               <h3 className="terms-h3">3.2 Content Guidelines</h3>
               <p>
-                Itaque earum rerum hic tenetur a sapiente delectus, ut aut
-                reiciendis voluptatibus maiores alias consequatur aut
-                perferendis doloribus asperiores repellat.
+                Users (including individuals granted access by contributing
+                institutions) agree not to upload content that:
               </p>
-              <h2 className="terms-h2">4. Data Privacy and Protection</h2>
+              <ul>
+                <li>Infringes third-party intellectual property rights;</li>
+                <li>Violates confidentiality agreements;</li>
+                <li>
+                  Breaches ethical or legal standards associated with museum or
+                  research practices.
+                </li>
+              </ul>
               <p>
-                Nam libero tempore, cum soluta nobis est eligendi optio cumque
-                nihil impedit quo minus id quod maxime placeat facere possimus,
-                omnis voluptas assumenda est, omnis dolor repellendus.
+                Contributing institutions are responsible for managing user
+                permissions and ensuring that any individuals they authorise are
+                aware of and comply with these Terms.
               </p>
+              <p>
+                Collections Trust reserves the right to remove any content that
+                violates these guidelines or that it deems inappropriate or
+                harmful.
+              </p>
+
+              <h2 className="terms-h2">4. Data Privacy and Protection</h2>
               <h3 className="terms-h3">4.1 Information Collection</h3>
               <p>
-                Temporibus autem quibusdam et aut officiis debitis aut rerum
-                necessitatibus saepe eveniet ut et voluptates repudiandae sint
-                et molestiae non recusandae.
+                The Site may collect and store user-submitted data, account
+                information, and usage metadata for the purposes of delivering,
+                improving, and maintaining the service.
               </p>
               <h3 className="terms-h3">4.2 Data Usage</h3>
               <p>
-                Et harum quidem rerum facilis est et expedita distinctio. Nam
-                libero tempore, cum soluta nobis est eligendi optio cumque nihil
-                impedit quo minus id quod maxime placeat facere possimus.
+                Collections Trust will only use personal and institutional data
+                in accordance with its Privacy Policy. Data may be used to
+                support analytics, diagnostics, and service development, but
+                will not be sold or shared with third parties without user
+                consent, unless required by law.
               </p>
               <h2 className="terms-h2">5. Intellectual Property</h2>
+              <h3 className="terms-h3">5.1 Ownership</h3>
               <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
+                All content submitted by users, including but not limited to
+                text entries, comments, annotations, transcriptions, or
+                interpretive material linked to museum collections (“User
+                Content”), remains the intellectual property of the original
+                contributor or their institution. Nothing in these Terms
+                transfers ownership of such content to Collections Trust.
               </p>
-              <h3 className="terms-h3">5.1 User Content</h3>
+              <h3 className="terms-h3">5.2 Licensing and Access Controls</h3>
               <p>
-                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit
-                aut fugit, sed quia consequuntur magni dolores eos qui ratione
-                voluptatem sequi nesciunt.
+                We encourage open licensing of User Content. However,
+                contributing institutions may apply specific licensing terms or
+                restrict access to certain content.
               </p>
-              <h3 className="terms-h3">5.2 Service Content</h3>
+              <p> When submitting content, users must:</p>
+              <ul>
+                <li>Specify the applicable licence or access restriction;</li>
+                <li>Ensure any content shared complies with these terms;</li>
+                <li>
+                  Honour any third-party rights, including copyright, privacy,
+                  and data protection obligations.
+                </li>
+              </ul>
+              <h3 className="terms-h3">
+                5.3 Ownership and Open Source Licensing
+              </h3>
               <p>
-                Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,
-                consectetur, adipisci velit, sed quia non numquam eius modi
-                tempora incidunt ut labore et dolore magnam aliquam quaerat
-                voluptatem.
+                The core software that powers this platform (“the Tool”) is
+                developed and maintained by Collections Trust and is made
+                available under an open source MIT licence (Modified for
+                non-commercial use).{" "}
+              </p>
+              <p>MIT License (Modified for Non-Commercial Use)</p>
+              <p>Copyright (c) 2025 Collections Trust</p>
+              <p>
+                Permission is hereby granted, free of charge, to any person
+                obtaining a copy of this software and associated documentation
+                files (the "Software"), to use, copy, modify, merge, publish,
+                distribute, copies of the Software for non-commercial purposes
+                only, subject to the following conditions:
+              </p>
+              <ol>
+                <li>
+                  <p>Non-Commercial Use Only</p>
+                  <p>
+                    The Software may only be used for non-commercial purposes.
+                  </p>
+                  <p>
+                    Commercial use—including but not limited to selling,
+                    licensing, or using the Software as part of a commercial
+                    product or service—is strictly prohibited without prior
+                    written permission from the copyright holder.
+                  </p>
+                </li>
+                <li>
+                  <p>Commercial Licensing</p>
+                  <p>
+                    For commercial use, please contact
+                    office@collectionstrust.org.uk to obtain a separate
+                    commercial license.
+                  </p>
+                </li>
+                <li>
+                  <p>Attribution</p>
+                  <p>
+                    The above copyright notice and this permission notice shall
+                    be included in all copies or substantial portions of the
+                    Software.
+                  </p>
+                  <p>
+                    The source code and associated documentation are available
+                    at{" "}
+                    <a href="https://github.com/CollectionsTrust/CT-text-tool.git">
+                      https://github.com/CollectionsTrust/CT-text-tool.git
+                    </a>
+                  </p>
+                </li>
+              </ol>
+              <h3 className="terms-h3">5.4 Scope of the Licence</h3>
+              <p>
+                While the tool’s source code is open-licensed, this does not
+                automatically apply to:
+              </p>
+              <ul>
+                <li>Content submitted by users (see Section 5.1);</li>
+                <li>
+                  Content hosted on the platform that has its own licensing
+                  terms;
+                </li>
+                <li>
+                  System-generated content derived from user activity or data.
+                </li>
+              </ul>
+              <p>
+                You must respect any separate intellectual property or licence
+                terms that apply to these other types of content.
+              </p>
+              <h3 className="terms-h3">
+                5.5 Documentation and Support Material
+              </h3>
+              <p>
+                Any documentation, training materials, or API specifications
+                provided with the tool are licensed under Creative Commons
+                Attribution 4.0 (CC-BY 4.0), unless otherwise stated. Where
+                different licences apply, they will be clearly indicated.
+              </p>
+              <p>
+                We encourage reuse and adaptation of these materials in line
+                with our goal to support open, interoperable collections
+                infrastructure.
+              </p>
+              <h3 className="terms-h3">5.6 Platform Interface and Branding</h3>
+              <p>
+                The design of the user interface (UI), branding, and other
+                visual elements of the hosted platform may be protected by
+                copyright or trademark law and are not covered under the open
+                source software licence. These may not be used without
+                permission, except as permitted by law.
+              </p>
+              <h3 className="terms-h3">5.7 Aggregated and Derived Content</h3>
+              <p>
+                The platform may generate aggregated or derived content (e.g.
+                indexes, usage statistics, normalised data structures) from
+                user-submitted information. Collections Trust retains rights to
+                this system-generated content but will make anonymised or
+                summary outputs available under open licences wherever possible,
+                in alignment with our open data principles.
               </p>
               <h2 className="terms-h2">6. Limitation of Liability</h2>
               <p>
-                Ut enim ad minima veniam, quis nostrum exercitationem ullam
-                corporis suscipit laboriosam, nisi ut aliquid ex ea commodi
-                consequatur.
+                The service is provided "as is" without warranties of any kind,
+                either express or implied. Collections Trust makes no guarantee
+                of uninterrupted access, completeness, accuracy, or fitness for
+                a particular purpose. To the extent permitted by law,
+                Collections Trust is not liable for any direct, indirect, or
+                consequential damages arising from use of the Site.
               </p>
-              <div className="info-box">
-                <strong>Disclaimer:</strong> The service is provided "as is"
-                without warranties of any kind, either express or implied.
-              </div>
               <h2 className="terms-h2">7. Changes to Terms</h2>
               <p>
-                Quis autem vel eum iure reprehenderit qui in ea voluptate velit
-                esse quam nihil molestiae consequatur, vel illum qui dolorem eum
-                fugiat quo voluptas nulla pariatur.
+                Collections Trust reserves the right to modify these Terms at
+                any time. Updates will be posted on the Site with a revised
+                effective date. Continued use of the CT Text Tool following any
+                changes constitutes acceptance of the revised Terms.
               </p>
               <h2 className="terms-h2">8. Contact Information</h2>
               <p>
-                For questions about these terms and conditions, please contact:
+                For questions about these Terms and Conditions, please contact:
               </p>
               <ul>
                 <li>
                   <strong>Collections Trust</strong>
                 </li>
                 <li>
-                  <strong>Email:</strong> katie@collectionstrust.org.uk
+                  <strong>Email:</strong> office@Collectionstrust.org.uk
                 </li>
                 <li>
-                  <strong>Website:</strong> https://collectionstrust.org.uk
+                  <strong>Website:</strong>{" "}
+                  <a href="https://collectionstrust.org.uk">
+                    https://collectionstrust.org.uk
+                  </a>
                 </li>
               </ul>
-              <p>
-                <em>
-                  These terms and conditions are effective as of the date last
-                  updated above.
-                </em>
-              </p>
             </div>
           </div>
         </div>
