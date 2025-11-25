@@ -34,7 +34,7 @@ const TermsPage = () => {
     <div className="terms-overlay" onClick={handleBackdropClick}>
       <div className="terms-modal">
         <div className="terms-header">
-          <h2 className="terms-title">CT Text Tool Terms and Conditions</h2>
+          <h2 className="terms-title">CT Text Tool terms and conditions</h2>
           <button
             onClick={handleCloseTerms}
             className="terms-close-btn"
@@ -46,11 +46,11 @@ const TermsPage = () => {
         <div className="terms-content-wrapper">
           <div className="terms-content">
             <div className="terms">
-              <h1 className="terms-h1">CT Text Tool Terms and Conditions</h1>
+              <h1 className="terms-h1">CT Text Tool terms and conditions</h1>
               <p>
                 <strong>Last updated:</strong> November 2025
               </p>
-              <h2 className="terms-h2">1. Acceptance of Terms</h2>
+              <h2 className="terms-h2">1. Acceptance of terms</h2>
               <p>
                 The following terms and conditions (the "Terms") shall govern
                 and be the binding contract between{" "}
@@ -65,8 +65,8 @@ const TermsPage = () => {
                 acknowledge that you have read, understood, and agree to be
                 bound by these terms and conditions.
               </div>
-              <h2 className="terms-h2">2. Service Description</h2>
-              <h3 className="terms-h3">2.1 Museum Data Service Integration</h3>
+              <h2 className="terms-h2">2. Service description</h2>
+              <h3 className="terms-h3">2.1 Museum Data Service integration</h3>
               <p>
                 The Tool is intended for use by museums and other related
                 institutions that have object records in the Museum Data Service
@@ -74,15 +74,15 @@ const TermsPage = () => {
                 to represent such an institution and that you have the necessary
                 rights and permissions to use the Tool for the intended purpose.
               </p>
-              <h3 className="terms-h3">2.2 Text Creation and Management</h3>
+              <h3 className="terms-h3">2.2 Text creation and management</h3>
               <p>
                 Users may input, edit, and manage museum-related text entries.
                 These entries may be exported, shared, or integrated into other
                 Collections Trust systems, in accordance with these Terms and
                 any applicable privacy or licensing agreements.
               </p>
-              <h2 className="terms-h2">3. User Responsibilities</h2>
-              <h3 className="terms-h3">3.1 Account Security</h3>
+              <h2 className="terms-h2">3. User responsibilities</h2>
+              <h3 className="terms-h3">3.1 Account security</h3>
               <p>
                 Users are responsible for maintaining the confidentiality of
                 their login credentials. Unauthorized access or misuse of an
@@ -90,7 +90,7 @@ const TermsPage = () => {
                 liable for any loss or damage arising from a failure to protect
                 account details.
               </p>
-              <h3 className="terms-h3">3.2 Content Guidelines</h3>
+              <h3 className="terms-h3">3.2 Content guidelines</h3>
               <p>
                 Users (including individuals granted access by contributing
                 institutions) agree not to upload content that:
@@ -114,22 +114,25 @@ const TermsPage = () => {
                 harmful.
               </p>
 
-              <h2 className="terms-h2">4. Data Privacy and Protection</h2>
-              <h3 className="terms-h3">4.1 Information Collection</h3>
+              <h2 className="terms-h2">4. Data privacy and protection</h2>
+              <h3 className="terms-h3">4.1 Information collection</h3>
               <p>
                 The Site may collect and store user-submitted data, account
                 information, and usage metadata for the purposes of delivering,
                 improving, and maintaining the service.
               </p>
-              <h3 className="terms-h3">4.2 Data Usage</h3>
+              <h3 className="terms-h3">4.2 Data usage</h3>
               <p>
                 Collections Trust will only use personal and institutional data
-                in accordance with its Privacy Policy. Data may be used to
-                support analytics, diagnostics, and service development, but
-                will not be sold or shared with third parties without user
-                consent, unless required by law.
+                in accordance with its{" "}
+                <a href="https://collectionstrust.org.uk/what-we-do/statutory-information">
+                  Privacy Policy
+                </a>
+                . Data may be used to support analytics, diagnostics, and
+                service development, but will not be sold or shared with third
+                parties without user consent, unless required by law.
               </p>
-              <h2 className="terms-h2">5. Intellectual Property</h2>
+              <h2 className="terms-h2">5. Intellectual property</h2>
               <h3 className="terms-h3">5.1 Ownership</h3>
               <p>
                 All content submitted by users, including but not limited to
@@ -139,7 +142,7 @@ const TermsPage = () => {
                 contributor or their institution. Nothing in these Terms
                 transfers ownership of such content to Collections Trust.
               </p>
-              <h3 className="terms-h3">5.2 Licensing and Access Controls</h3>
+              <h3 className="terms-h3">5.2 Licensing and access controls</h3>
               <p>
                 We encourage open licensing of User Content. However,
                 contributing institutions may apply specific licensing terms or
@@ -155,7 +158,7 @@ const TermsPage = () => {
                 </li>
               </ul>
               <h3 className="terms-h3">
-                5.3 Ownership and Open Source Licensing
+                5.3 Ownership and open source licensing
               </h3>
               <p>
                 The core software that powers this platform (“the Tool”) is
@@ -163,7 +166,7 @@ const TermsPage = () => {
                 available under an open source MIT licence (Modified for
                 non-commercial use).{" "}
               </p>
-              <p>MIT License (Modified for Non-Commercial Use)</p>
+              <p>MIT License (Modified for non-commercial use)</p>
               <p>Copyright (c) 2025 Collections Trust</p>
               <p>
                 Permission is hereby granted, free of charge, to any person
@@ -174,7 +177,7 @@ const TermsPage = () => {
               </p>
               <ol>
                 <li>
-                  <p>Non-Commercial Use Only</p>
+                  <p>Non-commercial use only</p>
                   <p>
                     The Software may only be used for non-commercial purposes.
                   </p>
@@ -186,7 +189,7 @@ const TermsPage = () => {
                   </p>
                 </li>
                 <li>
-                  <p>Commercial Licensing</p>
+                  <p>Commercial licensing</p>
                   <p>
                     For commercial use, please contact
                     office@collectionstrust.org.uk to obtain a separate
@@ -209,7 +212,7 @@ const TermsPage = () => {
                   </p>
                 </li>
               </ol>
-              <h3 className="terms-h3">5.4 Scope of the Licence</h3>
+              <h3 className="terms-h3">5.4 Scope of the licence</h3>
               <p>
                 While the tool’s source code is open-licensed, this does not
                 automatically apply to:
@@ -229,7 +232,7 @@ const TermsPage = () => {
                 terms that apply to these other types of content.
               </p>
               <h3 className="terms-h3">
-                5.5 Documentation and Support Material
+                5.5 Documentation and support material
               </h3>
               <p>
                 Any documentation, training materials, or API specifications
@@ -242,7 +245,7 @@ const TermsPage = () => {
                 with our goal to support open, interoperable collections
                 infrastructure.
               </p>
-              <h3 className="terms-h3">5.6 Platform Interface and Branding</h3>
+              <h3 className="terms-h3">5.6 Platform interface and branding</h3>
               <p>
                 The design of the user interface (UI), branding, and other
                 visual elements of the hosted platform may be protected by
@@ -250,7 +253,7 @@ const TermsPage = () => {
                 source software licence. These may not be used without
                 permission, except as permitted by law.
               </p>
-              <h3 className="terms-h3">5.7 Aggregated and Derived Content</h3>
+              <h3 className="terms-h3">5.7 Aggregated and derived content</h3>
               <p>
                 The platform may generate aggregated or derived content (e.g.
                 indexes, usage statistics, normalised data structures) from
@@ -259,7 +262,7 @@ const TermsPage = () => {
                 summary outputs available under open licences wherever possible,
                 in alignment with our open data principles.
               </p>
-              <h2 className="terms-h2">6. Limitation of Liability</h2>
+              <h2 className="terms-h2">6. Limitation of liability</h2>
               <p>
                 The service is provided "as is" without warranties of any kind,
                 either express or implied. Collections Trust makes no guarantee
@@ -268,16 +271,16 @@ const TermsPage = () => {
                 Collections Trust is not liable for any direct, indirect, or
                 consequential damages arising from use of the Site.
               </p>
-              <h2 className="terms-h2">7. Changes to Terms</h2>
+              <h2 className="terms-h2">7. Changes to terms</h2>
               <p>
                 Collections Trust reserves the right to modify these Terms at
                 any time. Updates will be posted on the Site with a revised
                 effective date. Continued use of the CT Text Tool following any
                 changes constitutes acceptance of the revised Terms.
               </p>
-              <h2 className="terms-h2">8. Contact Information</h2>
+              <h2 className="terms-h2">8. Contact information</h2>
               <p>
-                For questions about these Terms and Conditions, please contact:
+                For questions about these terms and conditions, please contact:
               </p>
               <ul>
                 <li>
