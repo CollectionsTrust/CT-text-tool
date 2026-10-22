@@ -201,8 +201,8 @@ const LandingPage = () => {
               >
                 Museum Data Service website
               </a>{" "}
-              or contact Museum Data Manager,{" "}
-              <a href="mailto:support@museumdata.uk">Arran Rees</a>.
+              or contact,{" "}
+              <a href="mailto:support@museumdata.uk">Museum Data Manager</a>.
             </p>
           </div>
           <div className="landing-content-wrapper">
